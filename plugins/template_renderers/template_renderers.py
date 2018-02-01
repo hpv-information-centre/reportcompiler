@@ -1,5 +1,5 @@
-from abc import abstractmethod
 import logging
+from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import TemplateRendererException
 

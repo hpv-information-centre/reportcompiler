@@ -1,8 +1,8 @@
-from abc import abstractmethod
 import json
 import os
 import hashlib
 import logging
+from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import ContextGenerationError
 
@@ -48,7 +48,7 @@ class FragmentContextGenerator(PluginModule):
                     pass # No previous hash available, we run the code
             else:
                 if previous_hash == '':
-                    logger.warning("[{}] {}: No previous context generation found, can't skip generation...".format(metadata['doc_suffix'], metadata['fragment_name']))
+                    logger.warning("[{}] {}: No previous context found, generating...".format(metadata['doc_suffix'], metadata['fragment_name']))
                 else:
                     hash_list = hash.split('\n')
                     prev_hash_list = previous_hash.split('\n')
@@ -57,9 +57,9 @@ class FragmentContextGenerator(PluginModule):
                     hash_differences = [component for component, is_different in hash_differences if is_different]
                     hash_differences_str = ', '.join(hash_differences)
                     if len(hash_differences) > 0:
-                        logger.warning("[{}] {}: {} differ, can't skip generation...".format(metadata['doc_suffix'], metadata['fragment_name'], hash_differences_str))
+                        logger.warning("[{}] {}: {} differ, generating context...".format(metadata['doc_suffix'], metadata['fragment_name'], hash_differences_str))
                     elif not os.path.exists(fragment_hash_basename + '.ctx'):
-                        logger.warning("[{}] {}: Output data not available, can't skip generation...".format(metadata['doc_suffix'], metadata['fragment_name']))
+                        logger.info("[{}] {}: Output data not available, generating context...".format(metadata['doc_suffix'], metadata['fragment_name']))
                     else:
                         self.raise_generator_exception(metadata['fragment_path'],
                                                        None,
@@ -106,9 +106,9 @@ class FragmentContextGenerator(PluginModule):
     @classmethod
     def raise_generator_exception(cls, filename, exception, context, message=None):
         exception_info = message if message else str(exception)
-        full_msg = '{}: Context generation error:\n\n{}'.format(filename, exception_info)
-        logger = logging.getLogger(context['logger'])
-        logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
+        full_msg = '{}: Context generation error:\n{}'.format(filename, exception_info)
+        # logger = logging.getLogger(context['logger'])
+        # logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
         err = ContextGenerationError(full_msg)
         if exception:
             err.with_traceback(exception.__traceback__)

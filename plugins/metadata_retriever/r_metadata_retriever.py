@@ -1,5 +1,5 @@
-from subprocess import run, PIPE, CalledProcessError
 import json
+from subprocess import run, PIPE, CalledProcessError
 from reportcompiler.plugins.metadata_retriever.metadata_retriever import FragmentMetadataRetriever
 
 

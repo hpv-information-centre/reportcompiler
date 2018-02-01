@@ -1,5 +1,4 @@
 import pandas as pd
-
 from reportcompiler.plugins.data_fetchers.data_fetchers import FragmentDataFetcher
 
 

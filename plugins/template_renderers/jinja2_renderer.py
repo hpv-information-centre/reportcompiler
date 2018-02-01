@@ -1,7 +1,9 @@
 import re
 import jinja2
-from jinja2.exceptions import UndefinedError
+import os
 import itertools
+import shutil
+from jinja2.exceptions import UndefinedError
 from reportcompiler.plugins.template_renderers.template_renderers import TemplateRenderer
 
 
@@ -11,12 +13,34 @@ class JinjaRenderer(TemplateRenderer):
     def render_template(self, template_path, main_template, doc_var, context):
         # TODO: StrictUndefined vs DebugUndefined
         try:
-            environment = jinja2.Environment(loader=jinja2.FileSystemLoader(template_path), undefined=jinja2.StrictUndefined)
+            template_tmp_dir = os.path.join(context['meta']['tmp_path'], 'templates')
+            if not os.path.exists(template_tmp_dir):
+                os.mkdir(template_tmp_dir)
+
+            environment = jinja2.Environment(loader=jinja2.FileSystemLoader(template_tmp_dir), undefined=jinja2.StrictUndefined)
             self._setup_environment(environment)
+            self.generate_temp_templates(environment, context)
             # TODO: render vs generate
-            return environment.get_template(context['meta']['main_template']).render(context)
+            rendered_template = environment.get_template(context['meta']['main_template']).render(context)
+
+            shutil.rmtree(template_tmp_dir)
+
+            return rendered_template
         except UndefinedError as e:
             TemplateRenderer.raise_rendering_exception(e, context)
+
+    def generate_temp_templates(self, env, context):
+        context_info = context['meta']['template_context_info']
+        for template_file, dict_path in context_info:
+            with open(os.path.join(context['meta']['templates_path'], template_file), 'r') as f_orig, \
+                 open(os.path.join(context['meta']['tmp_path'], 'templates', template_file), 'w') as f_tmp:
+                content = f_orig.read()
+                header = env.block_start_string + \
+                         'with ctx = {}'.format('data.' + dict_path if dict_path != '' else 'data') + \
+                         env.block_end_string + '\n'
+                footer = '\n' + env.block_start_string + 'endwith' + env.block_end_string
+                f_tmp.write(header + content + footer)
+
 
     def included_templates(self, content):
         templates = re.findall(pattern='.*{%.*%}.*', string=content)

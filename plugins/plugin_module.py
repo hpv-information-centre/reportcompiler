@@ -1,8 +1,8 @@
-from abc import ABCMeta
 import importlib
 import os
 import re
 import inspect
+from abc import ABCMeta
 
 
 class PluginModule(metaclass=ABCMeta):
@@ -16,8 +16,8 @@ class PluginModule(metaclass=ABCMeta):
         class_dict = cls._get_classes()
         if id:
             try:
-                if isinstance(id, dict): # It might be a dictionary with more info, we get the name from within
-                    id = id['name']
+                if isinstance(id, dict): # It might be a dictionary with more info, we get the type from within
+                    id = id['type']
                 return class_dict[id]()
             except KeyError:
                 raise NotImplementedError('{} "{}" does not exist'.format(cls.__name__, id))

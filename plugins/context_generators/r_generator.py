@@ -1,5 +1,5 @@
-from subprocess import run, PIPE, CalledProcessError
 import json
+from subprocess import run, PIPE, CalledProcessError
 from reportcompiler.plugins.context_generators.context_generators import FragmentContextGenerator, ContextGenerationError
 
 

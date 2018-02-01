@@ -1,8 +1,5 @@
-import pymysql
-import pymysql.cursors
 import pandas as pd
-import pymysql
-import pymysql.cursors
+import os
 from reportcompiler.plugins.data_fetchers.data_fetchers import FragmentDataFetcher
 
 
@@ -11,7 +8,7 @@ class ExcelFetcher(FragmentDataFetcher):
 
     def fetch(self, doc_var, fetcher_info, metadata):
         params = [
-            {'name': 'file_path', 'default_value': ValueError},
+            {'name': 'file', 'default_value': ValueError},
             {'name': 'sheet_name', 'default_value': 0},
             {'name': 'columns', 'default_value': None},
             {'name': 'na_values', 'default_value': None},
@@ -29,7 +26,10 @@ class ExcelFetcher(FragmentDataFetcher):
                     par = param['default_value']
             arguments[param['name']] = par
 
-        df = pd.read_excel(io=arguments['file_path'],
+        if not os.path.isabs(arguments['file']):
+            arguments['file'] = os.path.join(metadata['data_path'], arguments['file'])
+
+        df = pd.read_excel(io=arguments['file'],
                            sheet_name=arguments['sheet_name'],
                            usecols=arguments['columns'],
                            na_values=arguments['na_values'])

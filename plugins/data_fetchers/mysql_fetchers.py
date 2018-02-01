@@ -4,12 +4,14 @@ import pymysql
 import pymysql.cursors
 import os
 import json
+from threading import Lock
 from pymysql.err import OperationalError
 from reportcompiler.plugins.data_fetchers.data_fetchers import FragmentDataFetcher
 
 
 class MySQLFetcher(FragmentDataFetcher):
     name = 'mysql'
+    mutex = Lock()
 
     def _connect(self, credentials):
         connection = pymysql.connect(host=credentials['host'],
@@ -21,15 +23,20 @@ class MySQLFetcher(FragmentDataFetcher):
         return connection
 
     def fetch(self, doc_var, fetcher_info, metadata):
-        fetcher_info['fragment_path'] = metadata['fragment_path']
+        # TODO: Look for ways to avoid mutex
+        with MySQLFetcher.mutex:
+            data = self._fetch(doc_var, fetcher_info, metadata)
+        return data
+
+    def _fetch(self, doc_var, fetcher_info, metadata):
         credentials = self._create_context_credentials(fetcher_info, metadata)
         try:
             connection = self._connect(credentials)
         except OperationalError as e:
             raise FragmentDataFetcher.raise_data_fetching_exception(metadata['fragment_path'], e, metadata)
 
-        if isinstance(fetcher_info, str):
-            sql_string = fetcher_info
+        if fetcher_info.get('raw_query'):
+            sql_string = fetcher_info['raw_query']
         else:
             try:
                 select_clause = self._create_select_clause(fetcher_info, metadata)
@@ -44,7 +51,6 @@ class MySQLFetcher(FragmentDataFetcher):
             sql_string = 'SELECT {} FROM {} {} WHERE {}'.format(select_clause, from_clause, join_clause, where_clause)
 
         df = pd.read_sql(sql_string, con=connection)
-        del fetcher_info['fragment_path']
         return df
 
     def _create_context_credentials(self, fetcher_info, metadata):
@@ -64,7 +70,7 @@ class MySQLFetcher(FragmentDataFetcher):
                 credentials['password'] = fetcher_info['password']
                 credentials['db'] = fetcher_info['db']
             except KeyError:
-                raise FragmentDataFetcher.raise_data_fetching_exception(fetcher_info['fragment_path'], None, metadata,
+                raise FragmentDataFetcher.raise_data_fetching_exception(metadata['fragment_path'], None, metadata,
                                                                         message='MySQL credentials not specified in context')
         return credentials
 

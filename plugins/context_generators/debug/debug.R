@@ -1,3 +1,5 @@
+rm(list=ls(all=TRUE))
+
 library(jsonlite)
 
 debug.fragment <- function(doc.var, fragment.name, reportcompiler.engine.path, report.path) {
@@ -5,7 +7,7 @@ debug.fragment <- function(doc.var, fragment.name, reportcompiler.engine.path, r
   fragment.path <- file.path(report.path, 'src', paste0(fragment.name, '.r'))
   source(fragment.path)
   subdir <- paste(doc.var, collapse='_')
-  tmp.base.file <- file.path(report.path, 'tmp', subdir, paste0(paste0(doc.var, collapse='-'), '_', fragment.name))
+  tmp.base.file <- file.path(report.path, 'gen', subdir, 'tmp', paste0(paste0(doc.var, collapse='-'), '_', fragment.name))
   
   doc.var <- fromJSON(paste0(tmp.base.file, '.docvar'))
   data <- fromJSON(paste0(tmp.base.file, '.data'))
@@ -17,7 +19,7 @@ debug.fragment <- function(doc.var, fragment.name, reportcompiler.engine.path, r
 base.path <-  'C:/Users/47873315b/Dropbox/ICO/ReportCompiler/reportcompiler'
 report.path <- 'C:/Users/47873315b/Dropbox/ICO/ReportCompiler/reports'
 
-doc.var <- list(iso='ESP')
+doc.var <- list(iso='IDN')
 fragment <- 'ten_most_frequent'
 report_dir <- 'FactSheetTest'
 
