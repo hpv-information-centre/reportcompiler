@@ -6,7 +6,7 @@ from reportcompiler.plugins.postprocessors.postprocessors import PostProcessor
 class PdflatexPostProcessor(PostProcessor):
     name = 'pdflatex'
 
-    def postprocess(self, doc_var, doc, report_path, postprocessor_info, context):
+    def postprocess(self, doc_var, doc, postprocessor_info, context):
         suffix = context['meta']['doc_suffix']
         filename = context['meta']['name'] if suffix == '' else context['meta']['name'] + '-' + suffix
 

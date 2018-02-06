@@ -7,7 +7,7 @@ from reportcompiler.plugins.errors import PostProcessorError
 class PostProcessor(PluginModule):
 
     @abstractmethod
-    def postprocess(self, doc_var, doc, report_path, postprocessor_info, context):
+    def postprocess(self, doc_var, doc, postprocessor_info, context):
         raise NotImplementedError('Postprocessing not implemented for {}'.format(self.__class__))
 
     @classmethod

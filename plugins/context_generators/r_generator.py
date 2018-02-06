@@ -1,6 +1,6 @@
 import json
 from subprocess import run, PIPE, CalledProcessError
-from reportcompiler.plugins.context_generators.context_generators import FragmentContextGenerator, ContextGenerationError
+from reportcompiler.plugins.context_generators.context_generators import FragmentContextGenerator
 
 
 class RContextGenerator(FragmentContextGenerator):

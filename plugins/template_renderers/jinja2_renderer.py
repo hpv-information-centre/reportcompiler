@@ -19,7 +19,7 @@ class JinjaRenderer(TemplateRenderer):
 
             environment = jinja2.Environment(loader=jinja2.FileSystemLoader(template_tmp_dir), undefined=jinja2.StrictUndefined)
             self._setup_environment(environment)
-            self.generate_temp_templates(environment, context)
+            self._generate_temp_templates(environment, context)
             # TODO: render vs generate
             rendered_template = environment.get_template(context['meta']['main_template']).render(context)
 
@@ -29,7 +29,7 @@ class JinjaRenderer(TemplateRenderer):
         except UndefinedError as e:
             TemplateRenderer.raise_rendering_exception(e, context)
 
-    def generate_temp_templates(self, env, context):
+    def _generate_temp_templates(self, env, context):
         context_info = context['meta']['template_context_info']
         for template_file, dict_path in context_info:
             with open(os.path.join(context['meta']['templates_path'], template_file), 'r') as f_orig, \
@@ -43,8 +43,8 @@ class JinjaRenderer(TemplateRenderer):
 
 
     def included_templates(self, content):
-        templates = re.findall(pattern='.*{%.*%}.*', string=content)
-        templates = [t for t in templates if len(re.findall(pattern='^[ ]*##.*', string=t)) == 0]
+        templates = re.findall(pattern='{%.*%}', string=content)
+        templates = [t for t in templates if len(re.findall(pattern='^[ ]*##', string=t)) == 0]
         templates = [re.findall(pattern='\{%[ ]*include[ ]*[\'"](.*?)[\'"][ ]*%\}',
                                         string=t) for t in templates]
         templates = list(itertools.chain.from_iterable(templates))
@@ -90,8 +90,8 @@ class JinjaLatexRenderer(JinjaRenderer):
         jinja_env.autoescape = False
 
     def included_templates(self, content):
-        templates = re.findall(pattern='.*BLOCK.*', string=content)
-        templates = [t for t in templates if len(re.findall(pattern='^[ ]*%#.*', string=t)) == 0]
+        templates = re.findall(pattern='BLOCK', string=content)
+        templates = [t for t in templates if len(re.findall(pattern='^[ ]*%#', string=t)) == 0]
         templates = [re.findall(pattern='\\BLOCK\{[ ]*include[ ]*[\'"](.*?)[\'"][ ]*\}',
                                         string=t) for t in templates]
         templates = list(itertools.chain.from_iterable(templates))

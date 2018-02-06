@@ -103,7 +103,7 @@ class Report:
         for item in doc_vars:
             num_occurrences = doc_vars.count(item)
             if num_occurrences > 1 and item not in doc_vars_list:
-                doc_vars_list.append(item)
+                doc_vars.remove(item)
                 logging.warning('{} appears more than once, duplicates will be ignored...'.format(item))
 
         for doc_var in doc_vars:
@@ -112,7 +112,7 @@ class Report:
                 missing_vars = mandatory_vars - current_var_keys
                 raise ValueError('Some mandatory document variables were not specified: {}\nVariables set: {}'.format(', '.join(missing_vars), doc_var))
 
-        return doc_vars_list
+        return doc_vars
 
 class ReportCompiler:
     LOG_FORMAT = '%(asctime)-15s %(message)s'
@@ -215,7 +215,8 @@ class ReportCompiler:
                 if isinstance(error, FragmentGenerationError):
                     traceback_dict.update(error.fragment_errors)
                 else:
-                    traceback_dict.update({result.doc: {'<global>': [error.args[0]]}})
+                    error_msg = str(error) + '\n' + ''.join(traceback.format_tb(error.__traceback__))
+                    traceback_dict.update({result.doc: {'<global>': error_msg}})
             raise FragmentGenerationError('Error on document(s) generation:\n', traceback_dict)
 
     def _generate_fragment(self, _fragment_compiler, _fragment, _doc_var, _report_metadata):
@@ -226,8 +227,11 @@ class ReportCompiler:
             # Deep copy to avoid concurrency issues in parallel computation
             doc_var_copy = deepcopy(_doc_var)
             report_metadata = deepcopy(_report_metadata)
-            current_frag_context = _fragment_compiler.compile(self.source_file_map[fragment_name], doc_var_copy,
+            if self.source_file_map.get(fragment_name):
+                current_frag_context = _fragment_compiler.compile(self.source_file_map[fragment_name], doc_var_copy,
                                                               report_metadata)
+            else:
+                current_frag_context = {}
             if not isinstance(current_frag_context, dict):
                 current_frag_context = {'data': current_frag_context}
             return current_frag_context, fragment_path
@@ -284,7 +288,7 @@ class ReportCompiler:
                  for node in PreOrderIter(self.template_tree.node)
                  ]
             output_doc = self.render_template(doc_var, context)
-            self.postprocess(self.report.path, output_doc, doc_var, context)
+            self.postprocess(output_doc, doc_var, context)
             logger.info('[{}] Document generated'.format(report_metadata['doc_suffix']))
             return output_doc
         return func
@@ -308,7 +312,7 @@ class ReportCompiler:
         logger.debug('[{}] Rendering template ({})...'.format(context['meta']['doc_suffix'], renderer.__class__.__name__))
         return renderer.render_template(os.path.join(self.report.path,'templates'), self.report.main_template, doc_var, context)
 
-    def postprocess(self, path, doc, doc_var, context):
+    def postprocess(self, doc, doc_var, context):
         try:
             postprocessors_info = context['meta']['postprocessor']
             if not isinstance(postprocessors_info, list):
@@ -320,7 +324,7 @@ class ReportCompiler:
             postprocessor = PostProcessor.get(id=postprocessor_info)
             logger = logging.getLogger(context['meta']['logger'])
             logger.debug('[{}] Postprocessing ({})...'.format(context['meta']['doc_suffix'], postprocessor.__class__.__name__))
-            postprocessor.postprocess(doc_var, doc, path, postprocessor_info, context)
+            postprocessor.postprocess(doc_var, doc, postprocessor_info, context)
 
     def _update_nested_dict(self, doc_context, fragment, frag_context):
         head, tail = os.path.split(fragment)
@@ -460,10 +464,10 @@ class FragmentCompiler:
 
 if __name__ == '__main__':
     try:
-        report = Report('C:\\Users\\47873315B\\Dropbox\\ICO\\ReportCompiler\\reports\\FactSheetTest')
+        # report = Report('C:\\Users\\47873315B\\Dropbox\\ICO\\ReportCompiler\\reports\\FactSheetTest')
+        report = Report('C:\\Users\\47873315B\\Dropbox\\ICO\\ReportCompiler\\reports\\TestRMarkdown')
         # report = Report(repo_url='http://icosrvprec02/gitlab/informationcenter/report_factsheet-test.git')
-        # report.generate([{'iso': iso} for iso in ['AUS', 'CHN', 'USA', 'FRA', 'DEU', 'ITA', 'JPN', 'SWE', 'EGY', 'MEX', 'IDN', 'IND']], n_doc_workers=12, n_frag_workers=5)
-        report.generate([{'iso': iso} for iso in ['AUS', 'AUS']], n_doc_workers=12, n_frag_workers=5)
+        report.generate([{'iso': iso} for iso in ['ESP',]], n_doc_workers=3, n_frag_workers=2)
         print('All documents generated successfully!')
     except FragmentGenerationError as e:
         print(e)
