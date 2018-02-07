@@ -1,5 +1,5 @@
 import os
-from subprocess import run, PIPE, DEVNULL, CalledProcessError
+from subprocess import run, PIPE, CalledProcessError
 from reportcompiler.plugins.postprocessors.postprocessors import PostProcessor
 
 
@@ -17,7 +17,11 @@ class PdflatexPostProcessor(PostProcessor):
         try:
             with open(tex_file, 'w') as f:
                 f.write(doc)
-            command = 'pdflatex -interaction=nonstopmode -halt-on-error {} -aux-directory={} -output-directory={}'.format(tex_file, tmp_path, out_path)
+            command = 'pdflatex -interaction=nonstopmode ' \
+                      '-halt-on-error ' \
+                      '{} ' \
+                      '-aux-directory={} ' \
+                      '-output-directory={}'.format(tex_file, tmp_path, out_path)
             run(command, shell=True, check=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         except CalledProcessError as e:
             PostProcessor.raise_postprocessor_exception(e, context, message=e.stdout)

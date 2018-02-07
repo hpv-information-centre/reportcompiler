@@ -23,7 +23,7 @@ class JinjaRenderer(TemplateRenderer):
             # TODO: render vs generate
             rendered_template = environment.get_template(context['meta']['main_template']).render(context)
 
-            shutil.rmtree(template_tmp_dir)
+            shutil.rmtree(template_tmp_dir, ignore_errors=True)
 
             return rendered_template
         except UndefinedError as e:
@@ -90,7 +90,7 @@ class JinjaLatexRenderer(JinjaRenderer):
         jinja_env.autoescape = False
 
     def included_templates(self, content):
-        templates = re.findall(pattern='BLOCK', string=content)
+        templates = re.findall(pattern='.*BLOCK.*', string=content)
         templates = [t for t in templates if len(re.findall(pattern='^[ ]*%#', string=t)) == 0]
         templates = [re.findall(pattern='\\BLOCK\{[ ]*include[ ]*[\'"](.*?)[\'"][ ]*\}',
                                         string=t) for t in templates]

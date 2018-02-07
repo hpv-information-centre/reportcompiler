@@ -19,10 +19,15 @@ class RMetadataRetriever(FragmentMetadataRetriever):
         r_code = r_code.format(metadata['fragment_path'].replace('\\', '\\\\'),
                                json.dumps(doc_var),
                                json.dumps(metadata))
+        output = None
         try:
             # TODO: Check for Rscript first
             command = 'Rscript --vanilla -e "{}"'.format(r_code)
             output = run(command, shell=True, check=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         except CalledProcessError as e:
-            FragmentMetadataRetriever.raise_retriever_exception(metadata['fragment_path'], e, metadata, message=e.stderr)
+            FragmentMetadataRetriever.raise_retriever_exception(
+                metadata['fragment_path'],
+                e,
+                metadata,
+                message=e.stderr)
         return json.loads(output.stdout)

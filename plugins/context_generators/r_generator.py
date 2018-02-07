@@ -18,7 +18,7 @@ class RContextGenerator(FragmentContextGenerator):
                                metadata['docvar_file'].replace('\\', '\\\\'),
                                metadata['data_file'].replace('\\', '\\\\'),
                                metadata['metadata_file'].replace('\\', '\\\\'))
-
+        output = None
         try:
             command = 'Rscript --vanilla -e "{}"'.format(r_code.replace('"', '\\"'))
             output = run(command, shell=True, check=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)

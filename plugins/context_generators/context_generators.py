@@ -18,7 +18,9 @@ class FragmentContextGenerator(PluginModule):
                                               doc_suffix + '_' + metadata['fragment_name'])
 
         if isinstance(data, dict):
-            json_data = "{" + ", ".join(['"' + key + '": ' + df.to_json(orient='records') for key, df in data.items()]) + "}"
+            json_data = "{" + \
+                        ", ".join(['"' + key + '": ' + df.to_json(orient='records') for key, df in data.items()]) + \
+                        "}"
         else:
             json_data = data.to_json(orient='records')
 
@@ -34,32 +36,38 @@ class FragmentContextGenerator(PluginModule):
                 with open(fragment_hash_basename + '.hash', 'r') as prev_hash_file:
                     previous_hash = prev_hash_file.read()
             except FileNotFoundError:
-                previous_hash = '' # Invalid hash, will not match
+                previous_hash = ''  # Invalid hash, will not match
 
             hash_components = [code_hash, docvar_hash, data_hash, metadata_hash]
             hash_component_names = ['code_hash', 'docvar_hash', 'data_hash', 'metadata_hash']
-            hash = '\n'.join(hash_components)
-            if hash == previous_hash and os.path.exists(fragment_hash_basename + '.ctx'):
+            current_hash = '\n'.join(hash_components)
+            if current_hash == previous_hash and os.path.exists(fragment_hash_basename + '.ctx'):
                 try:
                     with open(fragment_hash_basename + '.ctx') as f:
                         context = json.load(f)
                         return context
                 except FileNotFoundError:
-                    pass # No previous hash available, we run the code
+                    pass  # No previous hash available, we run the code
             else:
                 if previous_hash == '':
-                    logger.warning("[{}] {}: No previous context found, generating...".format(metadata['doc_suffix'], metadata['fragment_name']))
+                    logger.warning("[{}] {}: No previous context found, generating...".format(
+                        metadata['doc_suffix'],
+                        metadata['fragment_name']))
                 else:
-                    hash_list = hash.split('\n')
+                    hash_list = current_hash.split('\n')
                     prev_hash_list = previous_hash.split('\n')
                     hash_differences = [hash_list[i] != prev_hash_list[i] for i in range(len(hash_list))]
                     hash_differences = zip(hash_component_names, hash_differences)
                     hash_differences = [component for component, is_different in hash_differences if is_different]
                     hash_differences_str = ', '.join(hash_differences)
                     if len(hash_differences) > 0:
-                        logger.warning("[{}] {}: {} differ, generating context...".format(metadata['doc_suffix'], metadata['fragment_name'], hash_differences_str))
+                        logger.warning("[{}] {}: {} differ, generating context...".format(metadata['doc_suffix'],
+                                                                                          metadata['fragment_name'],
+                                                                                          hash_differences_str))
                     elif not os.path.exists(fragment_hash_basename + '.ctx'):
-                        logger.info("[{}] {}: Output data not available, generating context...".format(metadata['doc_suffix'], metadata['fragment_name']))
+                        logger.info("[{}] {}: Output data not available, generating context...".format(
+                            metadata['doc_suffix'],
+                            metadata['fragment_name']))
                     else:
                         self.raise_generator_exception(metadata['fragment_path'],
                                                        None,
@@ -69,7 +77,7 @@ class FragmentContextGenerator(PluginModule):
                                                            metadata['fragment_name']))
 
             with open(fragment_hash_basename + '.hash', 'w') as hash_file:
-                hash_file.write(hash)
+                hash_file.write(current_hash)
 
         with open(fragment_tmp_basename + '.docvar', 'w') as docvar_file:
             docvar_file.write(json.dumps(doc_var))
@@ -83,7 +91,9 @@ class FragmentContextGenerator(PluginModule):
             metadata_file.write(json.dumps(metadata))
             metadata['metadata_file'] = fragment_tmp_basename + '.metadata'
 
-        logger.debug('[{}] {}: Generating context ({})...'.format(metadata['doc_suffix'], metadata['fragment_name'], self.__class__.__name__))
+        logger.debug('[{}] {}: Generating context ({})...'.format(metadata['doc_suffix'],
+                                                                  metadata['fragment_name'],
+                                                                  self.__class__.__name__))
         context = self.generate_context(doc_var, data, metadata)
 
         with open(fragment_hash_basename + '.ctx', 'w') as output_file:
@@ -100,15 +110,13 @@ class FragmentContextGenerator(PluginModule):
         return context
 
     @abstractmethod
-    def generate_context(self, source_path, doc_var, data, metadata):
+    def generate_context(self, doc_var, data, metadata):
         raise NotImplementedError('Context generation not implemented for {}'.format(self.__class__))
 
     @classmethod
     def raise_generator_exception(cls, filename, exception, context, message=None):
         exception_info = message if message else str(exception)
         full_msg = '{}: Context generation error:\n{}'.format(filename, exception_info)
-        # logger = logging.getLogger(context['logger'])
-        # logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
         err = ContextGenerationError(full_msg)
         if exception:
             err.with_traceback(exception.__traceback__)
@@ -123,4 +131,5 @@ class FragmentContextGenerator(PluginModule):
         try:
             return extension_dict[extension]
         except KeyError:
-            raise NotImplementedError('No {} specified and no default is available for extension {}'.format(cls, extension))
+            raise NotImplementedError('No {} specified and no default is available for extension {}'.format(cls,
+                                                                                                            extension))

@@ -10,6 +10,7 @@ class PythonContextGenerator(FragmentContextGenerator):
         filename, file_extension = os.path.splitext(metadata['fragment_path'])
         basename = os.path.basename(filename)
         fragment_module = importlib.import_module(basename)
+        context = None
         try:
             context = fragment_module.generate_context(doc_var, data, metadata)
         except Exception as e:

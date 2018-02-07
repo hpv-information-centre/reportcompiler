@@ -30,4 +30,5 @@ class FragmentMetadataRetriever(PluginModule):
         try:
             return extension_dict[extension]
         except KeyError:
-            raise NotImplementedError('No {} specified and no default is available for extension {}'.format(cls, extension))
+            raise NotImplementedError('No {} specified and no default is available for extension {}'.format(cls,
+                                                                                                            extension))

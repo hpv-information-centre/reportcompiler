@@ -20,8 +20,11 @@ class ExcelFetcher(FragmentDataFetcher):
                 par = fetcher_info[param['name']]
             except KeyError:
                 if isinstance(param['default_value'], ValueError):
-                    raise FragmentDataFetcher.raise_data_fetching_exception(metadata['fragment_path'], None, metadata,
-                                                                     message='Parameter {} is missing'.format(param['name']))
+                    raise FragmentDataFetcher.raise_data_fetching_exception(metadata['fragment_path'],
+                                                                            None,
+                                                                            metadata,
+                                                                            message='Parameter {} is missing'.format(
+                                                                                param['name']))
                 else:
                     par = param['default_value']
             arguments[param['name']] = par
