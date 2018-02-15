@@ -50,26 +50,46 @@ class Report:
             config = json.loads(jsmin(config_data.read()))
         self.name = name
         self.path = directory
-        self.config = config
+        self.metadata = OrderedDict(config)
+        self.metadata['report_path'] = self.path
 
-        # source = set([os.path.splitext(s)[0] for s in self.source_code])
-        # templates = set([os.path.splitext(t)[0] for t in self.templates])
-        # dangling_sources = source.difference(templates)
-        # dangling_sources = dangling_sources.difference([s for s in dangling_sources if s.startswith('__')])
-        # if len(dangling_sources) > 0:
-        # 	print("Warning: some source files don't have corresponding templates: {}".format(
-        #         ', '.join(dangling_sources)))
-        # dangling_templates = templates.difference(source)
-        # if len(dangling_templates) > 0:
-        # 	print("Warning: some templates don't have corresponding source files: {}".format(
-        #         ', '.join(dangling_templates)))
+        self.allowed_values = self.fetch_allowed_var_values(doc_var={})
 
-        if not os.path.exists('{}/templates/{}'.format(self.path, self.config['main_template'])):
+        if not os.path.exists('{}/templates/{}'.format(self.path, self.metadata['main_template'])):
             raise FileNotFoundError("Main template defined in config.ini ({}) doesn't exist".format(
-                self.config['main_template']))
+                self.metadata['main_template']))
 
     def __str__(self):
-        return self.config.get('verbose_name') or self.config['name']
+        return self.metadata.get('verbose_name') or self.metadata['name']
+
+    def fetch_allowed_var_values(self, doc_var):
+        """
+        Returns the allowed values for the document variables for the current report if specified in the configuration
+        file.
+        :param doc_var: Document variable to check, necessary when checking dependent variables
+        :return: Dictionary with possible values of the variables specified in the report configuration. Variables
+        dependent on others missing from doc_var are returned with value None.
+        """
+        allowed_values = None
+        doc_var_keys = doc_var.keys()
+        if self.metadata.get('allowed_docvar_values_fetcher') is not None:
+            doc_var_values_fetchers = self.metadata['allowed_docvar_values_fetcher']
+            if isinstance(doc_var_values_fetchers, dict):
+                doc_var_values_fetchers = [doc_var_values_fetchers]
+            allowed_values = {}
+
+            for fetcher_info in doc_var_values_fetchers:
+                if fetcher_info.get('dependencies') and \
+                        not set(fetcher_info['dependencies']).issubset(set(doc_var_keys)):
+                    allowed_values[fetcher_info['name']] = []
+                    continue
+                fetcher = FragmentDataFetcher.get(id=fetcher_info)
+                dt = fetcher.fetch(doc_var, fetcher_info, self.metadata)
+                for col in dt.columns:
+                    if allowed_values.get(col) is None:
+                        allowed_values[col] = []
+                    allowed_values[col].extend(list(dt[col]))
+        return allowed_values
 
     @property
     def main_template(self):
@@ -77,7 +97,7 @@ class Report:
         Returns the main template filename
         :return: main template filename
         """
-        return self.config['main_template']
+        return self.metadata['main_template']
 
     def generate(self, doc_vars=None, n_doc_workers=2, n_frag_workers=2, debug_level=logging.DEBUG):
         """
@@ -91,41 +111,75 @@ class Report:
             doc_vars = {}
         if not isinstance(doc_vars, list):
             doc_vars = [doc_vars]
-        doc_vars = self._cleanup_doc_vars(doc_vars)
 
-        report_metadata = OrderedDict(self.config)
-        report_metadata['report_path'] = self.path
+        doc_vars = self._clean_and_validate_doc_vars(doc_vars)
+
         compiler = ReportCompiler(self)
-        compiler.generate(doc_vars, report_metadata, n_doc_workers=n_doc_workers,
+        compiler.generate(doc_vars, self.metadata, n_doc_workers=n_doc_workers,
                           n_frag_workers=n_frag_workers, debug_level=debug_level)
 
-    def _cleanup_doc_vars(self, doc_vars):
+    def _clean_and_validate_doc_vars(self, doc_vars):
         """
         Validation and cleaning of input document variable list
         :param doc_vars: Input document variable list
         :return: Cleaned up document variable list
         """
-        # TODO: Further validation (e.g. limit values, like ISOs, ...)
-        mandatory_vars = self.config.get('mandatory_doc_vars')
+        Report._check_and_clean_duplicate_variables(doc_vars)
+
+        for doc_var in doc_vars:
+            self._check_mandatory_variables(doc_var)
+            self._check_allowed_values(doc_var)
+
+        return doc_vars
+
+    @staticmethod
+    def _check_and_clean_duplicate_variables(doc_vars):
+        for doc_var in doc_vars:
+            num_occurrences = doc_vars.count(doc_var)
+            if num_occurrences > 1:
+                doc_vars.remove(doc_var)
+                logging.warning('{} appears more than once, duplicates will be ignored...'.format(doc_var))
+
+    def _check_mandatory_variables(self, doc_var):
+        mandatory_vars = self.metadata.get('mandatory_doc_vars')
         if mandatory_vars is None:
             mandatory_vars = []
         mandatory_vars = set(mandatory_vars)
 
-        doc_vars_list = []
-        for item in doc_vars:
-            num_occurrences = doc_vars.count(item)
-            if num_occurrences > 1 and item not in doc_vars_list:
-                doc_vars.remove(item)
-                logging.warning('{} appears more than once, duplicates will be ignored...'.format(item))
+        current_var_keys = set(doc_var.keys())
+        if not mandatory_vars.issubset(current_var_keys):
+            missing_vars = mandatory_vars - current_var_keys
+            raise ValueError('Some mandatory document variables were not specified: {}'.format(
+                ', '.join(missing_vars)))
 
-        for doc_var in doc_vars:
-            current_var_keys = set(doc_var.keys())
-            if not mandatory_vars.issubset(current_var_keys):
-                missing_vars = mandatory_vars - current_var_keys
-                raise ValueError('Some mandatory document variables were not specified: {}\nVariables set: {}'.format(
-                    ', '.join(missing_vars), doc_var))
+    def _check_allowed_values(self, doc_var):
+        allowed_values = self.fetch_allowed_var_values(doc_var)
+        if allowed_values is not None:
+            allowed_values_msg = ' Allowed values for variable "{}" are {}'
+            dependent_allowed_values_msg = ' Variable "{}" allowed values depend on "{}"'
+            # Missing mandatory variables not appearing in the allowed_values dictionary are dependent
+            # on other variables
+            dependent_missing_vars = [var for var, values in allowed_values.items() if values == []]
+            allowed_values = {var: values
+                              for var, values in allowed_values.items()
+                              if var not in dependent_missing_vars or var in doc_var.keys()}
 
-        return doc_vars
+            # TODO: Refactor
+            error_msgs = [
+                        allowed_values_msg.format(var, ', '.join(allowed_values[var]))
+                        if var not in dependent_missing_vars
+                        else dependent_allowed_values_msg.format(var, ', '.join(
+                                    [
+                                        fetcher['dependencies']
+                                        for fetcher in self.metadata['allowed_docvar_values_fetcher']
+                                        if fetcher['name'] == var
+                                    ][0]))
+                        for var, values in allowed_values.items()
+                        if doc_var.get(var) is not None and doc_var[var] not in values]
+
+            if len(error_msgs) > 0:
+                allowed_values_msg = '\n'.join(error_msgs)
+                raise ValueError('Some document variables have invalid values.\n{}'.format(allowed_values_msg))
 
 
 class ReportCompiler:
@@ -372,7 +426,7 @@ class ReportCompiler:
         :return: List of child templates included in content
         """
         try:
-            renderer = TemplateRenderer.get(id=self.report.config['template_renderer'])
+            renderer = TemplateRenderer.get(id=self.report.metadata['template_renderer'])
         except KeyError:
             renderer = TemplateRenderer.get()  # Default renderer
 
@@ -615,7 +669,8 @@ if __name__ == '__main__':
         # report = Report('C:\\Users\\47873315B\\Dropbox\\ICO\\ReportCompiler\\reports\\TestRMarkdown')
         # report = Report(repo_url='http://icosrvprec02/gitlab/informationcenter/report_factsheet-test.git',
         #                 repo_path='I:/d_gomez/reports')
-        report.generate([{'iso': iso} for iso in ['ESP', ]], n_doc_workers=3, n_frag_workers=2)
+        # report.generate([{'iso': iso} for iso in ['ESP', ]], n_doc_workers=3, n_frag_workers=2)
+        report.generate({'iso': 'ESP'})
         print('All documents generated successfully!')
     except FragmentGenerationError as e:
         print(e)
