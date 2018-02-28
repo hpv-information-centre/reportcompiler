@@ -76,7 +76,7 @@ class ReportCompiler:
                                 directory)
 
         metadata['doc_suffix'] = ReportCompiler.get_doc_var_suffix(doc_var)
-        dirs = ['fig', 'hash', 'log', 'tmp', 'out']
+        dirs = ['fig', 'hash', 'data', 'log', 'tmp', 'out']
         for d in dirs:
             metadata['{}_path'.format(d)] = _build_subpath(d)
             if not os.path.exists(metadata['{}_path'.format(d)]):
@@ -520,6 +520,8 @@ class FragmentCompiler:
         """
         fragment_path = metadata.get('fragment_path')
         if fragment_path is None:
+            # If it's None, we are fetching data for the report itself
+            # (e.g. allowed doc_vars)
             fragment_path = fetcher_key
 
         doc_suffix = metadata.get('doc_suffix')
@@ -543,7 +545,7 @@ class FragmentCompiler:
                                                   message))
                 raise NotImplementedError(message)
             else:
-                # Fetchers optional for other
+                # Fetchers optional for other cases
                 if logger:
                     logger.warning('[{}] {}'.format(metadata['doc_suffix'],
                                                     message))

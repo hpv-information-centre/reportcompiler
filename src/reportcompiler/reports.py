@@ -20,7 +20,11 @@ from reportcompiler.reportcompilers import ReportCompiler
 
 class Report:
     """Represents a report with its file structure and configuration."""
-    def __init__(self, directory=None, repo_url=None, repo_path=None):
+    def __init__(self,
+                 directory=None,
+                 repo_url=None,
+                 repo_branch='master',
+                 repo_path=None):
         if directory is None and repo_url is None:
             raise ValueError("'directory' or 'repo' must be specified")
         if repo_url:
@@ -36,13 +40,17 @@ class Report:
             except InvalidGitRepositoryError:
                 repo = git.Repo.init(repo_path)
                 repo.create_remote('origin', repo_url)
-                repo.remotes.origin.pull('master')
+                repo.remotes.origin.pull(repo_branch)
             directory = repo_path
         name = os.path.basename(directory)
+        if not os.path.exists(directory):
+            raise FileNotFoundError(
+                "Directory '{}' doesn't exist".format(directory))
+
         config_file = '{}/config.json'.format(directory)
         if not os.path.exists(config_file):
             raise FileNotFoundError(
-                "Report doesn't exist or has no configuration file"
+                "Report {} has no configuration file".format(name) +
                 " (config.json)")
 
         with open(config_file) as config_data:
@@ -74,28 +82,6 @@ class Report:
         the report configuration. Variables dependent on others missing from
         doc_var are returned with value None.
         """
-        # allowed_values = None
-        # doc_var_keys = doc_var.keys()
-        # if self.metadata.get('allowed_docvar_values_fetcher') is not None:
-        #     doc_var_values_fetchers = self.metadata[
-        #                                 'allowed_docvar_values_fetcher']
-        #     if isinstance(doc_var_values_fetchers, dict):
-        #         doc_var_values_fetchers = [doc_var_values_fetchers]
-        #     allowed_values = {}
-
-        #     for fetcher_info in doc_var_values_fetchers:
-        #         if (fetcher_info.get('dependencies') and
-        #                 not set(fetcher_info['dependencies']).issubset(
-        #                         set(doc_var_keys))):
-        #             allowed_values[fetcher_info['name']] = []
-        #             continue
-        #         fetcher = FragmentDataFetcher.get(id=fetcher_info)
-        #         dt = fetcher.fetch(doc_var, fetcher_info, self.metadata)
-        #         for col in dt.columns:
-        #             if allowed_values.get(col) is None:
-        #                 allowed_values[col] = []
-        #             allowed_values[col].extend(list(dt[col]))
-        # return allowed_values
         try:
             dt = ReportCompiler.fetch_info(doc_var, self.metadata)
         except NotImplementedError:
