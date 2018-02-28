@@ -44,4 +44,8 @@ class FragmentDataFetcher(PluginModule):
             err.with_traceback(exception.__traceback__)
         raise err from None
 
+    @classmethod
+    def _get_default_handler(cls, **kwargs):
+        return FragmentDataFetcher.get('constant')
+
 __all__ = ['FragmentDataFetcher', ]

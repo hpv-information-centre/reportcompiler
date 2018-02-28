@@ -32,11 +32,11 @@ class ExcelFetcher(FragmentDataFetcher):
                     par = param['default_value']
             arguments[param['name']] = par
 
-        if not os.path.isabs(arguments['file']):
-            arguments['file'] = os.path.join(metadata['data_path'],
-                                             arguments['file'])
+        filename = os.path.basename(arguments['file'])
+        file_path = os.path.join(metadata['data_path'],
+                                 filename)
 
-        df = pd.read_excel(io=arguments['file'],
+        df = pd.read_excel(io=file_path,
                            sheet_name=arguments['sheet_name'],
                            usecols=arguments['columns'],
                            na_values=arguments['na_values'])
