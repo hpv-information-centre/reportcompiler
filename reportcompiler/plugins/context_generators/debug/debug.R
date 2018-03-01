@@ -17,11 +17,11 @@ debug.fragment <- function(doc.var, fragment.name, reportcompiler.engine.path, r
 }
 
 base.path <-  'C:/Users/47873315b/Dropbox/ICO/ReportCompiler/reportcompiler'
-report.path <- 'C:/Users/47873315b/Dropbox/ICO/ReportCompiler/reports'
+report.path <- 'C:/Users/47873315b/Dropbox/ICO/ReportCompiler/sample_reports'
 
-doc.var <- list(iso='IDN')
-fragment <- 'ten_most_frequent'
-report_dir <- 'FactSheetTest'
+doc.var <- list(artist_name='Gerald Moore')
+fragment <- 'introduction'
+report_dir <- 'TestPDFlatex'
 
 debug.fragment( doc.var,
                 fragment,
