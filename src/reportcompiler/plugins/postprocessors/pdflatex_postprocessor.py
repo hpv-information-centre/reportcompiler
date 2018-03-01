@@ -22,11 +22,11 @@ class PdflatexPostProcessor(PostProcessor):
                 f.write(doc)
             command = 'pdflatex -interaction=nonstopmode ' \
                       '-halt-on-error ' \
-                      '{} ' \
-                      '-aux-directory={} ' \
-                      '-output-directory={}'.format(tex_file,
-                                                    tmp_path,
-                                                    out_path)
+                      '"{}" ' \
+                      '-aux-directory="{}" ' \
+                      '-output-directory="{}"'.format(tex_file,
+                                                      tmp_path,
+                                                      out_path)
             run(command,
                 shell=True,
                 check=True,
