@@ -21,12 +21,20 @@ from reportcompiler.reportcompilers import ReportCompiler
 class Report:
     """Represents a report with its file structure and configuration."""
     def __init__(self,
-                 directory=None,
+                 dir_path=None,
                  repo_url=None,
                  repo_branch='master',
-                 repo_path=None):
-        if directory is None and repo_url is None:
-            raise ValueError("'directory' or 'repo' must be specified")
+                 repo_path=None,
+                 create=False):
+        if create:
+            if repo_url or repo_path:
+                raise ValueError(
+                    "Repository info can't be specified on "
+                    "new report directory creation")
+            self._create_report_specification(dir_path)
+
+        if dir_path is None and repo_url is None:
+            raise ValueError("'dir_path' or 'repo' must be specified")
         if repo_url:
             if repo_path is None:
                 raise ValueError(
@@ -41,13 +49,13 @@ class Report:
                 repo = git.Repo.init(repo_path)
                 repo.create_remote('origin', repo_url)
                 repo.remotes.origin.pull(repo_branch)
-            directory = repo_path
-        name = os.path.basename(directory)
-        if not os.path.exists(directory):
+            dir_path = repo_path
+        name = os.path.basename(dir_path)
+        if not os.path.exists(dir_path):
             raise FileNotFoundError(
-                "Directory '{}' doesn't exist".format(directory))
+                "Directory '{}' doesn't exist".format(dir_path))
 
-        config_file = '{}/config.json'.format(directory)
+        config_file = '{}/config.json'.format(dir_path)
         if not os.path.exists(config_file):
             raise FileNotFoundError(
                 "Report {} has no configuration file".format(name) +
@@ -56,7 +64,7 @@ class Report:
         with open(config_file) as config_data:
             config = json.loads(jsmin(config_data.read()))
         self.name = name
-        self.path = directory
+        self.path = dir_path
         self.metadata = OrderedDict(config)
         self.metadata['report_path'] = self.path
 
@@ -71,6 +79,57 @@ class Report:
 
     def __str__(self):
         return self.metadata.get('verbose_name') or self.metadata['name']
+
+    def _create_report_specification(self, new_report_path):
+        """
+        Creates a new report specification.
+        :param str new_report_path: Full path of the new report specification.
+            The parent path must exist, and the last directory will be created
+        """
+        if not os.path.exists(os.path.join(new_report_path, os.path.pardir)):
+            raise EnvironmentError(
+                "Parent path for new report doesn't exist"
+            )
+        if os.path.exists(new_report_path):
+            # Report directory already exists, assume report specification
+            # exists
+            return
+
+        os.mkdir(new_report_path)
+        dirs = ['src', 'templates']
+        for d in dirs:
+            os.mkdir(os.path.join(new_report_path, d))
+        config_content = """
+        {
+            /* Mandatory settings */
+            "name": "new_report",
+            "verbose_name": "New report",
+            "main_template": "report.tex",
+
+            /* Optional settings */
+            "mandatory_doc_vars": [],
+
+            /* Workflow settings */
+            "template_renderer": "jinja-latex",
+            "postprocessor": "pdflatex"
+        }
+        """
+        with open(os.path.join(new_report_path, 'config.json'), 'w') \
+                as config_file:
+            config_file.write(config_content)
+
+        main_template_content = r"""
+        \documentclass[11pt]{article}
+
+        \begin{document}
+        This is a sample document. You can customize this report by editing
+        the templates and source files along with the configuration file.
+        \end{document}
+        """
+        with open(os.path.join(new_report_path,
+                               'templates',
+                               'report.tex'), 'w') as main_template_file:
+            main_template_file.write(main_template_content)
 
     def fetch_allowed_var_values(self, doc_var):
         """
