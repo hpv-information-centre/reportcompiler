@@ -9,6 +9,7 @@ from threading import Lock
 from pymysql.err import OperationalError
 from reportcompiler.plugins.data_fetchers.data_fetchers \
     import FragmentDataFetcher
+# TODO: Design better JSON interface to build SQL queries
 
 
 class MySQLFetcher(FragmentDataFetcher):

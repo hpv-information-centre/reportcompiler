@@ -223,6 +223,7 @@ class ReportCompiler:
             fragment_path = _fragment.path
             fragment_path = '/'.join([elem.name for elem in fragment_path])
             # Deep copy to avoid concurrency issues in parallel computation
+            # TODO: Try to avoid copies
             doc_var_copy = deepcopy(_doc_var)
             report_metadata = deepcopy(_report_metadata)
             if self.source_file_map.get(fragment_name):
