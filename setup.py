@@ -10,7 +10,7 @@ os.chdir(
 
 setup(
     name='report-compiler',
-    version='0.1',
+    version='0.2',
     packages=find_packages('src'),
     include_package_data=True,
     package_dir={'': 'src'},
