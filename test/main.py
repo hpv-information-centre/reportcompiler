@@ -8,7 +8,7 @@ report_path = os.path.join(
                 os.path.realpath(
                     os.path.join(__file__, '..', '..')),
                 'sample_reports',
-                'FactSheetTest'
+                'TestPDFlatex'  # 'FactSheetTest'
                 )
 report = Report(report_path)
 # report = Report(
@@ -16,7 +16,10 @@ report = Report(report_path)
 #                    'informationcenter/report_factsheet-test.git',
 #           repo_path='I:/d_gomez/reports')
 try:
-    report.generate([{'iso': iso} for iso in ['ESP', 'FRA', ]],
+    # report.generate([{'iso': iso} for iso in ['ESP', 'FRA', ]],
+    #                 n_doc_workers=1,
+    #                 n_frag_workers=1)
+    report.generate({'artist_name': 'Amy Winehouse'},
                     n_doc_workers=1,
                     n_frag_workers=1)
     print('All documents generated successfully!')
