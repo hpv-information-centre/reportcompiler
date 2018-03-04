@@ -24,21 +24,26 @@ class FragmentDataFetcher(PluginModule):
             'Data fetching not implemented for {}'.format(self.__class__))
 
     @classmethod
-    def raise_data_fetching_exception(cls, filename, exception, context,
+    def raise_data_fetching_exception(cls, context, exception=None,
                                       message=None):
         """
         Returns a data fetching exception with the necessary info attached.
 
-        :param str filename: Fragment filename
-        :param Exception exception: Exception returned by data fetching
         :param dict context: Context for fragment
+        :param Exception exception: Exception returned by data fetching
         :param str message: Optional message for exception
+        :raises DataFetchingError: always
         """
         exception_info = message if message else str(exception)
-        full_msg = '{}: Data fetching error:\n\n{}'.format(filename,
+        if context.get('fragment_path'):
+            location = context['fragment_path']
+        else:
+            location = 'config.json'
+        full_msg = '{}: Data fetching error:\n\n{}'.format(location,
                                                            exception_info)
-        logger = logging.getLogger(context['logger'])
-        logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
+        if context.get('logger'):
+            logger = logging.getLogger(context['logger'])
+            logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
         err = DataFetchingError(full_msg)
         if exception:
             err.with_traceback(exception.__traceback__)

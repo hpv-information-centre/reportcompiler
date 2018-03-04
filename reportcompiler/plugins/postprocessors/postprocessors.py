@@ -23,19 +23,24 @@ class PostProcessor(PluginModule):
             'Postprocessing not implemented for {}'.format(self.__class__))
 
     @classmethod
-    def raise_postprocessor_exception(cls, exception, context, message=None):
+    def raise_postprocessor_exception(cls,
+                                      context,
+                                      exception=None,
+                                      message=None):
         """
         Returns a postprocessing exception with the necessary info attached.
 
-        :param str filename: Fragment filename
-        :param Exception exception: Exception returned by metadata retrieval
         :param dict context: Context for fragment
+        :param Exception exception: Exception returned by metadata retrieval
         :param str message: Optional message for exception
+        :raises PostProcessorError: always
         """
         exception_info = message if message else str(exception)
         full_msg = 'Postprocessing error:\n\n{}'.format(exception_info)
-        logger = logging.getLogger(context['meta']['logger'])
-        logger.error('[{}] {}'.format(context['meta']['doc_suffix'], full_msg))
+        if context['meta'].get('logger'):
+            logger = logging.getLogger(context['meta']['logger'])
+            logger.error('[{}] {}'.format(context['meta']['doc_suffix'],
+                                          full_msg))
         err = PostProcessorError(full_msg)
         if exception:
             err.with_traceback(exception.__traceback__)

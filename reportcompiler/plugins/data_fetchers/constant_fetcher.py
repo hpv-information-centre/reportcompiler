@@ -12,8 +12,6 @@ class ConstantFetcher(FragmentDataFetcher):
             values = fetcher_info['values']
             if not isinstance(values, list):
                 raise FragmentDataFetcher.raise_data_fetching_exception(
-                    metadata['fragment_path'],
-                    None,
                     metadata,
                     message="Constant fetcher values not a list.")
 
@@ -24,8 +22,6 @@ class ConstantFetcher(FragmentDataFetcher):
             # 'values' key might mean that the user forgot the 'type'
             # key for a different fetcher.
             raise FragmentDataFetcher.raise_data_fetching_exception(
-                metadata['fragment_path'],
-                None,
                 metadata,
                 message="The 'type' or 'values' keys are not set.")
 

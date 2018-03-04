@@ -16,7 +16,7 @@ class PythonMetadataRetriever(FragmentMetadataRetriever):
             fragment_module = importlib.import_module(module_name)
         except Exception as e:
             FragmentMetadataRetriever.raise_retriever_exception(
-                metadata['fragment_path'], e, metadata)
+                metadata, exception=e)
 
         module_vars = {var: fragment_module.__dict__[var]
                        for var in dir(fragment_module)

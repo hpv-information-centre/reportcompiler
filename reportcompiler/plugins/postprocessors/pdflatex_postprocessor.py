@@ -35,8 +35,8 @@ class PdflatexPostProcessor(PostProcessor):
                 universal_newlines=True)
         except CalledProcessError as e:
             PostProcessor.raise_postprocessor_exception(
-                            e,
                             context,
+                            exception=e,
                             message=e.stdout)
 
 __all__ = ['PdflatexPostProcessor', ]

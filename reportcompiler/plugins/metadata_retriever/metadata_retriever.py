@@ -22,23 +22,28 @@ class FragmentMetadataRetriever(PluginModule):
             'Metadata retrieval not implemented for {}'.format(self.__class__))
 
     @classmethod
-    def raise_retriever_exception(cls, filename, exception, context,
+    def raise_retriever_exception(cls, context, exception=None,
                                   message=None):
         """
         Returns a metadata retrieval exception with the necessary info
         attached.
 
-        :param str filename: Fragment filename
-        :param Exception exception: Exception returned by metadata retrieval
         :param dict context: Context for fragment
+        :param Exception exception: Exception returned by metadata retrieval
         :param str message: Optional message for exception
-        :raises MetadataRetrievalError: on retrieval error
+        :raises MetadataRetrievalError: always
         """
         exception_info = message if message else str(exception)
-        full_msg = '{}: Metadata retrieval error:\n\n{}'.format(filename,
-                                                                exception_info)
-        logger = logging.getLogger(context['logger'])
-        logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
+        if context.get('fragment_path'):
+            location = context['fragment_path']
+        else:
+            location = '<None>'
+        full_msg = '{}: Metadata retrieval error:\n\n{}'.format(
+                                                            location,
+                                                            exception_info)
+        if context.get('logger'):
+            logger = logging.getLogger(context['logger'])
+            logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
         err = MetadataRetrievalError(full_msg)
         if exception:
             err.with_traceback(exception.__traceback__)

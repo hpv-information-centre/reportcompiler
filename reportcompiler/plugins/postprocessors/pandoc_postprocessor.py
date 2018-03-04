@@ -43,13 +43,13 @@ class PandocPostprocessor(PostProcessor):
                     cwd=context['meta']['tmp_path'])
             except CalledProcessError as e:
                 PostProcessor.raise_postprocessor_exception(
-                                    e,
                                     context,
+                                    exception=e,
                                     message=e.stdout)
 
             return None
         except UndefinedError as e:
-            PostProcessor.raise_postprocessor_exception(e, context)
+            PostProcessor.raise_postprocessor_exception(context, exception=e)
 
     def _get_pandoc_args(self):
         return ' '.join(['--to latex', '--latex-engine pdflatex', ])

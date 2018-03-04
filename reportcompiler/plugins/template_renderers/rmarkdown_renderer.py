@@ -44,15 +44,15 @@ class RMarkdownRenderer(TemplateRenderer):
                     universal_newlines=True)
             except CalledProcessError as e:
                 TemplateRenderer.raise_rendering_exception(
-                                    e,
                                     context,
+                                    exception=e,
                                     message=e.stdout)
 
             shutil.rmtree(template_tmp_dir)
 
             return None
         except UndefinedError as e:
-            TemplateRenderer.raise_rendering_exception(e, context)
+            TemplateRenderer.raise_rendering_exception(context, exception=e)
 
     def _generate_temp_templates(self, doc_var, context):
         context_info = context['meta']['template_context_info']

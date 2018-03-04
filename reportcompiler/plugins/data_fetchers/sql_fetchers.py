@@ -42,16 +42,13 @@ class MySQLFetcher(FragmentDataFetcher):
             connection = MySQLFetcher.create_connection(credentials)
         except OperationalError as e:
             raise FragmentDataFetcher.raise_data_fetching_exception(
-                    metadata['fragment_path'],
-                    e,
-                    metadata)
+                    metadata,
+                    exception=e)
 
         try:
             sql_string = _build_sql_query(doc_var, fetcher_info, metadata)
         except KeyError:
             raise FragmentDataFetcher.raise_data_fetching_exception(
-                metadata['fragment_path'],
-                None,
                 metadata,
                 message='Table/column definition not defined for fragment')
 
@@ -80,8 +77,6 @@ class MySQLFetcher(FragmentDataFetcher):
                 credentials['db'] = fetcher_info['db']
             except KeyError:
                 raise FragmentDataFetcher.raise_data_fetching_exception(
-                    metadata['fragment_path'],
-                    None,
                     metadata,
                     message='MySQL credentials not specified in context')
         return credentials

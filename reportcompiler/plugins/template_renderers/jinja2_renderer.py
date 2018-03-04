@@ -35,7 +35,7 @@ class JinjaRenderer(TemplateRenderer):
 
             return rendered_template
         except UndefinedError as e:
-            TemplateRenderer.raise_rendering_exception(e, context)
+            TemplateRenderer.raise_rendering_exception(context, exception=e)
 
     def _generate_temp_templates(self, env, context):
         context_info = context['meta']['template_context_info']

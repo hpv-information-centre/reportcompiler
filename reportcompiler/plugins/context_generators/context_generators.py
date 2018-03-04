@@ -108,8 +108,6 @@ class FragmentContextGenerator(PluginModule):
                             ", generating context...")
                     else:
                         self.raise_generator_exception(
-                            metadata['fragment_path'],
-                            None,
                             metadata,
                             message="[{}] {}: Unexpected error".format(
                                 metadata['doc_suffix'],
@@ -168,21 +166,27 @@ class FragmentContextGenerator(PluginModule):
             'Context generation not implemented for {}'.format(self.__class__))
 
     @classmethod
-    def raise_generator_exception(cls, filename, exception, context,
+    def raise_generator_exception(cls, context, exception=None,
                                   message=None):
         """
         Returns a context generation exception with the necessary info
         attached.
 
-        :param str filename: Fragment filename
-        :param Exception exception: Exception returned by context generation
         :param dict context: Context for fragment
+        :param Exception exception: Exception returned by context generation
         :param str message: Optional message for exception
         :raises ContextGenerationError: always
         """
         exception_info = message if message else str(exception)
-        full_msg = '{}: Context generation error:\n{}'.format(filename,
+        if context.get('fragment_path'):
+            location = context['fragment_path']
+        else:
+            location = '<None>'
+        full_msg = '{}: Context generation error:\n{}'.format(location,
                                                               exception_info)
+        if context.get('logger'):
+            logger = logging.getLogger(context['logger'])
+            logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
         err = ContextGenerationError(full_msg)
         if exception:
             err.with_traceback(exception.__traceback__)

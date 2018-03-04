@@ -17,7 +17,7 @@ class PythonContextGenerator(FragmentContextGenerator):
             context = fragment_module.generate_context(doc_var, data, metadata)
         except Exception as e:
             FragmentContextGenerator.raise_generator_exception(
-                metadata['fragment_path'], e, metadata)
+                metadata, exception=e)
         return context
 
 __all__ = ['PythonContextGenerator', ]

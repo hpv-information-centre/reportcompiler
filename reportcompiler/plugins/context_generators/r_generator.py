@@ -33,9 +33,8 @@ class RContextGenerator(FragmentContextGenerator):
                          universal_newlines=True)
         except CalledProcessError as e:
             FragmentContextGenerator.raise_generator_exception(
-                metadata['fragment_path'],
-                e,
                 metadata,
+                exception=e,
                 message=e.stderr)
         return json.loads(output.stdout)
 

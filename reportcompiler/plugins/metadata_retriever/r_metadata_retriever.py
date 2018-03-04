@@ -33,9 +33,8 @@ class RMetadataRetriever(FragmentMetadataRetriever):
                          universal_newlines=True)
         except CalledProcessError as e:
             FragmentMetadataRetriever.raise_retriever_exception(
-                metadata['fragment_path'],
-                e,
                 metadata,
+                exception=e,
                 message=e.stderr)
         return json.loads(output.stdout)
 
