@@ -5,6 +5,7 @@ import pymysql.cursors
 import os
 import json
 import sqlite3
+import logging
 import re
 from collections import OrderedDict
 from threading import Lock
@@ -98,6 +99,8 @@ class SQLiteFetcher(FragmentDataFetcher):
                                             fetcher_info['file']))
         c = conn.cursor()
         sql_string = SQLQueryBuilder(doc_var, fetcher_info, metadata).build()
+        logger = logging.getLogger(metadata['logger_name'])
+        logger.debug('[{}] {}'.format(metadata['doc_suffix'], sql_string))
         c.execute(sql_string)
         data = c.fetchall()
         column_names = [col[0] for col in c.description]
@@ -157,7 +160,8 @@ class SQLQueryBuilder:
         column_aliases = self.fetcher_info['fields']
         if isinstance(column_aliases, list):
             column_aliases = {c: c for c in column_aliases}
-        alias_list = ['`{}` AS `{}`'.format(col_name, alias)
+        alias_list = ['`{}` AS `{}`'.format(col_name.replace('.', '`.`'),
+                                            alias)
                       for col_name, alias in column_aliases.items()]
         alias_list.sort()  # To force determinism and make testing easier
 
@@ -227,7 +231,8 @@ class SQLQueryBuilder:
                     [val1 for val1, _ in join_term['on'].items()])
                 self._validate_sql_varname(
                     [val2 for _, val2 in join_term['on'].items()])
-                on_columns_str = ['`{}` = `{}`'.format(k, v)
+                on_columns_str = ['`{}` = `{}`'.format(k.replace('.', '`.`'),
+                                                       v.replace('.', '`.`'))
                                   for k, v in on_columns.items()]
                 # To force determinism and make testing easier
                 on_columns_str.sort()
@@ -272,15 +277,21 @@ class SQLQueryBuilder:
                 self._validate_sql_varname(column)
                 self._validate_sql_varname(value)
                 if is_var:
-                    value = self.doc_var[value]
+                    try:
+                        value = self.doc_var[value]
+                    except KeyError:
+                        self._raise_exception(
+                                'Variable "{}" used in fetcher "condition" '
+                                'field is not available in doc_var'
+                                .format(value))
                 if isinstance(value, list):
                     value = ["'" + str(v) + "'" for v in value]
                     filter_value = ','.join(value)
                 else:
                     filter_value = "'" + str(value) + "'"
                 column_filter_clause = '`{}` IN ({})'.format(
-                                                        column,
-                                                        filter_value)
+                                                    column.replace('.', '`.`'),
+                                                    filter_value)
                 filter_clause.append(column_filter_clause)
         except IndexError:
             self._raise_exception(
@@ -296,7 +307,7 @@ class SQLQueryBuilder:
 
         self._validate_sql_varname(self.fetcher_info['group'])
         return 'GROUP BY {}'.format(', '.join(
-            ['`{}`'.format(v)
+            ['`{}`'.format(v.replace('.', '`.`'))
              for v
              in self.fetcher_info['group']]))
 
@@ -311,7 +322,7 @@ class SQLQueryBuilder:
                 "'sort' values must either be a list or a dict")
 
         self._validate_sql_varname([var for var, sort in sort_vars.items()])
-        sort_values = ['`{}` {}'.format(var, sort)
+        sort_values = ['`{}` {}'.format(var.replace('.', '`.`'), sort)
                        for var, sort
                        in sort_vars.items()]
         sort_values.sort()

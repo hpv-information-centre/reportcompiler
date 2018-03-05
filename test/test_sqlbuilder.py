@@ -69,7 +69,7 @@ class SQLBuilderTest(unittest.TestCase):
         expected_query = \
             "SELECT `var1` AS `v1` " \
             "FROM `test_table` `tt` " \
-            "INNER JOIN `join_table` `jt` ON `tt.id` = `jt.id`"
+            "INNER JOIN `join_table` `jt` ON `tt`.`id` = `jt`.`id`"
 
         query = self._build_expect_ok(fetcher_info)
         self.assertEqual(query, expected_query)
@@ -86,7 +86,7 @@ class SQLBuilderTest(unittest.TestCase):
         expected_query = \
             "SELECT `var1` AS `v1` " \
             "FROM `test_table` `tt` " \
-            "WHERE `tt.iso` IN ('ESP') AND `tt.type` IN ('country')"
+            "WHERE `tt`.`iso` IN ('ESP') AND `tt`.`type` IN ('country')"
 
         query = self._build_expect_ok(fetcher_info, doc_var=doc_var)
         self.assertEqual(query, expected_query)
