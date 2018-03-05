@@ -24,10 +24,10 @@ class Report:
                  dir_path=None,
                  repo_url=None,
                  repo_branch='master',
-                 repo_path=None,
+                 repo_relative_path='.',
                  create=False):
         if create:
-            if repo_url or repo_path:
+            if repo_url:
                 raise ValueError(
                     "Repository info can't be specified on "
                     "new report directory creation")
@@ -36,20 +36,20 @@ class Report:
         if dir_path is None and repo_url is None:
             raise ValueError("'dir_path' or 'repo' must be specified")
         if repo_url:
-            if repo_path is None:
+            if dir_path is None:
                 raise ValueError(
                     'Local path to store repository must be specified')
             repo_name, _ = os.path.splitext(os.path.basename(repo_url))
-            repo_path = os.path.join(repo_path, repo_name)
-            if not os.path.exists(repo_path):
-                os.mkdir(repo_path)
+            dir_path = os.path.join(dir_path, repo_name)
+            if not os.path.exists(dir_path):
+                os.mkdir(dir_path)
             try:
-                git.Repo(repo_path)
+                git.Repo(dir_path)
             except InvalidGitRepositoryError:
-                repo = git.Repo.init(repo_path)
+                repo = git.Repo.init(dir_path)
                 repo.create_remote('origin', repo_url)
                 repo.remotes.origin.pull(repo_branch)
-            dir_path = repo_path
+            dir_path = os.path.join(dir_path, repo_relative_path)
         name = os.path.basename(dir_path)
         if not os.path.exists(dir_path):
             raise FileNotFoundError(
