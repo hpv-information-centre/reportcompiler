@@ -41,8 +41,8 @@ class FragmentMetadataRetriever(PluginModule):
         full_msg = '{}: Metadata retrieval error:\n\n{}'.format(
                                                             location,
                                                             exception_info)
-        if context.get('logger'):
-            logger = logging.getLogger(context['logger'])
+        if context.get('logger_name'):
+            logger = logging.getLogger(context['logger_name'])
             logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
         err = MetadataRetrievalError(full_msg)
         if exception:

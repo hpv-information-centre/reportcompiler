@@ -22,7 +22,7 @@ class FragmentContextGenerator(PluginModule):
         :return: Dictionary with context for the template rendering stage
         :rtype: dict
         """
-        logger = logging.getLogger(metadata['logger'])
+        logger = logging.getLogger(metadata['logger_name'])
 
         doc_suffix = metadata['doc_suffix']
         fragment_tmp_basename = os.path.join(metadata['tmp_path'],
@@ -184,8 +184,8 @@ class FragmentContextGenerator(PluginModule):
             location = '<None>'
         full_msg = '{}: Context generation error:\n{}'.format(location,
                                                               exception_info)
-        if context.get('logger'):
-            logger = logging.getLogger(context['logger'])
+        if context.get('logger_name'):
+            logger = logging.getLogger(context['logger_name'])
             logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
         err = ContextGenerationError(full_msg)
         if exception:

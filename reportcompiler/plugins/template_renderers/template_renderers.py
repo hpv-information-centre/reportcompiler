@@ -47,8 +47,8 @@ class TemplateRenderer(PluginModule):
         """
         exception_info = message if message else str(exception)
         full_msg = 'Template rendering error\n\n{}'.format(exception_info)
-        if context['meta'].get('logger'):
-            logger = logging.getLogger(context['meta']['logger'])
+        if context['meta'].get('logger_name'):
+            logger = logging.getLogger(context['meta']['logger_name'])
             logger.error('[{}] {}'.format(context['meta']['doc_suffix'],
                                           full_msg))
         err = TemplateRendererException(full_msg)

@@ -61,10 +61,10 @@ class ReportCompiler:
                                 metadata=metadata)
 
     @staticmethod
-    def setup_paths(metadata, doc_var):
+    def setup_environment(metadata, doc_var):
         """
         Prepares the environment to generate the necessary files (e.g. output,
-        temp, logs, hashes, figures, ...)
+        temp, logs, hashes, figures, ...) and variables.
         :param metadata: Report metadata
         :param doc_var: Document variable
         :return: None
@@ -85,7 +85,9 @@ class ReportCompiler:
         metadata['templates_path'] = os.path.join(metadata['report_path'],
                                                   'templates')
         metadata['src_path'] = os.path.join(metadata['report_path'], 'src')
-        metadata['logger'] = metadata['name'] + '_' + metadata['doc_suffix']
+        metadata['logger_name'] = (metadata['name'] +
+                                   '_' +
+                                   metadata['doc_suffix'])
 
     def generate_template_tree(self):
         """
@@ -143,7 +145,9 @@ class ReportCompiler:
         :param debug_level: Debug level
         :return: Logger
         """
-        logger = logging.getLogger(report_metadata['logger'])
+        logger = logging.getLogger(report_metadata['name'] +
+                                   '_' +
+                                   report_metadata['doc_suffix'])
         log_path = report_metadata['log_path']
         file_handler = logging.FileHandler(
                         os.path.join(log_path,
@@ -156,7 +160,6 @@ class ReportCompiler:
         file_handler.setFormatter(formatter)
         logger.setLevel(debug_level)
         logger.addHandler(file_handler)
-        return logger
 
     def generate(self,
                  doc_vars,
@@ -181,7 +184,9 @@ class ReportCompiler:
             for doc_var in doc_vars:
                 # To avoid parallelism issues
                 report_metadata_copy = deepcopy(report_metadata)
-                ReportCompiler.setup_paths(report_metadata_copy, doc_var)
+                ReportCompiler.setup_environment(report_metadata_copy, doc_var)
+                ReportCompiler.setup_logger(report_metadata_copy,
+                                            debug_level)
                 worker = self._generate_doc(doc_var,
                                             report_metadata_copy,
                                             n_frag_workers,
@@ -255,8 +260,7 @@ class ReportCompiler:
         def func():
             doc_var = _doc_var
             report_metadata = _report_metadata
-
-            logger = ReportCompiler.setup_logger(report_metadata, debug_level)
+            logger = logging.getLogger(report_metadata['logger_name'])
             logger.info('[{}] Generating document...'.format(
                 report_metadata['doc_suffix']))
             sys.path.append(os.path.join(self.report.path, 'src'))
@@ -360,7 +364,7 @@ class ReportCompiler:
         except KeyError:
             renderer = TemplateRenderer.get()  # Default renderer
 
-        logger = logging.getLogger(context['meta']['logger'])
+        logger = logging.getLogger(context['meta']['logger_name'])
         logger.debug('[{}] Rendering template ({})...'.format(
             context['meta']['doc_suffix'],
             renderer.__class__.__name__))
@@ -386,7 +390,7 @@ class ReportCompiler:
 
         for postprocessor_info in postprocessors_info:
             postprocessor = PostProcessor.get(id=postprocessor_info)
-            logger = logging.getLogger(context['meta']['logger'])
+            logger = logging.getLogger(context['meta']['logger_name'])
             logger.debug('[{}] Postprocessing ({})...'.format(
                 context['meta']['doc_suffix'],
                 postprocessor.__class__.__name__))
@@ -465,7 +469,7 @@ class FragmentCompiler:
             retriever = FragmentMetadataRetriever.get(id=retriever_name)
         except KeyError:
             retriever = FragmentMetadataRetriever.get(extension=file_extension)
-        logger = logging.getLogger(metadata['logger'])
+        logger = logging.getLogger(metadata['logger_name'])
         logger.debug(
             '[{}] {}: Retrieving metadata ({})...'.
             format(metadata['doc_suffix'],
@@ -483,7 +487,7 @@ class FragmentCompiler:
         :return: Document variable "augmented" with the specified additional
         data
         """
-        logger = logging.getLogger(metadata['logger'])
+        logger = logging.getLogger(metadata['logger_name'])
         message = 'Starting predata fetching...'
         logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
         predata = FragmentCompiler.fetch_info(doc_var,
@@ -506,7 +510,7 @@ class FragmentCompiler:
         :param metadata: Metadata (report metadata, overriden by fragment)
         :return: Pandas dataframe (or list of dataframes) with required data
         """
-        logger = logging.getLogger(metadata['logger'])
+        logger = logging.getLogger(metadata['logger_name'])
         message = 'Starting data fetching...'
         logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
         return FragmentCompiler.fetch_info(doc_var, 'data_fetcher', metadata)
@@ -529,8 +533,9 @@ class FragmentCompiler:
         if doc_suffix is None:
             doc_suffix = '-'
 
-        if metadata.get('logger') is not None:
-            logger = logging.getLogger(metadata['logger'])
+        logger_name = metadata.get('logger_name')
+        if logger_name:
+            logger = logging.getLogger(logger_name)
         else:
             logger = None
 
@@ -597,7 +602,7 @@ class FragmentCompiler:
         :return: Dictionary with the context of the current fragment, to be
         used in the template rendering stage
         """
-        logger = logging.getLogger(metadata['logger'])
+        logger = logging.getLogger(metadata['logger_name'])
         _, file_extension = os.path.splitext(metadata['fragment_path'])
 
         generator = None
