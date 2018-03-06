@@ -165,7 +165,8 @@ class Report:
                  doc_vars=None,
                  n_doc_workers=2,
                  n_frag_workers=2,
-                 debug_level=logging.DEBUG):
+                 debug_mode=False,
+                 log_level=logging.DEBUG):
         """
         Generates the documents with document variables doc_vars from the
         current report.
@@ -173,7 +174,7 @@ class Report:
         :param n_doc_workers: Number of concurrent document-generating threads
         :param n_frag_workers: Number of concurrent fragment-generating
         threads (within each document-generating thread)
-        :param debug_level: Debug level (e.g. logging.DEBUG, logging.WARNING,
+        :param log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
         logging.ERROR, ...)
         """
         if doc_vars is None:
@@ -187,7 +188,8 @@ class Report:
         compiler.generate(doc_vars, self.metadata,
                           n_doc_workers=n_doc_workers,
                           n_frag_workers=n_frag_workers,
-                          debug_level=debug_level)
+                          debug_mode=debug_mode,
+                          log_level=log_level)
 
     def _clean_and_validate_doc_vars(self, doc_vars):
         """

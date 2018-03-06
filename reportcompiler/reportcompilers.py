@@ -138,11 +138,11 @@ class ReportCompiler:
         return src_mapping
 
     @staticmethod
-    def setup_logger(report_metadata, debug_level):
+    def setup_logger(report_metadata, log_level):
         """
         Initializes and sets up logger
         :param report_metadata: Report metadata
-        :param debug_level: Debug level
+        :param log_level: Log level
         :return: Logger
         """
         logger = logging.getLogger(report_metadata['name'] +
@@ -158,27 +158,37 @@ class ReportCompiler:
                                      '.log'))
         formatter = logging.Formatter(ReportCompiler.LOG_FORMAT)
         file_handler.setFormatter(formatter)
-        logger.setLevel(debug_level)
+        logger.setLevel(log_level)
         logger.addHandler(file_handler)
 
     def generate(self,
                  doc_vars,
                  report_metadata,
-                 n_doc_workers=2,
-                 n_frag_workers=2,
-                 debug_level=logging.DEBUG):
+                 n_doc_workers=1,
+                 n_frag_workers=1,
+                 debug_mode=False,
+                 log_level=logging.DEBUG):
         """
         Generates documents from a list of document variables.
-        :param doc_vars: List of document variables, where each document
-        variable is a dictionary with variables
-        associated with a document.
-        :param report_metadata: Report metadata
-        :param n_doc_workers: Number of concurrent document-generating threads.
-        :param n_frag_workers: Number of concurrent fragment-generating
-        threads. The total thread count will be n_doc_workers * n_frag_workers.
-        :param debug_level: Debug level
+        :param dict doc_vars: List of document variables, where each document
+            variable is a dictionary with variables associated with a document.
+        :param dict report_metadata: Report metadata
+        :param int n_doc_workers: Number of concurrent document-generating
+            threads.
+        :param int n_frag_workers: Number of concurrent fragment-generating
+            threads. The total thread count will be
+            n_doc_workers * n_frag_workers.
+        :param boolean debug_mode: If enabled, the document generation will
+            be limited to one thread and several measures will be taken to
+            facilitate debugging: each
+        :param int log_level: Log level
         :return: None
         """
+
+        if debug_mode:  # Overriding parameters to single thread
+            n_doc_workers = 1
+            n_frag_workers = 1
+
         results = []
         with ThreadPoolExecutor(max_workers=n_doc_workers) as executor:
             for doc_var in doc_vars:
@@ -186,11 +196,11 @@ class ReportCompiler:
                 report_metadata_copy = deepcopy(report_metadata)
                 ReportCompiler.setup_environment(report_metadata_copy, doc_var)
                 ReportCompiler.setup_logger(report_metadata_copy,
-                                            debug_level)
+                                            log_level)
+                report_metadata_copy['debug_mode'] = debug_mode
                 worker = self._generate_doc(doc_var,
                                             report_metadata_copy,
-                                            n_frag_workers,
-                                            debug_level=debug_level)
+                                            n_frag_workers)
                 result = executor.submit(worker)
                 result.doc = report_metadata_copy['doc_suffix']
                 results.append(result)
@@ -246,15 +256,13 @@ class ReportCompiler:
     def _generate_doc(self,
                       _doc_var,
                       _report_metadata,
-                      n_frag_workers=2,
-                      debug_level=logging.DEBUG):
+                      n_frag_workers=2):
         """
         Returns a function that generates a document, used by the
         ThreadPoolExecutor
         :param _doc_var: Document variable
         :param _report_metadata: Report metadata
         :param n_frag_workers: Number of concurrent fragment-generating threads
-        :param debug_level: Debug level
         :return: Function that generates a document
         """
         def func():
