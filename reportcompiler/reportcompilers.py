@@ -3,6 +3,7 @@ import traceback
 import logging
 import json
 import sys
+import glob
 import pandas as pd
 from anytree import PreOrderIter, Node, RenderTree as Tree
 from collections import OrderedDict, ChainMap
@@ -164,8 +165,8 @@ class ReportCompiler:
     def generate(self,
                  doc_vars,
                  report_metadata,
-                 n_doc_workers=1,
-                 n_frag_workers=1,
+                 n_doc_workers=2,
+                 n_frag_workers=2,
                  debug_mode=False,
                  log_level=logging.DEBUG):
         """
@@ -184,10 +185,10 @@ class ReportCompiler:
         :param int log_level: Log level
         :return: None
         """
-
-        if debug_mode:  # Overriding parameters to single thread
+        if debug_mode:
             n_doc_workers = 1
             n_frag_workers = 1
+            self._pre_doc_generation(report_metadata)
 
         results = []
         with ThreadPoolExecutor(max_workers=n_doc_workers) as executor:
@@ -206,6 +207,9 @@ class ReportCompiler:
                 results.append(result)
             executor.shutdown(wait=True)
 
+        if debug_mode:
+            self._post_doc_generation(report_metadata)
+
         error_results = [r for r in results if r.exception() is not None]
         n_errors = len(error_results)
         if n_errors > 0:
@@ -223,6 +227,26 @@ class ReportCompiler:
                                             '<global>': error_msg}})
             raise FragmentGenerationError(
                 'Error on document(s) generation:\n', traceback_dict)
+
+    def _pre_doc_generation(self, report_metadata):
+        meta_dir = os.path.join(report_metadata['report_path'], '..', '_meta')
+        for f in glob(os.path.join(meta_dir, 'error_*')):
+            os.remove(f)
+        os.remove(os.path.join(meta_dir, 'last_debug_errors'))
+
+    def _post_doc_generation(self, report_metadata):
+        meta_dir = os.path.join(report_metadata['report_path'], '..', '_meta')
+        last_errors_file = open(os.path.join(meta_dir,
+                                             'last_debug_errors'), 'w')
+        last_errors_file.write('[\n')
+        for i, f in enumerate(glob(os.path.join(meta_dir, 'error_*'))):
+            with open(f, 'r') as error_file:
+                if i > 0:
+                    last_errors_file.write(',\n')
+                last_errors_file.write(error_file.read())
+            os.remove(f)
+        last_errors_file.write('\n]')
+        last_errors_file.close()
 
     def _generate_fragment(self, _fragment, _doc_var, _report_metadata):
         """

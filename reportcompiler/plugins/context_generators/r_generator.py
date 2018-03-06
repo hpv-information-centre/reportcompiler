@@ -11,16 +11,15 @@ class RContextGenerator(FragmentContextGenerator):
     def generate_context(self, doc_var, data, metadata):
         r_code = "library(jsonlite, quietly=TRUE);\
                     source('{}');\
-                    doc_var <- fromJSON(file('{}'));\
-                    data <- fromJSON(file('{}'));\
-                    metadata <- fromJSON(file('{}'));\
+                    cache_file <- fromJSON(file('{}'));\
+                    doc_var <- cache_file$doc_var;\
+                    data <- cache_file$data;\
+                    metadata <- cache_file$metadata;\
                     print(toJSON(generate_context(doc_var, data, metadata),\
                         auto_unbox=TRUE))"
 
         r_code = r_code.format(metadata['fragment_path'].replace('\\', '\\\\'),
-                               metadata['docvar_file'].replace('\\', '\\\\'),
-                               metadata['data_file'].replace('\\', '\\\\'),
-                               metadata['metadata_file'].replace('\\', '\\\\'))
+                               metadata['cache_file'].replace('\\', '\\\\'))
         output = None
         try:
             command = 'Rscript --vanilla -e "{}"'.format(

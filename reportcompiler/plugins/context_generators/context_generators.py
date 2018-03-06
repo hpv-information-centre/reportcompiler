@@ -2,6 +2,7 @@ import json
 import os
 import hashlib
 import logging
+from tempfile import NamedTemporaryFile
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import ContextGenerationError
@@ -45,6 +46,7 @@ class FragmentContextGenerator(PluginModule):
 
         if (metadata.get('skip_unchanged_fragments') is None or
                 not metadata['skip_unchanged_fragments']):
+            context = None
             with open(metadata['fragment_path'], 'rb') as f:
                 code_hash = hashlib.sha256(f.read()).hexdigest()
 
@@ -73,7 +75,6 @@ class FragmentContextGenerator(PluginModule):
                 try:
                     with open(fragment_hash_basename + '.ctx') as f:
                         context = json.load(f)
-                        return context
                 except FileNotFoundError:
                     pass  # No previous hash available, we run the code
             else:
@@ -113,40 +114,54 @@ class FragmentContextGenerator(PluginModule):
                                 metadata['doc_suffix'],
                                 metadata['fragment_name']))
 
-            with open(fragment_hash_basename + '.hash', 'w') as hash_file:
-                hash_file.write(current_hash)
+            if context is None:
+                with open(fragment_hash_basename + '.hash', 'w') as hash_file:
+                    hash_file.write(current_hash)
 
-        with open(fragment_tmp_basename + '.docvar', 'w') as docvar_file:
-            docvar_file.write(json.dumps(doc_var))
-            metadata['docvar_file'] = fragment_tmp_basename + '.docvar'
-
-        with open(fragment_tmp_basename + '.data', 'w') as data_file:
-            data_file.write(json_data)
-            metadata['data_file'] = fragment_tmp_basename + '.data'
-
-        with open(fragment_tmp_basename + '.metadata', 'w') as metadata_file:
-            metadata_file.write(json.dumps(metadata))
-            metadata['metadata_file'] = fragment_tmp_basename + '.metadata'
+        with open(fragment_tmp_basename + '.json', 'w') as cache_file:
+            cache_file.write(json.dumps({'doc_var': doc_var,
+                                         'data': json.loads(json_data),
+                                         'metadata': metadata}, indent=2))
+            metadata['cache_file'] = fragment_tmp_basename + '.json'
 
         logger.debug(
             '[{}] {}: Generating context ({})...'.format(
                 metadata['doc_suffix'],
                 metadata['fragment_name'],
                 self.__class__.__name__))
-        context = self.generate_context(doc_var, data, metadata)
+
+        if context is None:  # If context is defined, skip the generation
+            try:
+                context = self.generate_context(doc_var, data, metadata)
+            except Exception as e:
+                meta_dir = os.path.join(metadata['report_path'],
+                                        '..',
+                                        '_meta')
+                if metadata['debug_mode']:
+                    if not os.path.exists(meta_dir):
+                        os.mkdir(meta_dir)
+                    with NamedTemporaryFile(dir=meta_dir,
+                                            prefix='error_',
+                                            delete=False,
+                                            mode='w') \
+                            as err_file:
+                        err_file.write(
+                            json.dumps({'doc_var': doc_var,
+                                        'data': json.loads(json_data),
+                                        'metadata': metadata,
+                                        'report': os.path.basename(
+                                            metadata['report_path'])},
+                                       indent=2))
+                raise e from None
 
         with open(fragment_hash_basename + '.ctx', 'w') as output_file:
             output_file.write(json.dumps(context, sort_keys=True))
 
-        if (metadata.get('delete_generator_params_files') and
-                metadata['delete_generator_params_files']):
-            os.remove(fragment_tmp_basename + '.docvar')
-            os.remove(fragment_tmp_basename + '.data')
-            os.remove(fragment_tmp_basename + '.metadata')
+        if (metadata.get('delete_generator_files') and
+                metadata['delete_generator_files']):
+            os.remove(fragment_tmp_basename + '.json')
 
-        del metadata['docvar_file']
-        del metadata['data_file']
-        del metadata['metadata_file']
+        del metadata['cache_file']
         return context
 
     @abstractmethod
