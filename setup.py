@@ -11,12 +11,12 @@ os.chdir(
 
 setup(
     name='report-compiler',
-    version='0.2',
+    version='0.3',
     packages=find_packages('.'),
     include_package_data=True,
     license='MIT License',
-    description='It compiles documents with information specified by a report'
-                ' directory (see documentation)',
+    description='Report Compiler generates documents with information'
+                ' specified by a report directory (see documentation)',
     long_description=README,
     url='https://www.hpvcentre.net',
     author='David Gómez',
