@@ -7,16 +7,19 @@ class FragmentGenerationError(Exception):
 
     def __str__(self):
         msg = self.args[0] + '\n'
+        count = 0
         for doc, fragments_tb_dict in self.fragment_errors.items():
             for fragment, error in fragments_tb_dict.items():
+                count += 1
                 if isinstance(error, tuple):
                     error_msg, error_tb = error
-                    msg += '[{}] {}:\n {}\n{}'.format(doc,
-                                                      fragment,
-                                                      ''.join(error_tb[-5:]),
-                                                      error_msg)
+                    msg += '[{}] {}:\n {}\n{}\n\n'.format(doc,
+                                                          fragment,
+                                                          ''.join(
+                                                              error_tb[-5:]),
+                                                          error_msg)
                 else:
-                    msg += '[{}] {}:\n {}\n'.format(doc, fragment, error)
-        return msg
+                    msg += '[{}] {}:\n {}\n\n'.format(doc, fragment, error)
+        return msg + '{} error/s'.format(count)
 
 __all__ = ['FragmentGenerationError', ]
