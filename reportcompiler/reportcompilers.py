@@ -230,7 +230,8 @@ class ReportCompiler:
         meta_dir = os.path.join(report_metadata['report_path'], '..', '_meta')
         for f in glob(os.path.join(meta_dir, 'error_*')):
             os.remove(f)
-        os.remove(os.path.join(meta_dir, 'last_debug_errors'))
+        if os.path.exists(os.path.join(meta_dir, 'last_debug_errors')):
+            os.remove(os.path.join(meta_dir, 'last_debug_errors'))
 
     def _post_doc_generation(self, report_metadata):
         meta_dir = os.path.join(report_metadata['report_path'], '..', '_meta')

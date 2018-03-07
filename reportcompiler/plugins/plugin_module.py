@@ -130,9 +130,15 @@ class PluginModule(object, metaclass=PluginModuleMeta):
         modules = []
         for plugin in plugins:
             if not plugin.startswith('__'):
-                modules.append(importlib.import_module(
+                try:
+                    modules.append(importlib.import_module(
                                 plugin,
                                 package=get_module_package(cls.__module__)))
+                except ImportError as e:
+                    if not getattr(cls, '_import_errors_printed', False):
+                        print("Warning: '{}' module not available "
+                              ": {}".format(plugin[1:], e))
+                    cls._import_errors_printed = True
 
         return modules
 
