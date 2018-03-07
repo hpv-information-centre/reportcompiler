@@ -37,7 +37,9 @@ TODO: Include pipeline diagram
 Sample reports
 ==============
 
-TODO: Add sample reports for different pipelines
+For examples of reports ready to be compiled by this library please check here_.
+
+.. _here: https://github.com/hpv-information-centre/reportcompiler-examples
 
 
 Installation
