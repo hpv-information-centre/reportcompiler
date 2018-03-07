@@ -12,15 +12,13 @@ from copy import deepcopy
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from reportcompiler.plugins.data_fetchers.data_fetchers \
-    import FragmentDataFetcher
-from reportcompiler.plugins.context_generators.context_generators \
-    import FragmentContextGenerator
-from reportcompiler.plugins.metadata_retriever.metadata_retriever \
-    import FragmentMetadataRetriever
-from reportcompiler.plugins.template_renderers.template_renderers \
-    import TemplateRenderer
-from reportcompiler.plugins.postprocessors.postprocessors import PostProcessor
+from reportcompiler.plugins.data_fetchers.base import DataFetcher
+from reportcompiler.plugins.context_generators.base \
+    import ContextGenerator
+from reportcompiler.plugins.metadata_retriever.base \
+    import MetadataRetriever
+from reportcompiler.plugins.template_renderers.base import TemplateRenderer
+from reportcompiler.plugins.postprocessors.base import PostProcessor
 from reportcompiler.errors import FragmentGenerationError
 
 
@@ -498,9 +496,9 @@ class FragmentCompiler:
         _, file_extension = os.path.splitext(metadata['fragment_path'])
         try:
             retriever_name = metadata['metadata_retriever'][file_extension]
-            retriever = FragmentMetadataRetriever.get(id=retriever_name)
+            retriever = MetadataRetriever.get(id=retriever_name)
         except KeyError:
-            retriever = FragmentMetadataRetriever.get(extension=file_extension)
+            retriever = MetadataRetriever.get(extension=file_extension)
         logger = logging.getLogger(metadata['logger_name'])
         logger.debug(
             '[{}] {}: Retrieving metadata ({})...'.
@@ -594,7 +592,7 @@ class FragmentCompiler:
 
         data = OrderedDict()
         for i, fetcher_info in enumerate(fetchers_info):
-            fetcher = FragmentDataFetcher.get(id=fetcher_info)
+            fetcher = DataFetcher.get(id=fetcher_info)
             if logger:
                 fetcher_name = fetcher_info.get('name')
                 if fetcher_name is None:
@@ -641,9 +639,9 @@ class FragmentCompiler:
         try:
             generator_info = metadata['context_generator']
             if isinstance(generator_info, str):
-                generator = FragmentContextGenerator.get(id=generator_info)
+                generator = ContextGenerator.get(id=generator_info)
             elif isinstance(generator_info, dict):
-                generator = FragmentContextGenerator.get(
+                generator = ContextGenerator.get(
                                 id=generator_info[file_extension])
             else:
                 pass  # Context generator invalid, ignoring...
@@ -653,7 +651,7 @@ class FragmentCompiler:
 
         if generator is None:
             try:
-                generator = FragmentContextGenerator.get(
+                generator = ContextGenerator.get(
                                 extension=file_extension)
             except KeyError:
                 message = 'Data fetcher not specified for fragment {}'.format(

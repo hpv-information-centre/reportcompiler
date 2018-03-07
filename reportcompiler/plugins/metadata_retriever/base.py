@@ -4,7 +4,7 @@ from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import MetadataRetrievalError
 
 
-class FragmentMetadataRetriever(PluginModule):
+class MetadataRetriever(PluginModule):
     """ Plugin that implements the metadata retrieval stage for a fragment. """
 
     @abstractmethod
@@ -60,8 +60,8 @@ class FragmentMetadataRetriever(PluginModule):
         :rtype: FragmentMetadataRetriever
         """
         extension_dict = {
-            '.py': FragmentMetadataRetriever.get('python'),
-            '.r': FragmentMetadataRetriever.get('r')
+            '.py': MetadataRetriever.get('python'),
+            '.r': MetadataRetriever.get('r')
         }
         try:
             extension = kwargs['extension']
@@ -74,4 +74,4 @@ class FragmentMetadataRetriever(PluginModule):
                 'No {} specified and no default is available for extension {}'.
                 format(cls, extension))
 
-__all__ = ['FragmentMetadataRetriever', ]
+__all__ = ['MetadataRetriever', ]

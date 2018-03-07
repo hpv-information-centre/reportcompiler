@@ -1,10 +1,10 @@
 import importlib
 import importlib.util
-from reportcompiler.plugins.metadata_retriever.metadata_retriever \
-    import FragmentMetadataRetriever
+from reportcompiler.plugins.metadata_retriever.base \
+    import MetadataRetriever
 
 
-class PythonMetadataRetriever(FragmentMetadataRetriever):
+class PythonMetadataRetriever(MetadataRetriever):
     """ Metadata retriever for python scripts. """
     name = 'python'
 
@@ -15,7 +15,7 @@ class PythonMetadataRetriever(FragmentMetadataRetriever):
         try:
             fragment_module = importlib.import_module(module_name)
         except Exception as e:
-            FragmentMetadataRetriever.raise_retriever_exception(
+            MetadataRetriever.raise_retriever_exception(
                 metadata, exception=e)
 
         module_vars = {var: fragment_module.__dict__[var]

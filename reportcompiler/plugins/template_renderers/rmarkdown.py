@@ -5,7 +5,7 @@ import json
 import shutil
 from subprocess import run, PIPE, CalledProcessError
 from jinja2.exceptions import UndefinedError
-from reportcompiler.plugins.template_renderers.template_renderers \
+from reportcompiler.plugins.template_renderers.base \
     import TemplateRenderer
 
 

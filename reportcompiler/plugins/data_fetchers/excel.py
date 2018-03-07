@@ -1,10 +1,10 @@
 import pandas as pd
 import os
-from reportcompiler.plugins.data_fetchers.data_fetchers \
-    import FragmentDataFetcher
+from reportcompiler.plugins.data_fetchers.base \
+    import DataFetcher
 
 
-class ExcelFetcher(FragmentDataFetcher):
+class ExcelFetcher(DataFetcher):
     """ Data fetcher for excel files. """
     name = 'excel'
 
@@ -22,7 +22,7 @@ class ExcelFetcher(FragmentDataFetcher):
                 par = fetcher_info[param['name']]
             except KeyError:
                 if isinstance(param['default_value'], ValueError):
-                    raise FragmentDataFetcher.raise_data_fetching_exception(
+                    raise DataFetcher.raise_data_fetching_exception(
                             metadata,
                             message='Parameter {} is missing'.format(
                                          param['name']))

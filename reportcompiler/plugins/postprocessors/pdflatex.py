@@ -1,6 +1,6 @@
 import os
 from subprocess import run, PIPE, CalledProcessError
-from reportcompiler.plugins.postprocessors.postprocessors import PostProcessor
+from reportcompiler.plugins.postprocessors.base import PostProcessor
 
 
 class PdflatexPostProcessor(PostProcessor):

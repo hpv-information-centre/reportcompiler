@@ -4,7 +4,7 @@ from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import DataFetchingError
 
 
-class FragmentDataFetcher(PluginModule):
+class DataFetcher(PluginModule):
     """ Plugin that implements the data fetching stage for a fragment. """
 
     @abstractmethod
@@ -51,6 +51,6 @@ class FragmentDataFetcher(PluginModule):
 
     @classmethod
     def _get_default_handler(cls, **kwargs):
-        return FragmentDataFetcher.get('constant')
+        return DataFetcher.get('constant')
 
-__all__ = ['FragmentDataFetcher', ]
+__all__ = ['DataFetcher', ]

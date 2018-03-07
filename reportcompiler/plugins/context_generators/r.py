@@ -1,10 +1,10 @@
 import json
 from subprocess import run, PIPE, CalledProcessError
-from reportcompiler.plugins.context_generators.context_generators \
-    import FragmentContextGenerator
+from reportcompiler.plugins.context_generators.base \
+    import ContextGenerator
 
 
-class RContextGenerator(FragmentContextGenerator):
+class RContextGenerator(ContextGenerator):
     """ Context generator for R scripts. """
     name = 'r'
 
@@ -31,7 +31,7 @@ class RContextGenerator(FragmentContextGenerator):
                          stderr=PIPE,
                          universal_newlines=True)
         except CalledProcessError as e:
-            FragmentContextGenerator.raise_generator_exception(
+            ContextGenerator.raise_generator_exception(
                 metadata,
                 exception=e,
                 message=e.stderr)
