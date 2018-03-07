@@ -6,4 +6,4 @@ doc/_build
 doc/_static
 doc/_templates
 doc/reportcompiler
-test/main.py
+main.py
