@@ -4,7 +4,7 @@ import shutil
 from tempfile import mkdtemp
 from reportcompiler.plugins.errors \
     import DataFetchingError
-from reportcompiler.plugins.data_fetchers.sql_fetchers \
+from reportcompiler.plugins.data_fetchers.utils.sql_builder \
     import SQLQueryBuilder
 
 

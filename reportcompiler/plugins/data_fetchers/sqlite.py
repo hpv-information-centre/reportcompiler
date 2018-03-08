@@ -4,11 +4,11 @@ import logging
 import pandas as pd
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
-from reportcompiler.plugins.data_fetchers.utils.sql \
-    import SQLQueryBuilder
+from reportcompiler.plugins.data_fetchers.sql \
+    import SQLFetcher
 
 
-class SQLiteFetcher(DataFetcher):
+class SQLiteFetcher(SQLFetcher):
     """ Data fetcher for SQLite databases. """
     name = 'sqlite'
 
@@ -16,7 +16,7 @@ class SQLiteFetcher(DataFetcher):
         conn = sqlite3.connect(os.path.join(metadata['data_path'],
                                             fetcher_info['file']))
         c = conn.cursor()
-        sql_string = SQLQueryBuilder(doc_var, fetcher_info, metadata).build()
+        sql_string = self._build_sql_query(doc_var, fetcher_info, metadata)
         logger = logging.getLogger(metadata['logger_name'])
         logger.debug('[{}] {}'.format(metadata['doc_suffix'], sql_string))
         c.execute(sql_string)

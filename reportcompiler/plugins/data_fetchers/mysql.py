@@ -9,11 +9,11 @@ from threading import Lock
 from pymysql.err import OperationalError
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
-from reportcompiler.plugins.data_fetchers.utils.sql \
-    import SQLQueryBuilder
+from reportcompiler.plugins.data_fetchers.sql \
+    import SQLFetcher
 
 
-class MySQLFetcher(DataFetcher):
+class MySQLFetcher(SQLFetcher):
     """ Data fetcher for MySQL databases. """
     name = 'mysql'
     mutex = Lock()
@@ -45,9 +45,9 @@ class MySQLFetcher(DataFetcher):
                     exception=e)
 
         try:
-            sql_string = SQLQueryBuilder(doc_var,
-                                         fetcher_info,
-                                         metadata).build()
+            sql_string = self._build_sql_query(doc_var,
+                                               fetcher_info,
+                                               metadata)
         except KeyError:
             raise DataFetcher.raise_data_fetching_exception(
                 metadata,
@@ -63,7 +63,7 @@ class MySQLFetcher(DataFetcher):
         try:
             with open(os.path.join(metadata['report_path'],
                                    'credentials',
-                                   fetcher_info['credentials_file'] + '.json'),
+                                   fetcher_info['credentials_file']),
                       'r') as cred_file:
                 credentials = json.load(cred_file)
         except KeyError:

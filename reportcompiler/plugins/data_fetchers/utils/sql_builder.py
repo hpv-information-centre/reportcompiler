@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 # TODO: Document JSON -> SQL specification
@@ -60,11 +61,10 @@ class SQLQueryBuilder:
             self._raise_exception("'fields' field missing")
         column_aliases = self.fetcher_info['fields']
         if isinstance(column_aliases, list):
-            column_aliases = {c: c for c in column_aliases}
+            column_aliases = OrderedDict([(c, c) for c in column_aliases])
         alias_list = ['`{}` AS `{}`'.format(col_name.replace('.', '`.`'),
                                             alias)
                       for col_name, alias in column_aliases.items()]
-        alias_list.sort()  # To force determinism and make testing easier
 
         select_clause = ', '.join(alias_list)
         if self.fetcher_info.get('distinct') is None:
@@ -135,8 +135,7 @@ class SQLQueryBuilder:
                 on_columns_str = ['`{}` = `{}`'.format(k.replace('.', '`.`'),
                                                        v.replace('.', '`.`'))
                                   for k, v in on_columns.items()]
-                # To force determinism and make testing easier
-                on_columns_str.sort()
+
                 join_str = '{} JOIN {} ON {}'.format(
                                 join_type,
                                 table, ' AND '.join(on_columns_str))
@@ -159,8 +158,7 @@ class SQLQueryBuilder:
             self._build_filter_term(column_aliases, is_var=True))
         filter_clause.extend(
             self._build_filter_term(column_aliases, is_var=False))
-        # To force determinism and make testing easier
-        filter_clause.sort()
+
         filter_clause = ' AND '.join(filter_clause)
         if filter_clause != '':
             filter_clause = 'WHERE {}'.format(filter_clause)
@@ -176,15 +174,19 @@ class SQLQueryBuilder:
         try:
             for column, value in self.fetcher_info[key].items():
                 self._validate_sql_varname(column)
-                self._validate_sql_varname(value)
+                # self._validate_sql_varname(value)
                 if is_var:
-                    try:
-                        value = self.doc_var[value]
-                    except KeyError:
-                        self._raise_exception(
-                                'Variable "{}" used in fetcher "condition" '
-                                'field is not available in doc_var'
-                                .format(value))
+                    if not isinstance(value, list):
+                        value = [value]
+                    for i, v in enumerate(value):
+                        try:
+                            value[i] = self.doc_var[v]
+                        except KeyError:
+                            self._raise_exception(
+                                    'Variable "{}" used in fetcher '
+                                    '"condition" field is not available in '
+                                    'doc_var'
+                                    .format(v))
                 if isinstance(value, list):
                     value = ["'" + str(v) + "'" for v in value]
                     filter_value = ','.join(value)
