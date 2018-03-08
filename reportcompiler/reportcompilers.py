@@ -75,7 +75,16 @@ class ReportCompiler:
                                 directory)
 
         metadata['doc_suffix'] = ReportCompiler.get_doc_var_suffix(doc_var)
-        dirs = ['fig', 'hash', 'data', 'log', 'tmp', 'out']
+        dirs = ['fig',  # Generated figures
+                'hash',  # Hashes used as cache checks to reuse generated data:
+                         # * .hash files contain the hashes of code, data,
+                         #   metadata and doc_var
+                         # * .ctx files contain the generated contexts to be
+                         #   reused if the hashes match
+                'log',  # Logs detailing the document generation
+                'tmp',  # Temporary directory
+                'out',  # Output directory
+                ]
         for d in dirs:
             metadata['{}_path'.format(d)] = _build_subpath(d)
             if not os.path.exists(metadata['{}_path'.format(d)]):

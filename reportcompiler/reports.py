@@ -97,7 +97,7 @@ class Report:
             return
 
         os.mkdir(new_report_path)
-        dirs = ['src', 'templates']
+        dirs = ['src', 'templates', 'data', 'credentials']
         for d in dirs:
             os.mkdir(os.path.join(new_report_path, d))
         config_content = """
