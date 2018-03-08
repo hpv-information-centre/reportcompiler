@@ -36,6 +36,7 @@ class RMetadataRetriever(MetadataRetriever):
                 metadata,
                 exception=e,
                 message=e.stderr)
-        return json.loads(output.stdout)
+        return json.loads(output.stdout,
+                          object_pairs_hook=collections.OrderedDict)
 
 __all__ = ['RMetadataRetriever', ]

@@ -1,6 +1,7 @@
 import unittest
 import os
 import shutil
+from odictliteral import odict
 from tempfile import mkdtemp
 from reportcompiler.plugins.errors \
     import DataFetchingError
@@ -46,10 +47,10 @@ class SQLBuilderTest(unittest.TestCase):
         fetcher_info = {
             'type': 'mysql',
             'table': {'test_table': 'tt'},
-            'fields': {'var1': 'v1', '_var2': '_v2'}
+            'fields': odict['var1': 'v1', 'var2': 'v2']
         }
         expected_query = \
-            "SELECT `_var2` AS `_v2`, `var1` AS `v1` " \
+            "SELECT `var1` AS `v1`, `var2` AS `v2` " \
             "FROM `test_table` `tt`"
 
         query = self._build_expect_ok(fetcher_info)
@@ -126,7 +127,7 @@ class SQLBuilderTest(unittest.TestCase):
             'type': 'mysql',
             'table': 'test_table',
             'fields': ['var1', 'var2'],
-            'sort': {'sort_var2': 'ASC', 'sort_var1': 'DESC'}
+            'sort': odict['sort_var2': 'ASC', 'sort_var1': 'DESC']
         }
         expected_query = \
             "SELECT `var1` AS `var1`, `var2` AS `var2` " \

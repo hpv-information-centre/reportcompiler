@@ -35,5 +35,6 @@ setup(
         'anytree',
         'jsmin',
         'GitPython',
+        'odictliteral',
     ],
 )

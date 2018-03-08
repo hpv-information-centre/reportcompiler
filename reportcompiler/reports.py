@@ -62,7 +62,8 @@ class Report:
                 " (config.json)")
 
         with open(config_file) as config_data:
-            config = json.loads(jsmin(config_data.read()))
+            config = json.loads(jsmin(config_data.read()),
+                                object_pairs_hook=OrderedDict)
         self.name = name
         self.path = dir_path
         self.metadata = OrderedDict(config)
