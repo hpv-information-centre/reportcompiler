@@ -8,7 +8,7 @@ from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import ContextGenerationError
 
 
-class FragmentContextGenerator(PluginModule):
+class ContextGenerator(PluginModule):
     """ Plugin that implements the context generation stage for a fragment. """
     def generate_context_wrapper(self, doc_var, data, metadata):
         """
@@ -218,8 +218,8 @@ class FragmentContextGenerator(PluginModule):
         :rtype: PluginModule
         """
         extension_dict = {
-            '.py': FragmentContextGenerator.get('python'),
-            '.r': FragmentContextGenerator.get('r')
+            '.py': ContextGenerator.get('python'),
+            '.r': ContextGenerator.get('r')
         }
         try:
             extension = kwargs['extension']
@@ -233,4 +233,4 @@ class FragmentContextGenerator(PluginModule):
                 'No {} specified and no default is available for extension {}'.
                 format(cls, extension))
 
-__all__ = ['FragmentContextGenerator', ]
+__all__ = ['ContextGenerator', ]

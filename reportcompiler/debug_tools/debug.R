@@ -1,7 +1,12 @@
 library(jsonlite)
 
 compile_last_fragment <- function(report_path) {
-    last_values <- fromJSON(file(paste(report_path, '_meta', 'last_debug_errors',sep='/')), simplifyVector=F)
+    tryCatch(
+        json_file <- file(paste(report_path, '_meta', 'last_debug_errors',sep='/'), open='r'),
+        error=function() {
+            print('There is no file with debugging data, please retry generating a document on debug mode')
+        })
+    last_values <- fromJSON(json_file, simplifyVector=F)
     
     for(frag in last_values) {
         doc_var <- frag$doc_var

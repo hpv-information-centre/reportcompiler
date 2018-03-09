@@ -1,9 +1,9 @@
 import pandas as pd
-from reportcompiler.plugins.data_fetchers.data_fetchers \
-    import FragmentDataFetcher
+from reportcompiler.plugins.data_fetchers.base \
+    import DataFetcher
 
 
-class ConstantFetcher(FragmentDataFetcher):
+class ConstantFetcher(DataFetcher):
     """ Constant data fetcher. """
     name = 'constant'
 
@@ -11,7 +11,7 @@ class ConstantFetcher(FragmentDataFetcher):
         try:
             values = fetcher_info['values']
             if not isinstance(values, list):
-                raise FragmentDataFetcher.raise_data_fetching_exception(
+                raise DataFetcher.raise_data_fetching_exception(
                     metadata,
                     message="Constant fetcher values not a list.")
 
@@ -21,7 +21,7 @@ class ConstantFetcher(FragmentDataFetcher):
             # Since this fetcher is the default one, not finding the
             # 'values' key might mean that the user forgot the 'type'
             # key for a different fetcher.
-            raise FragmentDataFetcher.raise_data_fetching_exception(
+            raise DataFetcher.raise_data_fetching_exception(
                 metadata,
                 message="The 'type' or 'values' keys are not set.")
 

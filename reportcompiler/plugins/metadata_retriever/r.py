@@ -1,10 +1,10 @@
 import json
 from subprocess import run, PIPE, CalledProcessError
-from reportcompiler.plugins.metadata_retriever.metadata_retriever \
-    import FragmentMetadataRetriever
+from reportcompiler.plugins.metadata_retriever.base \
+    import MetadataRetriever
 
 
-class RMetadataRetriever(FragmentMetadataRetriever):
+class RMetadataRetriever(MetadataRetriever):
     """ Metadata retriever for R scripts. """
     name = 'r'
 
@@ -32,10 +32,11 @@ class RMetadataRetriever(FragmentMetadataRetriever):
                          stderr=PIPE,
                          universal_newlines=True)
         except CalledProcessError as e:
-            FragmentMetadataRetriever.raise_retriever_exception(
+            MetadataRetriever.raise_retriever_exception(
                 metadata,
                 exception=e,
                 message=e.stderr)
-        return json.loads(output.stdout)
+        return json.loads(output.stdout,
+                          object_pairs_hook=collections.OrderedDict)
 
 __all__ = ['RMetadataRetriever', ]

@@ -34,29 +34,53 @@ Architecture
 TODO: Include pipeline diagram
 
 
-Sample reports
-==============
-
-TODO: Add sample reports for different pipelines
-
-
 Installation
 ============
 
 Package
 -------
 
-Run 'scripts/install_package.sh'.
+.. code:: bash
+
+ git clone https://github.com/hpv-information-centre/reportcompiler
+ cd reportcompiler/scripts
+ ./install_package.sh
+ 
+Document generation example
+---------------------------
+
+.. code:: python
+
+ from reportcompiler.reports import Report
+
+ root_reports_path = '/home/user/reports'
+ repo_url = 'https://github.com/hpv-information-centre/reportcompiler-examples'
+ report = Report(root_reports_path,
+                 repo_url=repo_url,
+                 repo_relative_path='example-music')
+ report.generate({'artist_id': 1})
+
+For more examples of reports ready to be compiled by this library please check here_.
+
+.. _here: https://github.com/hpv-information-centre/reportcompiler-examples
 
 
 Documentation
 -------------
 
-Run 'scripts/compile_docs.sh' for HTML documentation. This project uses Sphinx for documentation, so for 
-other formats please use 'make' with the appropriate parameters on the doc directory.
+To generate HTML documentation:
+
+.. code:: bash
+
+ scripts/compile_docs.sh
+
+This project uses Sphinx for documentation, so for other formats please use 'make' with the 
+appropriate parameters on the doc directory.
 
 
 Git hooks setup
 ---------------
 
-Run script on 'scripts/prepare_hooks.sh'.
+.. code:: bash
+
+ scripts/prepare_hooks.sh

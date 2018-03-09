@@ -1,8 +1,8 @@
-from reportcompiler.plugins.context_generators.context_generators \
-    import FragmentContextGenerator
+from reportcompiler.plugins.context_generators.base \
+    import ContextGenerator
 
 
-class StubContextGenerator(FragmentContextGenerator):
+class StubContextGenerator(ContextGenerator):
     """ Stub context generator. """
     name = 'stub'
 

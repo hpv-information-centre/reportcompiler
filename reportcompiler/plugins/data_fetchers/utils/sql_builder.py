@@ -1,111 +1,13 @@
-import pymysql.cursors
-import pandas as pd
-import pymysql
-import pymysql.cursors
-import os
-import json
-import sqlite3
-import logging
 import re
 from collections import OrderedDict
-from threading import Lock
-from pymysql.err import OperationalError
-from reportcompiler.plugins.data_fetchers.data_fetchers \
-    import FragmentDataFetcher
+from reportcompiler.plugins.data_fetchers.base \
+    import DataFetcher
 # TODO: Document JSON -> SQL specification
 # (inspired by https://github.com/2do2go/json-sql/tree/master/docs#type-select)
 
 # TODO: Consider other condition (WHERE) types (>, <, other builtins, ...)
 # TODO: Consider adding subqueries to specification
 # TODO: Test and optimize for larger data sets
-
-
-class MySQLFetcher(FragmentDataFetcher):
-    """ Data fetcher for MySQL databases. """
-    name = 'mysql'
-    mutex = Lock()
-
-    @staticmethod
-    def create_connection(credentials):
-        connection = pymysql.connect(host=credentials['host'],
-                                     user=credentials['user'],
-                                     password=credentials['password'],
-                                     db=credentials['db'],
-                                     charset='utf8mb4',
-                                     cursorclass=pymysql.cursors.DictCursor)
-        return connection
-
-    def fetch(self, doc_var, fetcher_info, metadata):
-        # TODO: Look for ways to avoid mutex
-        with MySQLFetcher.mutex:
-            data = self._fetch(doc_var, fetcher_info, metadata)
-        return data
-
-    def _fetch(self, doc_var, fetcher_info, metadata):
-        credentials = MySQLFetcher._create_context_credentials(fetcher_info,
-                                                               metadata)
-        try:
-            connection = MySQLFetcher.create_connection(credentials)
-        except OperationalError as e:
-            raise FragmentDataFetcher.raise_data_fetching_exception(
-                    metadata,
-                    exception=e)
-
-        try:
-            sql_string = SQLQueryBuilder(doc_var,
-                                         fetcher_info,
-                                         metadata).build()
-        except KeyError:
-            raise FragmentDataFetcher.raise_data_fetching_exception(
-                metadata,
-                message='Table/column definition not defined for fragment')
-
-        df = pd.read_sql(sql_string, con=connection)
-        return df
-
-    @staticmethod
-    def _create_context_credentials(fetcher_info, metadata):
-        credentials = None
-
-        try:
-            with open(os.path.join(metadata['report_path'],
-                                   'credentials',
-                                   fetcher_info['credentials_file'] + '.json'),
-                      'r') as cred_file:
-                credentials = json.load(cred_file)
-        except KeyError:
-            pass
-
-        if credentials is None:
-            credentials = {}
-            try:
-                credentials['host'] = fetcher_info['host']
-                credentials['user'] = fetcher_info['user']
-                credentials['password'] = fetcher_info['password']
-                credentials['db'] = fetcher_info['db']
-            except KeyError:
-                raise FragmentDataFetcher.raise_data_fetching_exception(
-                    metadata,
-                    message='MySQL credentials not specified in context')
-        return credentials
-
-
-class SQLiteFetcher(FragmentDataFetcher):
-    """ Data fetcher for SQLite databases. """
-    name = 'sqlite'
-
-    def fetch(self, doc_var, fetcher_info, metadata):
-        conn = sqlite3.connect(os.path.join(metadata['data_path'],
-                                            fetcher_info['file']))
-        c = conn.cursor()
-        sql_string = SQLQueryBuilder(doc_var, fetcher_info, metadata).build()
-        logger = logging.getLogger(metadata['logger_name'])
-        logger.debug('[{}] {}'.format(metadata['doc_suffix'], sql_string))
-        c.execute(sql_string)
-        data = c.fetchall()
-        column_names = [col[0] for col in c.description]
-        df = pd.DataFrame(data=data, columns=column_names)
-        return df
 
 
 class SQLQueryBuilder:
@@ -159,11 +61,10 @@ class SQLQueryBuilder:
             self._raise_exception("'fields' field missing")
         column_aliases = self.fetcher_info['fields']
         if isinstance(column_aliases, list):
-            column_aliases = {c: c for c in column_aliases}
+            column_aliases = OrderedDict([(c, c) for c in column_aliases])
         alias_list = ['`{}` AS `{}`'.format(col_name.replace('.', '`.`'),
                                             alias)
                       for col_name, alias in column_aliases.items()]
-        alias_list.sort()  # To force determinism and make testing easier
 
         select_clause = ', '.join(alias_list)
         if self.fetcher_info.get('distinct') is None:
@@ -234,8 +135,7 @@ class SQLQueryBuilder:
                 on_columns_str = ['`{}` = `{}`'.format(k.replace('.', '`.`'),
                                                        v.replace('.', '`.`'))
                                   for k, v in on_columns.items()]
-                # To force determinism and make testing easier
-                on_columns_str.sort()
+
                 join_str = '{} JOIN {} ON {}'.format(
                                 join_type,
                                 table, ' AND '.join(on_columns_str))
@@ -258,8 +158,7 @@ class SQLQueryBuilder:
             self._build_filter_term(column_aliases, is_var=True))
         filter_clause.extend(
             self._build_filter_term(column_aliases, is_var=False))
-        # To force determinism and make testing easier
-        filter_clause.sort()
+
         filter_clause = ' AND '.join(filter_clause)
         if filter_clause != '':
             filter_clause = 'WHERE {}'.format(filter_clause)
@@ -275,15 +174,19 @@ class SQLQueryBuilder:
         try:
             for column, value in self.fetcher_info[key].items():
                 self._validate_sql_varname(column)
-                self._validate_sql_varname(value)
+                # self._validate_sql_varname(value)
                 if is_var:
-                    try:
-                        value = self.doc_var[value]
-                    except KeyError:
-                        self._raise_exception(
-                                'Variable "{}" used in fetcher "condition" '
-                                'field is not available in doc_var'
-                                .format(value))
+                    if not isinstance(value, list):
+                        value = [value]
+                    for i, v in enumerate(value):
+                        try:
+                            value[i] = self.doc_var[v]
+                        except KeyError:
+                            self._raise_exception(
+                                    'Variable "{}" used in fetcher '
+                                    '"condition" field is not available in '
+                                    'doc_var'
+                                    .format(v))
                 if isinstance(value, list):
                     value = ["'" + str(v) + "'" for v in value]
                     filter_value = ','.join(value)
@@ -365,9 +268,9 @@ class SQLQueryBuilder:
                     .format(name))
 
     def _raise_exception(self, message):
-        raise FragmentDataFetcher.raise_data_fetching_exception(
+        raise DataFetcher.raise_data_fetching_exception(
             self.metadata,
             message=message)
 
 
-__all__ = ['MySQLFetcher', 'SQLiteFetcher', 'SQLQueryBuilder', ]
+__all__ = ['SQLQueryBuilder', ]

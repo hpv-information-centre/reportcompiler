@@ -62,7 +62,8 @@ class Report:
                 " (config.json)")
 
         with open(config_file) as config_data:
-            config = json.loads(jsmin(config_data.read()))
+            config = json.loads(jsmin(config_data.read()),
+                                object_pairs_hook=OrderedDict)
         self.name = name
         self.path = dir_path
         self.metadata = OrderedDict(config)
@@ -96,7 +97,7 @@ class Report:
             return
 
         os.mkdir(new_report_path)
-        dirs = ['src', 'templates']
+        dirs = ['src', 'templates', 'data', 'credentials']
         for d in dirs:
             os.mkdir(os.path.join(new_report_path, d))
         config_content = """

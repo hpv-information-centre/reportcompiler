@@ -1,10 +1,10 @@
 import importlib
 import os
-from reportcompiler.plugins.context_generators.context_generators \
-    import FragmentContextGenerator
+from reportcompiler.plugins.context_generators.base \
+    import ContextGenerator
 
 
-class PythonContextGenerator(FragmentContextGenerator):
+class PythonContextGenerator(ContextGenerator):
     """ Context generator for python scripts. """
     name = 'python'
 
@@ -16,7 +16,7 @@ class PythonContextGenerator(FragmentContextGenerator):
         try:
             context = fragment_module.generate_context(doc_var, data, metadata)
         except Exception as e:
-            FragmentContextGenerator.raise_generator_exception(
+            ContextGenerator.raise_generator_exception(
                 metadata, exception=e)
         return context
 

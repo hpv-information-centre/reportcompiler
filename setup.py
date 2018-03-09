@@ -11,7 +11,7 @@ os.chdir(
 
 setup(
     name='report-compiler',
-    version='0.3',
+    version='0.3.1',
     packages=find_packages('.'),
     include_package_data=True,
     license='MIT License',
@@ -29,5 +29,12 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+    ],
+    install_requires=[
+        'pandas',
+        'anytree',
+        'jsmin',
+        'GitPython',
+        'odictliteral',
     ],
 )
