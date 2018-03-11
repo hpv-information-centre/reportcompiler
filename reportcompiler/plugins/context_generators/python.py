@@ -13,7 +13,6 @@ from reportcompiler.plugins.context_generators.base \
 
 class PythonContextGenerator(ContextGenerator):
     """ Context generator for python scripts. """
-    name = 'python'
 
     def generate_context(self, doc_var, data, metadata):
         filename, _ = os.path.splitext(metadata['fragment_path'])

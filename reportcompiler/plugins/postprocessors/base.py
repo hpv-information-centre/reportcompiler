@@ -15,6 +15,8 @@ class PostProcessor(PluginModule):
     """ Plugin that implements the postprocessing stage for the document (see
     architecture). """
 
+    entry_point_group = 'postprocessors'
+
     @abstractmethod
     def postprocess(self, doc_var, doc, postprocessor_info, context):
         """

@@ -9,15 +9,12 @@ import os
 import sqlite3
 import logging
 import pandas as pd
-from reportcompiler.plugins.data_fetchers.base \
-    import DataFetcher
 from reportcompiler.plugins.data_fetchers.sql \
     import SQLFetcher
 
 
 class SQLiteFetcher(SQLFetcher):
     """ Data fetcher for SQLite databases. """
-    name = 'sqlite'
 
     def fetch(self, doc_var, fetcher_info, metadata):
         conn = sqlite3.connect(os.path.join(metadata['data_path'],

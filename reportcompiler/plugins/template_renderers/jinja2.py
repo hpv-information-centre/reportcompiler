@@ -17,7 +17,6 @@ from reportcompiler.plugins.template_renderers.base \
 
 class JinjaRenderer(TemplateRenderer):
     """ Template renderer for jinja2. """
-    name = 'jinja'
 
     def render_template(self, doc_var, context):
         try:
@@ -81,7 +80,6 @@ class JinjaRenderer(TemplateRenderer):
 
 class JinjaLatexRenderer(JinjaRenderer):
     """ Template renderer for jinja2, with latex-friendly syntax. """
-    name = 'jinja-latex'
 
     def _setup_environment(self, jinja_env):
         def escape_tex(value):

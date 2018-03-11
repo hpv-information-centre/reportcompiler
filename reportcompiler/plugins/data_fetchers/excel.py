@@ -13,7 +13,6 @@ from reportcompiler.plugins.data_fetchers.base \
 
 class ExcelFetcher(DataFetcher):
     """ Data fetcher for excel files. """
-    name = 'excel'
 
     def fetch(self, doc_var, fetcher_info, metadata):
         params = [

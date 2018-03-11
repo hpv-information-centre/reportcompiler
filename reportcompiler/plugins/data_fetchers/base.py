@@ -14,6 +14,8 @@ from reportcompiler.plugins.errors import DataFetchingError
 class DataFetcher(PluginModule):
     """ Plugin that implements the data fetching stage for a fragment. """
 
+    entry_point_group = 'data_fetchers'
+
     @abstractmethod
     def fetch(self, doc_var, fetcher_info, metadata):
         """

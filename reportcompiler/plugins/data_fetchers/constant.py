@@ -13,7 +13,6 @@ from reportcompiler.plugins.data_fetchers.base \
 
 class ConstantFetcher(DataFetcher):
     """ Constant data fetcher. """
-    name = 'constant'
 
     def fetch(self, doc_var, fetcher_info, metadata):
         try:

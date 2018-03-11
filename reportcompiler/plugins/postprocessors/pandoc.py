@@ -11,10 +11,9 @@ from jinja2.exceptions import UndefinedError
 from reportcompiler.plugins.postprocessors.base import PostProcessor
 
 
-class PandocPostprocessor(PostProcessor):
+class PandocPostProcessor(PostProcessor):
     """ Postprocessor for pandoc. """
     # TODO: Testing
-    name = 'pandoc-pdf'
 
     def postprocess(self, doc_var, doc, postprocessor_info, context):
         try:
@@ -65,8 +64,8 @@ class PandocPostprocessor(PostProcessor):
         return 'pdf'
 
 
-class PandocHTMLPostprocessor(PandocPostprocessor):
-    name = 'pandoc-html'
+class PandocHTMLPostProcessor(PandocPostProcessor):
+    """ Postprocessor for pandoc to HTML. """
     # TODO: Finish implementation
 
     def _get_pandoc_args(self):

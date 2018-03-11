@@ -17,6 +17,9 @@ from reportcompiler.plugins.errors import ContextGenerationError
 
 class ContextGenerator(PluginModule):
     """ Plugin that implements the context generation stage for a fragment. """
+
+    entry_point_group = 'context_generators'
+
     def generate_context_wrapper(self, doc_var, data, metadata):
         """
         Wraps the context generation with temporary file creation and hash
@@ -217,8 +220,8 @@ class ContextGenerator(PluginModule):
     @classmethod
     def _get_default_handler(cls, **kwargs):
         extension_dict = {
-            '.py': ContextGenerator.get('python'),
-            '.r': ContextGenerator.get('r')
+            '.py': 'python',
+            '.r': 'r'
         }
         try:
             extension = kwargs['extension']
@@ -226,7 +229,7 @@ class ContextGenerator(PluginModule):
             raise ValueError('File extension not specified')
 
         try:
-            return extension_dict[extension.lower()]
+            return ContextGenerator.get(extension_dict[extension.lower()])
         except KeyError:
             raise NotImplementedError(
                 'No {} specified and no default is available for extension {}'.

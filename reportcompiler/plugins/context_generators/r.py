@@ -13,7 +13,6 @@ from reportcompiler.plugins.context_generators.base \
 
 class RContextGenerator(ContextGenerator):
     """ Context generator for R scripts. """
-    name = 'r'
 
     def generate_context(self, doc_var, data, metadata):
         r_code = "library(jsonlite, quietly=TRUE);\

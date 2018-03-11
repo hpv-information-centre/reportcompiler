@@ -15,6 +15,8 @@ class TemplateRenderer(PluginModule):
     """ Plugin that implements the template rendering stage for the document (see
     architecture). """
 
+    entry_point_group = 'template_renderers'
+
     @abstractmethod
     def render_template(self, doc_var, context):
         """ Renders the template after the context is generated for all fragments.

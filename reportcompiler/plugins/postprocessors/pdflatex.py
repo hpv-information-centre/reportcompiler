@@ -12,7 +12,6 @@ from reportcompiler.plugins.postprocessors.base import PostProcessor
 
 class PdflatexPostProcessor(PostProcessor):
     """ Postprocessor for pdflatex. """
-    name = 'pdflatex'
 
     def postprocess(self, doc_var, doc, postprocessor_info, context):
         suffix = context['meta']['doc_suffix']

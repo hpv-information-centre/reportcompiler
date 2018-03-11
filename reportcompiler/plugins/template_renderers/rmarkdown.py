@@ -19,7 +19,6 @@ from reportcompiler.plugins.template_renderers.base \
 class RMarkdownRenderer(TemplateRenderer):
     """ Template renderer for RMarkdown. """
     # TODO: Testing
-    name = 'rmarkdown'
 
     def render_template(self, doc_var, context):
         try:

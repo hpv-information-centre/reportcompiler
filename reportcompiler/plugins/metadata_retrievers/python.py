@@ -1,12 +1,18 @@
+""" python.py
+
+This module includes the metadata retriever using python.
+
+"""
+
+
 import importlib
 import importlib.util
-from reportcompiler.plugins.metadata_retriever.base \
+from reportcompiler.plugins.metadata_retrievers.base \
     import MetadataRetriever
 
 
 class PythonMetadataRetriever(MetadataRetriever):
     """ Metadata retriever for python scripts. """
-    name = 'python'
 
     def retrieve_fragment_metadata(self, doc_var, metadata):
         module_name = metadata['fragment_name']
@@ -23,5 +29,6 @@ class PythonMetadataRetriever(MetadataRetriever):
                        if (not callable(fragment_module.__dict__[var]) and
                            not var.startswith('__'))}
         return module_vars
+
 
 __all__ = ['PythonMetadataRetriever', ]

@@ -1,12 +1,19 @@
+""" r.py
+
+This module includes the metadata retriever using R.
+
+"""
+
+
 import json
+from collections import OrderedDict
 from subprocess import run, PIPE, CalledProcessError
-from reportcompiler.plugins.metadata_retriever.base \
+from reportcompiler.plugins.metadata_retrievers.base \
     import MetadataRetriever
 
 
 class RMetadataRetriever(MetadataRetriever):
     """ Metadata retriever for R scripts. """
-    name = 'r'
 
     def retrieve_fragment_metadata(self, doc_var, metadata):
         r_code = "library(jsonlite, quietly=TRUE);\
@@ -37,6 +44,7 @@ class RMetadataRetriever(MetadataRetriever):
                 exception=e,
                 message=e.stderr)
         return json.loads(output.stdout,
-                          object_pairs_hook=collections.OrderedDict)
+                          object_pairs_hook=OrderedDict)
+
 
 __all__ = ['RMetadataRetriever', ]
