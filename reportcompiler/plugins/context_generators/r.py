@@ -4,11 +4,12 @@ This module includes the context generator using R.
 
 """
 
-
 import json
 from subprocess import run, PIPE, CalledProcessError
 from reportcompiler.plugins.context_generators.base \
     import ContextGenerator
+
+__all__ = ['RContextGenerator', ]
 
 
 class RContextGenerator(ContextGenerator):
@@ -42,5 +43,3 @@ class RContextGenerator(ContextGenerator):
                 exception=e,
                 message=e.stderr)
         return json.loads(output.stdout)
-
-__all__ = ['RContextGenerator', ]

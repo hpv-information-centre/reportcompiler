@@ -4,11 +4,12 @@ This module includes the base plugin interface for postprocessors.
 
 """
 
-
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import PostProcessorError
+
+__all__ = ['PostProcessor', ]
 
 
 class PostProcessor(PluginModule):
@@ -54,5 +55,3 @@ class PostProcessor(PluginModule):
         if exception:
             err.with_traceback(exception.__traceback__)
         raise err from None
-
-__all__ = ['PostProcessor', ]

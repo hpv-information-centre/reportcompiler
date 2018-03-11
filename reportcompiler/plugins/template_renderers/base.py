@@ -4,11 +4,12 @@ This module includes the base plugin interface for template renderers.
 
 """
 
-
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import TemplateRendererException
+
+__all__ = ['TemplateRenderer', ]
 
 
 class TemplateRenderer(PluginModule):
@@ -64,5 +65,3 @@ class TemplateRenderer(PluginModule):
         if exception:
             err.with_traceback(exception.__traceback__)
         raise err from None
-
-__all__ = ['TemplateRenderer', ]

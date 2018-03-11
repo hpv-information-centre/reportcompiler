@@ -4,9 +4,7 @@ This module includes the template renderer using rmarkdown.
 
 """
 
-
 import re
-import jinja2
 import os
 import json
 import shutil
@@ -14,6 +12,8 @@ from subprocess import run, PIPE, CalledProcessError
 from jinja2.exceptions import UndefinedError
 from reportcompiler.plugins.template_renderers.base \
     import TemplateRenderer
+
+__all__ = ['RMarkdownRenderer', ]
 
 
 class RMarkdownRenderer(TemplateRenderer):
@@ -23,8 +23,8 @@ class RMarkdownRenderer(TemplateRenderer):
     def render_template(self, doc_var, context):
         try:
             template_tmp_dir = os.path.join(
-                                    context['meta']['tmp_path'],
-                                    'templates')
+                context['meta']['tmp_path'],
+                'templates')
             if not os.path.exists(template_tmp_dir):
                 os.mkdir(template_tmp_dir)
 
@@ -36,10 +36,10 @@ class RMarkdownRenderer(TemplateRenderer):
                              context['meta']['tmp_path'].replace(
                                  '\\', '\\\\')) + \
                          "knitr::knit(input='{}', encoding='UTF-8');".format(
-                            os.path.join(context['meta']['tmp_path'],
-                                         'templates',
-                                         context['meta']['main_template']).
-                            replace('\\', '\\\\'))
+                             os.path.join(context['meta']['tmp_path'],
+                                          'templates',
+                                          context['meta']['main_template']).
+                             replace('\\', '\\\\'))
                 command = 'Rscript --vanilla -e "{}"'.format(
                                 r_code.replace('"', '\\"'))
                 run(command,
@@ -50,9 +50,9 @@ class RMarkdownRenderer(TemplateRenderer):
                     universal_newlines=True)
             except CalledProcessError as e:
                 TemplateRenderer.raise_rendering_exception(
-                                    context,
-                                    exception=e,
-                                    message=e.stdout)
+                    context,
+                    exception=e,
+                    message=e.stdout)
 
             shutil.rmtree(template_tmp_dir)
 
@@ -94,5 +94,3 @@ class RMarkdownRenderer(TemplateRenderer):
         for m in matches:
             templates += [t.strip() for t in m]
         return templates
-
-__all__ = ['RMarkdownRenderer', ]

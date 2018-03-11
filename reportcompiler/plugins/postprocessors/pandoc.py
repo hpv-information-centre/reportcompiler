@@ -4,11 +4,12 @@ This module includes the postprocessor using pandoc.
 
 """
 
-
 import os
 from subprocess import run, PIPE, CalledProcessError
 from jinja2.exceptions import UndefinedError
 from reportcompiler.plugins.postprocessors.base import PostProcessor
+
+__all__ = ['PandocPostProcessor', 'PandocHTMLPostProcessor', ]
 
 
 class PandocPostProcessor(PostProcessor):
@@ -18,9 +19,9 @@ class PandocPostProcessor(PostProcessor):
     def postprocess(self, doc_var, doc, postprocessor_info, context):
         try:
             md_file = os.path.splitext(
-                        os.path.join(
-                            context['meta']['tmp_path'],
-                            context['meta']['main_template']))[0] + '.md'
+                os.path.join(
+                    context['meta']['tmp_path'],
+                    context['meta']['main_template']))[0] + '.md'
             suffix = context['meta']['doc_suffix']
             filename = context['meta']['name']
             if suffix != '':
@@ -32,12 +33,12 @@ class PandocPostProcessor(PostProcessor):
                     "+RTS -K512m -RTS " + \
                     "--standalone " + \
                     "\"{input_md}\" ".format(
-                                input_md=md_file.replace('\\', '\\\\')) + \
+                        input_md=md_file.replace('\\', '\\\\')) + \
                     self._get_pandoc_args() + " " + \
                     "--output \"{output_file}.{ext}\" ".format(
                         output_file=os.path.join(
-                                context['meta']['out_path'],
-                                filename).replace('\\', '\\\\'),
+                            context['meta']['out_path'],
+                            filename).replace('\\', '\\\\'),
                         ext=self._get_output_extension())
                 # TODO: Do something with the result
                 run(pandoc_cmd,
@@ -49,9 +50,9 @@ class PandocPostProcessor(PostProcessor):
                     cwd=context['meta']['tmp_path'])
             except CalledProcessError as e:
                 PostProcessor.raise_postprocessor_exception(
-                                    context,
-                                    exception=e,
-                                    message=e.stdout)
+                    context,
+                    exception=e,
+                    message=e.stdout)
 
             return None
         except UndefinedError as e:
@@ -73,5 +74,3 @@ class PandocHTMLPostProcessor(PandocPostProcessor):
 
     def _get_output_extension(self):
         return 'html'
-
-__all__ = ['PandocPostprocessor', 'PandocHTMLPostprocessor', ]

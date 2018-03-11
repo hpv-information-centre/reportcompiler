@@ -4,11 +4,12 @@ This module includes the base plugin interface for data fetchers.
 
 """
 
-
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import DataFetchingError
+
+__all__ = ['DataFetcher', ]
 
 
 class DataFetcher(PluginModule):
@@ -61,5 +62,3 @@ class DataFetcher(PluginModule):
     @classmethod
     def _get_default_handler(cls, **kwargs):
         return DataFetcher.get('constant')
-
-__all__ = ['DataFetcher', ]

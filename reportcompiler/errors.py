@@ -4,6 +4,8 @@ This module defines the error structure that document generation can return.
 
 """
 
+__all__ = ['FragmentGenerationError', ]
+
 
 class FragmentGenerationError(Exception):
     """ Exception that encapsulates the different errors that might occur in
@@ -28,5 +30,3 @@ class FragmentGenerationError(Exception):
                 else:
                     msg += '[{}] {}:\n {}\n\n'.format(doc, fragment, error)
         return msg + '{} error/s'.format(count)
-
-__all__ = ['FragmentGenerationError', ]

@@ -4,7 +4,6 @@ This module includes the base plugin interface for context generators.
 
 """
 
-
 import json
 import os
 import hashlib
@@ -13,6 +12,8 @@ from tempfile import NamedTemporaryFile
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import ContextGenerationError
+
+__all__ = ['ContextGenerator', ]
 
 
 class ContextGenerator(PluginModule):
@@ -234,5 +235,3 @@ class ContextGenerator(PluginModule):
             raise NotImplementedError(
                 'No {} specified and no default is available for extension {}'.
                 format(cls, extension))
-
-__all__ = ['ContextGenerator', ]

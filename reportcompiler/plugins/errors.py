@@ -5,6 +5,13 @@ process.
 
 """
 
+__all__ = [
+    'ContextGenerationError',
+    'DataFetchingError',
+    'MetadataRetrievalError',
+    'PostProcessorError',
+    'TemplateRendererException', ]
+
 
 class ContextGenerationError(Exception):
     """ Exception on context generation """
@@ -29,10 +36,3 @@ class PostProcessorError(Exception):
 class TemplateRendererException(Exception):
     """ Exception on template rendering """
     pass
-
-__all__ = [
-            'ContextGenerationError',
-            'DataFetchingError',
-            'MetadataRetrievalError',
-            'PostProcessorError',
-            'TemplateRendererException', ]

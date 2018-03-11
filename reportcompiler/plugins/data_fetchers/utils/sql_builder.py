@@ -5,17 +5,19 @@ JSON data.
 
 """
 
-
-import re
-from collections import OrderedDict
-from reportcompiler.plugins.data_fetchers.base \
-    import DataFetcher
 # TODO: Document JSON -> SQL specification
 # (inspired by https://github.com/2do2go/json-sql/tree/master/docs#type-select)
 
 # TODO: Consider other condition (WHERE) types (>, <, other builtins, ...)
 # TODO: Consider adding subqueries to specification
 # TODO: Test and optimize for larger data sets
+
+import re
+from collections import OrderedDict
+from reportcompiler.plugins.data_fetchers.base \
+    import DataFetcher
+
+__all__ = ['SQLQueryBuilder', ]
 
 
 class SQLQueryBuilder:
@@ -163,16 +165,16 @@ class SQLQueryBuilder:
 
         filter_clause = []
         filter_clause.extend(
-            self._build_filter_term(column_aliases, is_var=True))
+            self._build_filter_term(is_var=True))
         filter_clause.extend(
-            self._build_filter_term(column_aliases, is_var=False))
+            self._build_filter_term(is_var=False))
 
         filter_clause = ' AND '.join(filter_clause)
         if filter_clause != '':
             filter_clause = 'WHERE {}'.format(filter_clause)
         return filter_clause
 
-    def _build_filter_term(self, column_aliases, is_var):
+    def _build_filter_term(self, is_var):
         if is_var:
             key = 'condition'
         else:
@@ -279,6 +281,3 @@ class SQLQueryBuilder:
         raise DataFetcher.raise_data_fetching_exception(
             self.metadata,
             message=message)
-
-
-__all__ = ['SQLQueryBuilder', ]

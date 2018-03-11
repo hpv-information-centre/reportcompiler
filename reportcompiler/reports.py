@@ -4,24 +4,17 @@ This module is responsible for the representation and handling of report
 specifications.
 
 """
+
 import json
 import logging
 import os
-import sys
-import traceback
-from collections import ChainMap, OrderedDict
-from concurrent.futures import ThreadPoolExecutor
-from copy import deepcopy
-from datetime import datetime
-from glob import glob
+from collections import OrderedDict
 
 import git
-import pandas as pd
-from anytree import RenderTree as Tree
-from anytree import Node, PreOrderIter
-from git import InvalidGitRepositoryError
 from jsmin import jsmin
 from reportcompiler.reportcompilers import ReportCompiler
+
+__all__ = ['Report', ]
 
 
 class Report:
@@ -51,7 +44,7 @@ class Report:
                 os.mkdir(dir_path)
             try:
                 git.Repo(dir_path)
-            except InvalidGitRepositoryError:
+            except git.InvalidGitRepositoryError:
                 repo = git.Repo.init(dir_path)
                 repo.create_remote('origin', repo_url)
                 repo.remotes.origin.pull(repo_branch)
@@ -280,5 +273,3 @@ class Report:
                 raise ValueError(
                     'Some document variables have invalid values.\n{}'.
                     format(allowed_values_msg))
-
-__all__ = ['Report', ]

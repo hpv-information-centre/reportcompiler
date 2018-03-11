@@ -4,11 +4,12 @@ This module includes the base data fetcher class using SQL.
 
 """
 
-
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 from reportcompiler.plugins.data_fetchers.utils.sql_builder \
     import SQLQueryBuilder
+
+__all__ = ['SQLFetcher', ]
 
 
 class SQLFetcher(DataFetcher):
@@ -21,6 +22,3 @@ class SQLFetcher(DataFetcher):
         return SQLQueryBuilder(doc_var,
                                fetcher_info,
                                metadata).build()
-
-
-__all__ = ['SQLFetcher', ]

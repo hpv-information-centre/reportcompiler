@@ -5,8 +5,9 @@ the rest of the plugin classes are derived.
 
 """
 
-
 from pkg_resources import iter_entry_points
+
+__all__ = ['PluginModule', ]
 
 
 class PluginModuleMeta(type):
@@ -93,6 +94,3 @@ class PluginModule(object, metaclass=PluginModuleMeta):
                     entry_point_group,
                     str(e)))
         return class_dict
-
-
-__all__ = ['PluginModule', ]

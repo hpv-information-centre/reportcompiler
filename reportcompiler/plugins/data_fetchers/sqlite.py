@@ -4,13 +4,14 @@ This module includes the data fetcher using SQLite.
 
 """
 
-
 import os
 import sqlite3
 import logging
 import pandas as pd
 from reportcompiler.plugins.data_fetchers.sql \
     import SQLFetcher
+
+__all__ = ['SQLiteFetcher', ]
 
 
 class SQLiteFetcher(SQLFetcher):
@@ -28,6 +29,3 @@ class SQLiteFetcher(SQLFetcher):
         column_names = [col[0] for col in c.description]
         df = pd.DataFrame(data=data, columns=column_names)
         return df
-
-
-__all__ = ['SQLiteFetcher', ]

@@ -4,28 +4,28 @@ This module is responsible for the compilation of the reports (ReportCompiler)
 and its fragments (FragmentCompiler).
 
 """
+
 import os
 import traceback
 import logging
 import json
 import sys
-import glob
-import pandas as pd
-from anytree import PreOrderIter, Node, RenderTree as Tree
 from collections import OrderedDict, ChainMap
 from glob import glob
 from copy import deepcopy
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from anytree import PreOrderIter, Node, RenderTree as Tree
 from reportcompiler.plugins.data_fetchers.base import DataFetcher
 from reportcompiler.plugins.context_generators.base \
     import ContextGenerator
-from reportcompiler.plugins.metadata_retriever.base \
+from reportcompiler.plugins.metadata_retrievers.base \
     import MetadataRetriever
 from reportcompiler.plugins.template_renderers.base import TemplateRenderer
 from reportcompiler.plugins.postprocessors.base import PostProcessor
 from reportcompiler.errors import FragmentGenerationError
+
+__all__ = ['ReportCompiler', 'FragmentCompiler', ]
 
 
 class ReportCompiler:
@@ -56,6 +56,12 @@ class ReportCompiler:
 
     def __init__(self, _report):
         self.report = _report
+        try:
+            self.renderer = TemplateRenderer.get(
+                id=self.report.metadata['template_renderer'])
+        except KeyError:
+            self.renderer = TemplateRenderer.get()  # Default renderer
+
         self.template_tree = self.generate_template_tree()
         self.source_file_map = self.generate_fragments_mapping()
 
@@ -172,12 +178,12 @@ class ReportCompiler:
                                    report_metadata['doc_suffix'])
         log_path = report_metadata['log_path']
         file_handler = logging.FileHandler(
-                        os.path.join(log_path,
-                                     report_metadata['doc_suffix'] +
-                                     '__' +
-                                     datetime.now().strftime(
-                                         '%Y_%m_%d__%H_%M_%S') +
-                                     '.log'))
+            os.path.join(log_path,
+                         report_metadata['doc_suffix'] +
+                         '__' +
+                         datetime.now().strftime(
+                             '%Y_%m_%d__%H_%M_%S') +
+                         '.log'))
         formatter = logging.Formatter(ReportCompiler.LOG_FORMAT)
         file_handler.setFormatter(formatter)
         logger.setLevel(log_level)
@@ -511,8 +517,8 @@ class FragmentCompiler:
             os.path.basename(fragment))[0]
 
         fragment_metadata = FragmentCompiler.retrieve_fragment_metadata(
-                                                    doc_var,
-                                                    metadata)
+            doc_var,
+            metadata)
         metadata.update(fragment_metadata)
         doc_var_augmented = FragmentCompiler.prefetch_data(doc_var, metadata)
         fragment_data = FragmentCompiler.fetch_data(doc_var_augmented,
@@ -656,8 +662,8 @@ class FragmentCompiler:
                 message = 'Fetcher id is duplicated {}'.format(fetcher_id)
                 if logger:
                     logger.error('[{}] {}'.format(
-                                            metadata['doc_suffix'],
-                                            message))
+                        metadata['doc_suffix'],
+                        message))
                 raise NotImplementedError(message)
             data[fetcher_id] = dt
 
@@ -687,7 +693,7 @@ class FragmentCompiler:
                 generator = ContextGenerator.get(id=generator_info)
             elif isinstance(generator_info, dict):
                 generator = ContextGenerator.get(
-                                id=generator_info[file_extension])
+                    id=generator_info[file_extension])
             else:
                 pass  # Context generator invalid, ignoring...
 
@@ -697,10 +703,10 @@ class FragmentCompiler:
         if generator is None:
             try:
                 generator = ContextGenerator.get(
-                                extension=file_extension)
+                    extension=file_extension)
             except KeyError:
                 message = 'Data fetcher not specified for fragment {}'.format(
-                                metadata['fragment_name'])
+                    metadata['fragment_name'])
                 logger.error('[{}] {}'.format(metadata['doc_suffix'], message))
                 raise NotImplementedError(message)
 
@@ -708,5 +714,3 @@ class FragmentCompiler:
                                                      fragment_data,
                                                      metadata)
         return context
-
-__all__ = ['ReportCompiler', 'FragmentCompiler', ]

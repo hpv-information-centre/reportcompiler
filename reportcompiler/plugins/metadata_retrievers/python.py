@@ -4,11 +4,12 @@ This module includes the metadata retriever using python.
 
 """
 
-
 import importlib
 import importlib.util
 from reportcompiler.plugins.metadata_retrievers.base \
     import MetadataRetriever
+
+__all__ = ['PythonMetadataRetriever', ]
 
 
 class PythonMetadataRetriever(MetadataRetriever):
@@ -29,6 +30,3 @@ class PythonMetadataRetriever(MetadataRetriever):
                        if (not callable(fragment_module.__dict__[var]) and
                            not var.startswith('__'))}
         return module_vars
-
-
-__all__ = ['PythonMetadataRetriever', ]

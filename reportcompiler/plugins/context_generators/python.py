@@ -4,11 +4,12 @@ This module includes the context generator using python.
 
 """
 
-
 import importlib
 import os
 from reportcompiler.plugins.context_generators.base \
     import ContextGenerator
+
+__all__ = ['PythonContextGenerator', ]
 
 
 class PythonContextGenerator(ContextGenerator):
@@ -25,5 +26,3 @@ class PythonContextGenerator(ContextGenerator):
             ContextGenerator.raise_generator_exception(
                 metadata, exception=e)
         return context
-
-__all__ = ['PythonContextGenerator', ]

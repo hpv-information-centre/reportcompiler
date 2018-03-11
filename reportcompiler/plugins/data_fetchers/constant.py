@@ -5,10 +5,11 @@ parameter).
 
 """
 
-
 import pandas as pd
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
+
+__all__ = ['ConstantFetcher', ]
 
 
 class ConstantFetcher(DataFetcher):
@@ -31,5 +32,3 @@ class ConstantFetcher(DataFetcher):
             raise DataFetcher.raise_data_fetching_exception(
                 metadata,
                 message="The 'type' or 'values' keys are not set.")
-
-__all__ = ['ConstantFetcher', ]

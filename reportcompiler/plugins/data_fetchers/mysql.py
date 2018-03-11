@@ -4,7 +4,6 @@ This module includes the data fetcher using MySQL.
 
 """
 
-
 import os
 import json
 import threading
@@ -16,6 +15,8 @@ from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 from reportcompiler.plugins.data_fetchers.sql \
     import SQLFetcher
+
+__all__ = ['MySQLFetcher', ]
 
 
 class MySQLFetcher(SQLFetcher):
@@ -85,6 +86,3 @@ class MySQLFetcher(SQLFetcher):
                     metadata,
                     message='MySQL credentials not specified in context')
         return credentials
-
-
-__all__ = ['MySQLFetcher', ]
