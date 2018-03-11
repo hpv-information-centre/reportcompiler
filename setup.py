@@ -10,7 +10,7 @@ os.chdir(
         os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='report-compiler',
+    name='reportcompiler',
     version='0.3.1',
     packages=find_packages('.'),
     include_package_data=True,
@@ -37,4 +37,44 @@ setup(
         'GitPython',
         'odictliteral',
     ],
+    entry_points={
+        'reportcompiler.metadata_retrievers': [
+            'python=reportcompiler.plugins.metadata_retrievers.python:'
+            'PythonMetadataRetriever',
+            'r=reportcompiler.plugins.metadata_retrievers.r:'
+            'RMetadataRetriever',
+        ],
+        'reportcompiler.data_fetchers': [
+            'constant=reportcompiler.plugins.data_fetchers.constant:'
+            'ConstantFetcher',
+            'excel=reportcompiler.plugins.data_fetchers.excel:'
+            'ExcelFetcher',
+            'mysql=reportcompiler.plugins.data_fetchers.mysql:'
+            'MySQLFetcher',
+            'sqlite=reportcompiler.plugins.data_fetchers.sqlite:'
+            'SQLiteFetcher',
+        ],
+        'reportcompiler.context_generators': [
+            'python=reportcompiler.plugins.context_generators.python:'
+            'PythonContextGenerator',
+            'r=reportcompiler.plugins.context_generators.r:'
+            'RContextGenerator',
+        ],
+        'reportcompiler.template_renderers': [
+            'jinja=reportcompiler.plugins.template_renderers.jinja2:'
+            'JinjaRenderer',
+            'jinja-latex=reportcompiler.plugins.template_renderers.jinja2:'
+            'JinjaLatexRenderer',
+            'rmarkdown=reportcompiler.plugins.template_renderers.rmarkdown:'
+            'RMarkdownRenderer',
+        ],
+        'reportcompiler.postprocessors': [
+            'pdflatex=reportcompiler.plugins.postprocessors.pdflatex:'
+            'PdflatexPostProcessor',
+            'pandoc=reportcompiler.plugins.postprocessors.pandoc:'
+            'PandocPostProcessor',
+            'pandoc-html=reportcompiler.plugins.postprocessors.pandoc:'
+            'PandocHTMLPostProcessor',
+        ],
+    }
 )
