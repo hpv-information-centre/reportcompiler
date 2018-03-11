@@ -1,3 +1,10 @@
+""" base.py
+
+This module includes the base plugin interface for postprocessors.
+
+"""
+
+
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule

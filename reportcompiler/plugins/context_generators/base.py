@@ -1,3 +1,10 @@
+""" base.py
+
+This module includes the base plugin interface for context generators.
+
+"""
+
+
 import json
 import os
 import hashlib
@@ -20,7 +27,7 @@ class ContextGenerator(PluginModule):
             with the specified input data
         :param dict metadata: Report metadata (overriden by fragment metadata
             when specified)
-        :return: Dictionary with context for the template rendering stage
+        :returns: Dictionary with context for the template rendering stage
         :rtype: dict
         """
         logger = logging.getLogger(metadata['logger_name'])
@@ -174,7 +181,7 @@ class ContextGenerator(PluginModule):
             with the specified input data
         :param dict metadata: Report metadata (overriden by fragment metadata
             when specified)
-        :return: Dictionary with context for the template rendering stage
+        :returns: Dictionary with context for the template rendering stage
         :rtype: dict
         """
         raise NotImplementedError(
@@ -209,14 +216,6 @@ class ContextGenerator(PluginModule):
 
     @classmethod
     def _get_default_handler(cls, **kwargs):
-        """
-        In case no explicit plugin is specified, each plugin type can specify
-        a default plugin.
-
-        :param dict kwargs: Parameters to decide on a default
-        :return: Default plugin
-        :rtype: PluginModule
-        """
         extension_dict = {
             '.py': ContextGenerator.get('python'),
             '.r': ContextGenerator.get('r')

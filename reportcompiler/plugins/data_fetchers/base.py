@@ -1,3 +1,10 @@
+""" base.py
+
+This module includes the base plugin interface for data fetchers.
+
+"""
+
+
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
@@ -17,7 +24,7 @@ class DataFetcher(PluginModule):
             (multiple can be used for fragment)
         :param dict metadata: Report metadata (overriden by fragment metadata
             when specified)
-        :return: Dataframe (or list of dataframes)
+        :returns: Dataframe (or list of dataframes)
         :rtype: pandas.DataFrame
         """
         raise NotImplementedError(

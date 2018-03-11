@@ -1,3 +1,10 @@
+""" sqlite.py
+
+This module includes the data fetcher using SQLite.
+
+"""
+
+
 import os
 import sqlite3
 import logging

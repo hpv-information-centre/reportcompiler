@@ -1,3 +1,10 @@
+""" python.py
+
+This module includes the context generator using python.
+
+"""
+
+
 import importlib
 import os
 from reportcompiler.plugins.context_generators.base \

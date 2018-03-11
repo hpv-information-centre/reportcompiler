@@ -1,3 +1,11 @@
+""" sql_builder.py
+
+This module includes the utilities to build SQL queries from structured
+JSON data.
+
+"""
+
+
 import re
 from collections import OrderedDict
 from reportcompiler.plugins.data_fetchers.base \

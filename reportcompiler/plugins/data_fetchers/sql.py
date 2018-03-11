@@ -1,12 +1,10 @@
-import pymysql.cursors
-import pymysql
-import pymysql.cursors
-import pandas as pd
-import os
-import json
-import logging
-from threading import Lock
-from pymysql.err import OperationalError
+""" sql.py
+
+This module includes the base data fetcher class using SQL.
+
+"""
+
+
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 from reportcompiler.plugins.data_fetchers.utils.sql_builder \

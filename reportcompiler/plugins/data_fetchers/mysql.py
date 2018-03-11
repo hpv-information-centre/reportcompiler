@@ -1,12 +1,17 @@
-import pymysql.cursors
-import pymysql
-import pymysql.cursors
-import pandas as pd
+""" mysql.py
+
+This module includes the data fetcher using MySQL.
+
+"""
+
+
 import os
 import json
-import logging
-from threading import Lock
+import threading
+import pymysql.cursors
+import pymysql
 from pymysql.err import OperationalError
+import pandas as pd
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 from reportcompiler.plugins.data_fetchers.sql \
@@ -15,8 +20,7 @@ from reportcompiler.plugins.data_fetchers.sql \
 
 class MySQLFetcher(SQLFetcher):
     """ Data fetcher for MySQL databases. """
-    name = 'mysql'
-    mutex = Lock()
+    mutex = threading.Lock()
 
     @staticmethod
     def create_connection(credentials):

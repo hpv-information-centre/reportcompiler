@@ -1,3 +1,10 @@
+""" jinja2.py
+
+This module includes the template renderer using jinja2 (and derivatives).
+
+"""
+
+
 import re
 import jinja2
 import os

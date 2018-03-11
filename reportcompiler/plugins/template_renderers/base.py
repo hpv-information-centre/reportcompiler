@@ -1,3 +1,10 @@
+""" base.py
+
+This module includes the base plugin interface for template renderers.
+
+"""
+
+
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
@@ -24,7 +31,7 @@ class TemplateRenderer(PluginModule):
         """ Returns the included templates in the specified content.
 
         :param str content: Template content
-        :return: List of included templates
+        :returns: List of included templates
         :rtype: list
         """
         raise NotImplementedError(

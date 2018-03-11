@@ -1,3 +1,11 @@
+""" errors.py
+
+This module contains the errors for each stage of the fragment generation
+process.
+
+"""
+
+
 class ContextGenerationError(Exception):
     """ Exception on context generation """
     pass

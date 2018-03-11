@@ -1,3 +1,9 @@
+""" reportcompilers.py
+
+This module is responsible for the compilation of the reports (ReportCompiler)
+and its fragments (FragmentCompiler).
+
+"""
 import os
 import traceback
 import logging
@@ -29,10 +35,11 @@ class ReportCompiler:
     @staticmethod
     def get_doc_var_suffix(doc_var):
         """
-        Generates a unique suffix given a particular document variable
-        :param doc_var: Document variable
-        :return: String with a representation of the document variable, to be
+        Generates a unique suffix given a particular document variable.
+        :param OrderedDict doc_var: Document variable
+        :returns: String with a representation of the document variable, to be
         used as a filename suffix
+        :rtype: str
         """
         try:
             if isinstance(doc_var, list) or isinstance(doc_var, tuple):
@@ -54,6 +61,13 @@ class ReportCompiler:
 
     @staticmethod
     def fetch_info(doc_var, metadata):
+        """
+        Fetches the information about the allowed document variables.
+        :param OrderedDict doc_var: Document variable
+        :param dict metadata: Report metadata
+        :returns: Dictionary with the allowed values for mandatory variables.
+        :rtype: dict
+        """
         return FragmentCompiler.fetch_info(
                                 doc_var=doc_var,
                                 fetcher_key='allowed_docvar_values_fetcher',
@@ -64,9 +78,8 @@ class ReportCompiler:
         """
         Prepares the environment to generate the necessary files (e.g. output,
         temp, logs, hashes, figures, ...) and variables.
-        :param metadata: Report metadata
-        :param doc_var: Document variable
-        :return: None
+        :param dict metadata: Report metadata
+        :param OrderedDict doc_var: Document variable
         """
         def _build_subpath(directory):
             return os.path.join(metadata['report_path'],
@@ -100,8 +113,9 @@ class ReportCompiler:
     def generate_template_tree(self):
         """
         Scans the template directory and creates a template dependency tree
-        (i.e. templates, subtemplates, ...)
-        :return: Template dependency tree
+        (i.e. templates, subtemplates, ...).
+        :returns: Template dependency tree
+        :rtype: anytree.Tree
         """
         root_template = Node(self.report.main_template)
         stack = [root_template]
@@ -121,7 +135,8 @@ class ReportCompiler:
         """
         Generates (and validates) the mapping between each template and its
         corresponding source code file.
-        :return: Template/source code file mapping
+        :returns: Template/source code file mapping
+        :rtype: dict
         """
         src_mapping = {}
         for fragment in PreOrderIter(self.template_tree.node):
@@ -148,10 +163,9 @@ class ReportCompiler:
     @staticmethod
     def setup_logger(report_metadata, log_level):
         """
-        Initializes and sets up logger
-        :param report_metadata: Report metadata
-        :param log_level: Log level
-        :return: Logger
+        Initializes and sets up the logger.
+        :param dict report_metadata: Report metadata
+        :param int log_level: Log level
         """
         logger = logging.getLogger(report_metadata['name'] +
                                    '_' +
@@ -190,7 +204,6 @@ class ReportCompiler:
             be limited to one thread and several measures will be taken to
             facilitate debugging: each
         :param int log_level: Log level
-        :return: None
         """
         if debug_mode:
             n_doc_workers = 1
@@ -236,6 +249,10 @@ class ReportCompiler:
                 'Error on document(s) generation:\n', traceback_dict)
 
     def _pre_doc_generation(self, report_metadata):
+        """
+        Actions made before starting the document generation process.
+        :param dict report_metadata: Report metadata
+        """
         meta_dir = os.path.join(report_metadata['report_path'], '..', '_meta')
         for f in glob(os.path.join(meta_dir, 'error_*')):
             os.remove(f)
@@ -243,6 +260,10 @@ class ReportCompiler:
             os.remove(os.path.join(meta_dir, 'last_debug_errors'))
 
     def _post_doc_generation(self, report_metadata):
+        """
+        Actions made after finishing the document generation process.
+        :param dict report_metadata: Report metadata
+        """
         meta_dir = os.path.join(report_metadata['report_path'], '..', '_meta')
         last_errors_file = open(os.path.join(meta_dir,
                                              'last_debug_errors'), 'w')
@@ -259,13 +280,15 @@ class ReportCompiler:
     def _generate_fragment(self, _fragment, _doc_var, _report_metadata):
         """
         Returns a function that generates a fragment for a particular document,
-        used by the ThreadPoolExecutor
-        :param _fragment: Fragment name
-        :param _doc_var: Document variable
-        :param _report_metadata: Report metadata
-        :return: Function that generates a fragment
+        used by the ThreadPoolExecutor.
+        :param str _fragment: Fragment name
+        :param OrderedDict _doc_var: Document variable
+        :param dict _report_metadata: Report metadata
+        :returns: Function that generates a fragment
+        :rtype: function
         """
         def func():
+            """ Fragment-generating closure """
             fragment_name = _fragment.name
             fragment_path = _fragment.path
             fragment_path = '/'.join([elem.name for elem in fragment_path])
@@ -291,13 +314,16 @@ class ReportCompiler:
                       n_frag_workers=2):
         """
         Returns a function that generates a document, used by the
-        ThreadPoolExecutor
-        :param _doc_var: Document variable
-        :param _report_metadata: Report metadata
-        :param n_frag_workers: Number of concurrent fragment-generating threads
-        :return: Function that generates a document
+        ThreadPoolExecutor.
+        :param OrderedDict _doc_var: Document variable
+        :param dict _report_metadata: Report metadata
+        :param int n_frag_workers: Number of concurrent fragment-generating
+            threads
+        :returns: Function that generates a document
+        :rtype: function
         """
         def func():
+            """ Document-generating closure """
             doc_var = _doc_var
             report_metadata = _report_metadata
             logger = logging.getLogger(report_metadata['logger_name'])
@@ -376,27 +402,25 @@ class ReportCompiler:
     def included_templates(self, content):
         """
         Returns the number of child templates included in content, according
-        to the report template renderer engine
-        :param content: String content of the parent template
-        :return: List of child templates included in content
+        to the report template renderer engine.
+        :param str content: String content of the parent template
+        :returns: List of child templates included in content
+        :rtype: list
         """
-        try:
-            renderer = TemplateRenderer.get(
-                id=self.report.metadata['template_renderer'])
-        except KeyError:
-            renderer = TemplateRenderer.get()  # Default renderer
 
-        return renderer.included_templates(content)
+        return self.renderer.included_templates(content)
 
     @staticmethod
     def render_template(doc_var, context):
         """
-        Performs the template rendering stage for the report (see architecture)
-        :param doc_var: Document variable
-        :param context: Full context with two keys: 'data' for context
+        Performs the template rendering stage for the report
+        (see architecture).
+        :param OrderedDict doc_var: Document variable
+        :param dict context: Full context with two keys: 'data' for context
         generation output and 'meta' for report metadata
-        :return: Template rendering engine output, generally the rendered
+        :returns: Template rendering engine output, generally the rendered
         template
+        :rtype: object
         """
         try:
             renderer = TemplateRenderer.get(
@@ -415,11 +439,11 @@ class ReportCompiler:
         """
         Performs the postprocessing stages for the report (see architecture).
         Multiple stages can be defined.
-        :param doc: Document content, output from the template rendering stage
-        :param doc_var: Document variable
-        :param context: Full context with two keys: 'data' for context
+        :param object doc: Document content, output from the template
+            rendering stage
+        :param OrderedDict doc_var: Document variable
+        :param dict context: Full context with two keys: 'data' for context
         generation output and 'meta' for report metadata
-        :return: None
         """
         try:
             postprocessors_info = context['meta']['postprocessor']
@@ -443,12 +467,13 @@ class ReportCompiler:
     def update_nested_dict(doc_context, fragment, frag_context):
         """
         Updates a dictionary recursively, forming a nested structure according
-        to the template tree structure
-        :param doc_context: Context/dictionary to be updated
-        :param fragment: Path of the new fragment from the template root, used
-        as the new key path
-        :param frag_context: Dictionary to be inserted in doc_context
-        :return: Updated document context
+        to the template tree structure.
+        :param dict doc_context: Context/dictionary to be updated
+        :param str fragment: Path of the new fragment from the template root,
+            used as the new key path
+        :param dict frag_context: Dictionary to be inserted in doc_context
+        :returns: Updated document context
+        :rtype: dict
         """
         head, tail = os.path.split(fragment)
         fragment_items = []
@@ -471,12 +496,14 @@ class FragmentCompiler:
     @staticmethod
     def compile(fragment, doc_var, report_metadata):
         """
-        Compiles a fragment within a document with the given document variables
-        :param fragment: Fragment path from template root
-        :param doc_var: Document variable
-        :param report_metadata: Report metadata
-        :return: Dictionary with the context of the specified fragment, to be
-        used in the template rendering stage
+        Compiles a fragment within a document with the given document
+            variables.
+        :param str fragment: Fragment path from template root
+        :param OrderedDict doc_var: Document variable
+        :param dict report_metadata: Report metadata
+        :returns: Context of the specified fragment, to be
+            used in the template rendering stage
+        :rtype: dict
         """
         metadata = report_metadata
         metadata['fragment_path'] = fragment
@@ -498,10 +525,11 @@ class FragmentCompiler:
     def retrieve_fragment_metadata(doc_var, metadata):
         """
         Stage to extract metadata from within the fragment's source code (see
-        architecture)
-        :param doc_var: Document variable
-        :param metadata: Report metadata
-        :return: Fragment metadata dictionary
+        architecture).
+        :param OrderedDict doc_var: Document variable
+        :param dict metadata: Report metadata
+        :returns: Fragment metadata dictionary
+        :rtype: dict
         """
         _, file_extension = os.path.splitext(metadata['fragment_path'])
         try:
@@ -521,11 +549,12 @@ class FragmentCompiler:
     def prefetch_data(doc_var, metadata):
         """
         Stage to "augment" the document variable with necessary data for
-        future stages (see architecture)
-        :param doc_var: Document variable
-        :param metadata: Metadata (report metadata, overriden by fragment)
-        :return: Document variable "augmented" with the specified additional
-        data
+        future stages (see architecture).
+        :param OrderedDict doc_var: Document variable
+        :param dict metadata: Metadata (report metadata, overriden by fragment)
+        :returns: Document variable "augmented" with the specified additional
+            data
+        :rtype: dict
         """
         logger = logging.getLogger(metadata['logger_name'])
         message = 'Starting predata fetching...'
@@ -545,10 +574,12 @@ class FragmentCompiler:
     def fetch_data(doc_var, metadata):
         """
         Stage to fetch the data to be used in the context generation stage
-        (see architecture)
-        :param doc_var: Document variable (augmented by prefetching)
-        :param metadata: Metadata (report metadata, overriden by fragment)
-        :return: Pandas dataframe (or list of dataframes) with required data
+        (see architecture).
+        :param OrderedDict doc_var: Document variable (augmented by
+            prefetching)
+        :param dict metadata: Metadata (report metadata, overriden by fragment)
+        :returns: Pandas dataframe (or list of dataframes) with required data
+        :rtype: pandas.DataFrame
         """
         logger = logging.getLogger(metadata['logger_name'])
         message = 'Starting data fetching...'
@@ -558,10 +589,12 @@ class FragmentCompiler:
     @staticmethod
     def fetch_info(doc_var, fetcher_key, metadata):
         """
-        Fetches data according to fetcher_key
-        :param doc_var: Document variable (augmented by prefetching)
-        :param metadata: Metadata (report metadata, overriden by fragment)
-        :return: Pandas dataframe (or list of dataframes) with required data
+        Fetches data according to fetcher_key.
+        :param OrderedDict doc_var: Document variable (augmented by
+            prefetching)
+        :param dict metadata: Metadata (report metadata, overriden by fragment)
+        :returns: Pandas dataframe (or list of dataframes) with required data
+        :rtype: pandas.DataFrame
         """
         fragment_path = metadata.get('fragment_path')
         if fragment_path is None:
@@ -635,12 +668,14 @@ class FragmentCompiler:
         """
         Stage to generate dictionary to be used as context for template
         rendering stage.
-        :param fragment_data: Pandas dataframe (or list of dataframes) with
-        the current fragment's data
-        :param doc_var: Document variable (augmented by prefetching)
-        :param metadata: Metadata (report metadata, overriden by fragment)
-        :return: Dictionary with the context of the current fragment, to be
-        used in the template rendering stage
+        :param pandas.DataFrame fragment_data: Pandas dataframe (or list
+            of dataframes) with the current fragment's data
+        :param OrderedDict doc_var: Document variable (augmented by
+            prefetching)
+        :param dict metadata: Metadata (report metadata, overriden by fragment)
+        :returns: Dictionary with the context of the current fragment, to be
+            used in the template rendering stage
+        :rtype: dict
         """
         logger = logging.getLogger(metadata['logger_name'])
         _, file_extension = os.path.splitext(metadata['fragment_path'])

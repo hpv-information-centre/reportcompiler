@@ -1,3 +1,10 @@
+""" errors.py
+
+This module defines the error structure that document generation can return.
+
+"""
+
+
 class FragmentGenerationError(Exception):
     """ Exception that encapsulates the different errors that might occur in
     the compilation of fragments of a document"""

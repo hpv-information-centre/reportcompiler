@@ -1,3 +1,10 @@
+""" r.py
+
+This module includes the context generator using R.
+
+"""
+
+
 import json
 from subprocess import run, PIPE, CalledProcessError
 from reportcompiler.plugins.context_generators.base \

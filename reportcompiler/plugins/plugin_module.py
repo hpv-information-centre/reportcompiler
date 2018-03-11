@@ -34,8 +34,9 @@ class PluginModule(object, metaclass=PluginModuleMeta):
         """
         In case no explicit plugin is specified, each plugin type can specify
         a default plugin.
-        :param kwargs: Parameters to decide on a default
-        :return: Default plugin
+        :param dict kwargs: Parameters to decide on a default
+        :returns: Default plugin
+        :rtype: PluginModule
         """
         raise NotImplementedError(
             'No default handlers are available for {}'.format(cls))
@@ -44,9 +45,10 @@ class PluginModule(object, metaclass=PluginModuleMeta):
     def get(cls, id=None, **kwargs):
         """
         Instantiates the specified plugin
-        :param id: plugin id (e.g. 'mysql', 'python', ...)
-        :param kwargs: optional arguments
-        :return: Plugin
+        :param str id: plugin id (e.g. 'mysql', 'python', ...)
+        :param dict kwargs: optional arguments
+        :returns: Plugin
+        :rtype: PluginModule
         """
         class_dict = cls._get_classes()
         if id:

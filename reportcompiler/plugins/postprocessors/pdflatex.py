@@ -1,3 +1,10 @@
+""" pdflatex.py
+
+This module includes the postprocessor using pdflatex.
+
+"""
+
+
 import os
 from subprocess import run, PIPE, CalledProcessError
 from reportcompiler.plugins.postprocessors.base import PostProcessor

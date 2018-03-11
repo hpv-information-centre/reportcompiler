@@ -1,3 +1,10 @@
+""" rmarkdown.py
+
+This module includes the template renderer using rmarkdown.
+
+"""
+
+
 import re
 import jinja2
 import os

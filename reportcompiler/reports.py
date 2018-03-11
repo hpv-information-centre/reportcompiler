@@ -1,3 +1,9 @@
+""" reports.py
+
+This module is responsible for the representation and handling of report
+specifications.
+
+"""
 import json
 import logging
 import os
@@ -85,7 +91,8 @@ class Report:
         """
         Creates a new report specification.
         :param str new_report_path: Full path of the new report specification.
-            The parent path must exist, and the last directory will be created
+            The parent path must exist, and the last directory in the path will
+            be created.
         """
         if not os.path.exists(os.path.join(new_report_path, os.path.pardir)):
             raise EnvironmentError(
@@ -136,11 +143,12 @@ class Report:
         """
         Returns the allowed values for the document variables for the current
         report if specified in the configuration file.
-        :param doc_var: Document variable to check, necessary when checking
-        dependent variables
-        :return: Dictionary with possible values of the variables specified in
-        the report configuration. Variables dependent on others missing from
-        doc_var are returned with value None.
+        :param OrderedDict doc_var: Document variable to check, necessary when
+            checking dependent variables
+        :returns: Dictionary with possible values of the variables specified in
+            the report configuration. Variables dependent on others missing
+            from doc_var are returned with value None.
+        :rtype: dict
         """
         try:
             dt = ReportCompiler.fetch_info(doc_var, self.metadata)
@@ -157,8 +165,9 @@ class Report:
     @property
     def main_template(self):
         """
-        Returns the main template filename
-        :return: main template filename
+        Returns the main template filename.
+        :returns: main template filename
+        :rtype: str
         """
         return self.metadata['main_template']
 
@@ -171,12 +180,14 @@ class Report:
         """
         Generates the documents with document variables doc_vars from the
         current report.
-        :param doc_vars: Document variables to generate documents
-        :param n_doc_workers: Number of concurrent document-generating threads
-        :param n_frag_workers: Number of concurrent fragment-generating
-        threads (within each document-generating thread)
-        :param log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
-        logging.ERROR, ...)
+        :param OrderedDict|list doc_vars: Document variables to generate
+            documents
+        :param int n_doc_workers: Number of concurrent document-generating
+            threads
+        :param int n_frag_workers: Number of concurrent fragment-generating
+            threads (within each document-generating thread)
+        :param int log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
+            logging.ERROR, ...)
         """
         if doc_vars is None:
             doc_vars = {}
@@ -195,8 +206,9 @@ class Report:
     def _clean_and_validate_doc_vars(self, doc_vars):
         """
         Validation and cleaning of input document variable list
-        :param doc_vars: Input document variable list
-        :return: Cleaned up document variable list
+        :param list doc_vars: Input document variable list
+        :returns: Cleaned up document variable list
+        :rtype: list
         """
         Report._check_and_clean_duplicate_variables(doc_vars)
 

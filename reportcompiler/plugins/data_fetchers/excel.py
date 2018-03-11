@@ -1,5 +1,12 @@
-import pandas as pd
+""" excel.py
+
+This module includes the data fetcher using Excel worksheets.
+
+"""
+
+
 import os
+import pandas as pd
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 

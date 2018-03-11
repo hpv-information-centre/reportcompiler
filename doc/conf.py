@@ -326,7 +326,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'ReportCompiler', 'Report Compiler Documentation',
-     author, 'ReportCompiler', 'One line description of project.',
+     author, 'ReportCompiler', 'Generates highly customizable reports from a report specification.',
      'Miscellaneous'),
 ]
 

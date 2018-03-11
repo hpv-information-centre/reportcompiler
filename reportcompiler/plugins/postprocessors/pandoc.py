@@ -1,3 +1,10 @@
+""" pandoc.py
+
+This module includes the postprocessor using pandoc.
+
+"""
+
+
 import os
 from subprocess import run, PIPE, CalledProcessError
 from jinja2.exceptions import UndefinedError

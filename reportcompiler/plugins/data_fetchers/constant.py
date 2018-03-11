@@ -1,3 +1,11 @@
+""" constant.py
+
+This module includes the data fetcher using a constant list (given as a
+parameter).
+
+"""
+
+
 import pandas as pd
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
