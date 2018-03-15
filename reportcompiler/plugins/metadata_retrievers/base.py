@@ -1,11 +1,21 @@
+""" base.py
+
+This module includes the base plugin interface for metadata retrievers.
+
+"""
+
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import MetadataRetrievalError
 
+__all__ = ['MetadataRetriever', ]
+
 
 class MetadataRetriever(PluginModule):
     """ Plugin that implements the metadata retrieval stage for a fragment. """
+
+    entry_point_group = 'metadata_retrievers'
 
     @abstractmethod
     def retrieve_fragment_metadata(self, doc_var, metadata):
@@ -15,7 +25,7 @@ class MetadataRetriever(PluginModule):
         :param OrderedDict doc_var: Document variable
         :param dict metadata: Report metadata (overriden by fragment metadata
             when specified)
-        :return: Dictionary with metadata
+        :returns: Dictionary with metadata
         :rtype: dict
         """
         raise NotImplementedError(
@@ -39,8 +49,8 @@ class MetadataRetriever(PluginModule):
         else:
             location = '<None>'
         full_msg = '{}: Metadata retrieval error:\n\n{}'.format(
-                                                            location,
-                                                            exception_info)
+            location,
+            exception_info)
         if context.get('logger_name'):
             logger = logging.getLogger(context['logger_name'])
             logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
@@ -51,27 +61,17 @@ class MetadataRetriever(PluginModule):
 
     @classmethod
     def _get_default_handler(cls, **kwargs):
-        """
-        In case no explicit plugin is specified, each plugin type can specify
-        a default plugin.
-
-        :param dict kwargs: Parameters to decide on a default
-        :return: Default plugin
-        :rtype: FragmentMetadataRetriever
-        """
         extension_dict = {
-            '.py': MetadataRetriever.get('python'),
-            '.r': MetadataRetriever.get('r')
+            '.py': 'python',
+            '.r': 'r'
         }
         try:
             extension = kwargs['extension']
         except KeyError:
             raise ValueError('File extension not specified')
         try:
-            return extension_dict[extension.lower()]
+            return MetadataRetriever.get(extension_dict[extension.lower()])
         except KeyError:
             raise NotImplementedError(
                 'No {} specified and no default is available for extension {}'.
                 format(cls, extension))
-
-__all__ = ['MetadataRetriever', ]

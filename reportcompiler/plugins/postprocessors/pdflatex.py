@@ -1,11 +1,18 @@
+""" pdflatex.py
+
+This module includes the postprocessor using pdflatex.
+
+"""
+
 import os
 from subprocess import run, PIPE, CalledProcessError
 from reportcompiler.plugins.postprocessors.base import PostProcessor
 
+__all__ = ['PdflatexPostProcessor', ]
+
 
 class PdflatexPostProcessor(PostProcessor):
     """ Postprocessor for pdflatex. """
-    name = 'pdflatex'
 
     def postprocess(self, doc_var, doc, postprocessor_info, context):
         suffix = context['meta']['doc_suffix']
@@ -35,8 +42,6 @@ class PdflatexPostProcessor(PostProcessor):
                 universal_newlines=True)
         except CalledProcessError as e:
             PostProcessor.raise_postprocessor_exception(
-                            context,
-                            exception=e,
-                            message=e.stdout)
-
-__all__ = ['PdflatexPostProcessor', ]
+                context,
+                exception=e,
+                message=e.stdout)

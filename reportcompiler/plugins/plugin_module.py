@@ -1,16 +1,21 @@
-import importlib
-import os
-import re
-import inspect
-from abc import ABCMeta
+""" plugin_modules.py
+
+This module has the implementation of the plugin module base class from where
+the rest of the plugin classes are derived.
+
+"""
+
+from pkg_resources import iter_entry_points
+
+__all__ = ['PluginModule', ]
 
 
 class PluginModuleMeta(type):
     """ Base metaclass to make subclasses inherit docstrings from their
     parents if empty. """
     # TODO: Check efficiency
-    def __new__(mcls, classname, bases, cls_dict):
-        cls = super().__new__(mcls, classname, bases, cls_dict)
+    def __new__(mcs, classname, bases, cls_dict):
+        cls = super().__new__(mcs, classname, bases, cls_dict)
         for name, member in cls_dict.items():
             if (not getattr(member, '__doc__') and
                     hasattr(bases[-1], name) and
@@ -34,8 +39,9 @@ class PluginModule(object, metaclass=PluginModuleMeta):
         """
         In case no explicit plugin is specified, each plugin type can specify
         a default plugin.
-        :param kwargs: Parameters to decide on a default
-        :return: Default plugin
+        :param dict kwargs: Parameters to decide on a default
+        :returns: Default plugin
+        :rtype: PluginModule
         """
         raise NotImplementedError(
             'No default handlers are available for {}'.format(cls))
@@ -44,11 +50,13 @@ class PluginModule(object, metaclass=PluginModuleMeta):
     def get(cls, id=None, **kwargs):
         """
         Instantiates the specified plugin
-        :param id: plugin id (e.g. 'mysql', 'python', ...)
-        :param kwargs: optional arguments
-        :return: Plugin
+        :param str id: plugin id (e.g. 'mysql', 'python', ...) or dict
+            with more info (with the 'type' key enclosed)
+        :param dict kwargs: optional arguments
+        :returns: Plugin
+        :rtype: PluginModule
         """
-        class_dict = cls._get_classes()
+        class_dict = cls._get_plugins()
         if id:
             try:
                 # It might be a dictionary with more info, we get the type
@@ -57,100 +65,31 @@ class PluginModule(object, metaclass=PluginModuleMeta):
                     id = id['type']
                 return class_dict[id]()
             except KeyError:
-                raise NotImplementedError(
-                    '{} "{}" does not exist'.format(cls.__name__, id))
-        else:
-            try:
-                return cls._get_default_handler(**kwargs)
-            except NotImplementedError:
-                raise NotImplementedError(
-                    'There is no default {} for extension .{}'.format(
-                        cls.__name__, id))
+                pass  # If type is not defined we try the default plugin
+        try:
+            return cls._get_default_handler(**kwargs)
+        except NotImplementedError:
+            raise NotImplementedError(
+                'There is no default {} for extension .{}'.format(
+                    cls.__name__, id))
 
     @classmethod
-    def _get_classes(cls):
+    def _get_plugins(cls):
         """
-        Scans the corresponding directory and returns information about
-        suitable subclasses.
-        :return: Dictionary with the class names as keys and the classes
-        themselves as values
+        Returns the plugins of cls defined on the entry_point
+        'reportcompiler.<plugin_class>'.
+        :returns: Dictionary with elements {plugin_name: plugin_class}
+        :rtype: dict
         """
-        modules = cls._get_modules()
-        classes = set()
 
-        def is_plugin_subclass(other_cls):
-            return inspect.isclass(other_cls) and issubclass(other_cls, cls)
-
-        for module in modules:
-            module_classes = [cls
-                              for name, cls
-                              in inspect.getmembers(module,
-                                                    is_plugin_subclass)]
-            classes = classes.union(module_classes)
-        classes.remove(cls)
+        entry_point_group = 'reportcompiler.' + cls.entry_point_group
         class_dict = {}
-        # fetchers = FragmentDataFetcher.
-        #   _get_all_subclasses(FragmentDataFetcher)
-        for current_class in classes:
+        for entry_point in iter_entry_points(entry_point_group):
             try:
-                if class_dict.get(current_class.name) is not None:
-                    raise NameError(
-                        'Name conflict ("{}") with classes {} and {}'.
-                        format(current_class.name,
-                               class_dict[current_class.name], current_class))
-                class_dict[current_class.name] = current_class
-            except AttributeError:
-                raise AttributeError(
-                    'Class "{}" has no "name" attribute'.format(current_class))
+                class_dict[entry_point.name] = entry_point.load()
+            except Exception as e:
+                print("'{}' from '{}' not loaded:\n  {}".format(
+                    entry_point.name,
+                    entry_point_group,
+                    str(e)))
         return class_dict
-
-    @classmethod
-    def _get_modules(cls):
-        """
-        Scans the corresponding directory (e.g. context_generators) and
-        returns information about suitable modules.
-        :return: List of all module objects in the directory
-        """
-        def get_module_package(module):
-            """ Returns the package containing the module with the name
-            specified """
-            return '.'.join(module.split('.')[:-1])
-
-        pysearchre = re.compile('.py$', re.IGNORECASE)
-        pluginfiles = filter(pysearchre.search,
-                             os.listdir(os.path.dirname(
-                                            inspect.getfile(cls))))
-
-        def form_module(fp):
-            return '.' + os.path.splitext(fp)[0]
-
-        plugins = map(form_module, pluginfiles)
-        # import parent module / namespace
-        importlib.import_module(cls.__module__)
-        modules = []
-        for plugin in plugins:
-            if not plugin.startswith('__'):
-                try:
-                    modules.append(importlib.import_module(
-                                plugin,
-                                package=get_module_package(cls.__module__)))
-                except ImportError as e:
-                    if not getattr(cls, '_import_errors_printed', False):
-                        print("Warning: '{}' module not available "
-                              ": {}".format(plugin[1:], e))
-                    cls._import_errors_printed = True
-
-        return modules
-
-    @classmethod
-    def _get_all_subclasses(cls):
-        """ Returns all subclasses of the current class """
-        all_subclasses = []
-
-        for subclass in cls.__subclasses__():
-            all_subclasses.append(subclass)
-            all_subclasses.extend(cls._get_all_subclasses(**subclass))
-
-        return all_subclasses
-
-__all__ = ['PluginModule', ]

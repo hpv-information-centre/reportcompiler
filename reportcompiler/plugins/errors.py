@@ -1,3 +1,18 @@
+""" errors.py
+
+This module contains the errors for each stage of the fragment generation
+process.
+
+"""
+
+__all__ = [
+    'ContextGenerationError',
+    'DataFetchingError',
+    'MetadataRetrievalError',
+    'PostProcessorError',
+    'TemplateRendererException', ]
+
+
 class ContextGenerationError(Exception):
     """ Exception on context generation """
     pass
@@ -21,10 +36,3 @@ class PostProcessorError(Exception):
 class TemplateRendererException(Exception):
     """ Exception on template rendering """
     pass
-
-__all__ = [
-            'ContextGenerationError',
-            'DataFetchingError',
-            'MetadataRetrievalError',
-            'PostProcessorError',
-            'TemplateRendererException', ]

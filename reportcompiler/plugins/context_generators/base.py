@@ -1,3 +1,9 @@
+""" base.py
+
+This module includes the base plugin interface for context generators.
+
+"""
+
 import json
 import os
 import hashlib
@@ -7,9 +13,14 @@ from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import ContextGenerationError
 
+__all__ = ['ContextGenerator', ]
+
 
 class ContextGenerator(PluginModule):
     """ Plugin that implements the context generation stage for a fragment. """
+
+    entry_point_group = 'context_generators'
+
     def generate_context_wrapper(self, doc_var, data, metadata):
         """
         Wraps the context generation with temporary file creation and hash
@@ -20,7 +31,7 @@ class ContextGenerator(PluginModule):
             with the specified input data
         :param dict metadata: Report metadata (overriden by fragment metadata
             when specified)
-        :return: Dictionary with context for the template rendering stage
+        :returns: Dictionary with context for the template rendering stage
         :rtype: dict
         """
         logger = logging.getLogger(metadata['logger_name'])
@@ -157,10 +168,6 @@ class ContextGenerator(PluginModule):
         with open(fragment_hash_basename + '.ctx', 'w') as output_file:
             output_file.write(json.dumps(context, sort_keys=True))
 
-        if (metadata.get('delete_generator_files') and
-                metadata['delete_generator_files']):
-            os.remove(fragment_tmp_basename + '.json')
-
         del metadata['cache_file']
         return context
 
@@ -174,7 +181,7 @@ class ContextGenerator(PluginModule):
             with the specified input data
         :param dict metadata: Report metadata (overriden by fragment metadata
             when specified)
-        :return: Dictionary with context for the template rendering stage
+        :returns: Dictionary with context for the template rendering stage
         :rtype: dict
         """
         raise NotImplementedError(
@@ -209,17 +216,9 @@ class ContextGenerator(PluginModule):
 
     @classmethod
     def _get_default_handler(cls, **kwargs):
-        """
-        In case no explicit plugin is specified, each plugin type can specify
-        a default plugin.
-
-        :param dict kwargs: Parameters to decide on a default
-        :return: Default plugin
-        :rtype: PluginModule
-        """
         extension_dict = {
-            '.py': ContextGenerator.get('python'),
-            '.r': ContextGenerator.get('r')
+            '.py': 'python',
+            '.r': 'r'
         }
         try:
             extension = kwargs['extension']
@@ -227,10 +226,8 @@ class ContextGenerator(PluginModule):
             raise ValueError('File extension not specified')
 
         try:
-            return extension_dict[extension.lower()]
+            return ContextGenerator.get(extension_dict[extension.lower()])
         except KeyError:
             raise NotImplementedError(
                 'No {} specified and no default is available for extension {}'.
                 format(cls, extension))
-
-__all__ = ['ContextGenerator', ]

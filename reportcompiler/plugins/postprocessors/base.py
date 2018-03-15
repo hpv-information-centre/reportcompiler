@@ -1,12 +1,22 @@
+""" base.py
+
+This module includes the base plugin interface for postprocessors.
+
+"""
+
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import PostProcessorError
 
+__all__ = ['PostProcessor', ]
+
 
 class PostProcessor(PluginModule):
     """ Plugin that implements the postprocessing stage for the document (see
     architecture). """
+
+    entry_point_group = 'postprocessors'
 
     @abstractmethod
     def postprocess(self, doc_var, doc, postprocessor_info, context):
@@ -45,5 +55,3 @@ class PostProcessor(PluginModule):
         if exception:
             err.with_traceback(exception.__traceback__)
         raise err from None
-
-__all__ = ['PostProcessor', ]

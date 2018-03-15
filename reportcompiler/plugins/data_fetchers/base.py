@@ -1,11 +1,21 @@
+""" base.py
+
+This module includes the base plugin interface for data fetchers.
+
+"""
+
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import DataFetchingError
 
+__all__ = ['DataFetcher', ]
+
 
 class DataFetcher(PluginModule):
     """ Plugin that implements the data fetching stage for a fragment. """
+
+    entry_point_group = 'data_fetchers'
 
     @abstractmethod
     def fetch(self, doc_var, fetcher_info, metadata):
@@ -17,7 +27,7 @@ class DataFetcher(PluginModule):
             (multiple can be used for fragment)
         :param dict metadata: Report metadata (overriden by fragment metadata
             when specified)
-        :return: Dataframe (or list of dataframes)
+        :returns: Dataframe (or list of dataframes)
         :rtype: pandas.DataFrame
         """
         raise NotImplementedError(
@@ -52,5 +62,3 @@ class DataFetcher(PluginModule):
     @classmethod
     def _get_default_handler(cls, **kwargs):
         return DataFetcher.get('constant')
-
-__all__ = ['DataFetcher', ]

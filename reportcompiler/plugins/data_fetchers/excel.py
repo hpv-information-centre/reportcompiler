@@ -1,12 +1,19 @@
-import pandas as pd
+""" excel.py
+
+This module includes the data fetcher using Excel worksheets.
+
+"""
+
 import os
+import pandas as pd
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
+
+__all__ = ['ExcelFetcher', ]
 
 
 class ExcelFetcher(DataFetcher):
     """ Data fetcher for excel files. """
-    name = 'excel'
 
     def fetch(self, doc_var, fetcher_info, metadata):
         params = [
@@ -39,5 +46,3 @@ class ExcelFetcher(DataFetcher):
                            usecols=arguments['columns'],
                            na_values=arguments['na_values'])
         return df
-
-__all__ = ['ExcelFetcher', ]

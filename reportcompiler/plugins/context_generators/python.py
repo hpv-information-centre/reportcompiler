@@ -1,12 +1,19 @@
+""" python.py
+
+This module includes the context generator using python.
+
+"""
+
 import importlib
 import os
 from reportcompiler.plugins.context_generators.base \
     import ContextGenerator
 
+__all__ = ['PythonContextGenerator', ]
+
 
 class PythonContextGenerator(ContextGenerator):
     """ Context generator for python scripts. """
-    name = 'python'
 
     def generate_context(self, doc_var, data, metadata):
         filename, _ = os.path.splitext(metadata['fragment_path'])
@@ -19,5 +26,3 @@ class PythonContextGenerator(ContextGenerator):
             ContextGenerator.raise_generator_exception(
                 metadata, exception=e)
         return context
-
-__all__ = ['PythonContextGenerator', ]

@@ -1,12 +1,22 @@
+""" base.py
+
+This module includes the base plugin interface for template renderers.
+
+"""
+
 import logging
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import TemplateRendererException
 
+__all__ = ['TemplateRenderer', ]
+
 
 class TemplateRenderer(PluginModule):
     """ Plugin that implements the template rendering stage for the document (see
     architecture). """
+
+    entry_point_group = 'template_renderers'
 
     @abstractmethod
     def render_template(self, doc_var, context):
@@ -24,7 +34,7 @@ class TemplateRenderer(PluginModule):
         """ Returns the included templates in the specified content.
 
         :param str content: Template content
-        :return: List of included templates
+        :returns: List of included templates
         :rtype: list
         """
         raise NotImplementedError(
@@ -55,5 +65,3 @@ class TemplateRenderer(PluginModule):
         if exception:
             err.with_traceback(exception.__traceback__)
         raise err from None
-
-__all__ = ['TemplateRenderer', ]

@@ -1,35 +1,42 @@
+""" jinja2.py
+
+This module includes the template renderer using jinja2 (and derivatives).
+
+"""
+
 import re
-import jinja2
 import os
 import itertools
 import shutil
+import jinja2
 from jinja2.exceptions import UndefinedError
 from reportcompiler.plugins.template_renderers.base \
     import TemplateRenderer
 
+__all__ = ['JinjaRenderer', 'JinjaLatexRenderer', ]
+
 
 class JinjaRenderer(TemplateRenderer):
     """ Template renderer for jinja2. """
-    name = 'jinja'
 
     def render_template(self, doc_var, context):
         try:
             template_tmp_dir = os.path.join(
-                                context['meta']['tmp_path'],
-                                'templates')
+                context['meta']['tmp_path'],
+                'templates')
             if not os.path.exists(template_tmp_dir):
                 os.mkdir(template_tmp_dir)
 
             environment = jinja2.Environment(
-                            loader=jinja2.FileSystemLoader(template_tmp_dir),
-                            undefined=jinja2.StrictUndefined)
+                loader=jinja2.FileSystemLoader(template_tmp_dir),
+                undefined=jinja2.StrictUndefined)
             self._setup_environment(environment)
             self._generate_temp_templates(environment, context)
             # TODO: render vs generate
             rendered_template = \
                 environment.get_template(
-                                context['meta']['main_template']).render(
-                                                                    context)
+                    context['meta']['main_template']).render(
+                        context)
 
             shutil.rmtree(template_tmp_dir, ignore_errors=True)
 
@@ -74,7 +81,6 @@ class JinjaRenderer(TemplateRenderer):
 
 class JinjaLatexRenderer(JinjaRenderer):
     """ Template renderer for jinja2, with latex-friendly syntax. """
-    name = 'jinja-latex'
 
     def _setup_environment(self, jinja_env):
         def escape_tex(value):
@@ -119,5 +125,3 @@ class JinjaLatexRenderer(JinjaRenderer):
                 string=t) for t in templates]
         templates = list(itertools.chain.from_iterable(templates))
         return templates
-
-__all__ = ['JinjaRenderer', 'JinjaLatexRenderer', ]
