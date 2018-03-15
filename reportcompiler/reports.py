@@ -8,6 +8,7 @@ specifications.
 import json
 import logging
 import os
+import shutil
 from collections import OrderedDict
 
 import git
@@ -212,6 +213,17 @@ class Report:
                           n_frag_workers=n_frag_workers,
                           debug_mode=debug_mode,
                           log_level=log_level)
+
+    def clean(self, docs='all', keep=[]):
+        if docs == 'all':
+            docs = os.listdir(os.path.join(self.path, 'gen'))
+        if not isinstance(docs, list):
+            raise ValueError('docs must be a list')
+        for doc_dir in os.listdir(os.path.join(self.path, 'gen')):
+            if doc_dir in docs and doc_dir not in keep:
+                shutil.rmtree(os.path.join(self.path, 'gen', doc_dir))
+        if len(os.listdir(os.path.join(self.path, 'gen'))) == 0:
+            shutil.rmtree(os.path.join(self.path, 'gen'))
 
     def _clean_and_validate_doc_vars(self, doc_vars):
         """
