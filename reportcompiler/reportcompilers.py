@@ -50,6 +50,7 @@ class ReportCompiler:
                 suffix = doc_var
             else:
                 raise ValueError('doc_var has invalid type')
+            suffix = suffix.replace(': ', '=')
             return suffix
         except KeyError:
             return ''
@@ -76,7 +77,7 @@ class ReportCompiler:
         """
         return FragmentCompiler.fetch_info(
                                 doc_var=doc_var,
-                                fetcher_key='allowed_docvar_values_fetcher',
+                                fetcher_key='param_config',
                                 metadata=metadata)
 
     @staticmethod
@@ -334,8 +335,8 @@ class ReportCompiler:
         return func
 
     def _generate_doc(self,
-                      _doc_var,
-                      _report_metadata,
+                      doc_var,
+                      report_metadata,
                       n_frag_workers=2):
         """
         Returns a function that generates a document, used by the
@@ -349,8 +350,8 @@ class ReportCompiler:
         """
         def func():
             """ Document-generating closure """
-            doc_var = _doc_var
-            report_metadata = _report_metadata
+            augmented_doc_var = ReportCompiler.augment_doc_var(doc_var,
+                                                               report_metadata)
             logger = logging.getLogger(report_metadata['logger_name'])
             logger.info('[{}] Generating document...'.format(
                 report_metadata['doc_suffix']))
@@ -360,10 +361,10 @@ class ReportCompiler:
             with ThreadPoolExecutor(max_workers=n_frag_workers) as executor:
                 for fragment in PreOrderIter(self.template_tree.node):
                     # To avoid parallelism issues
-                    report_metadata_copy = deepcopy(report_metadata)
+                    _report_metadata = deepcopy(report_metadata)
                     worker = self._generate_fragment(fragment,
-                                                     doc_var,
-                                                     report_metadata_copy)
+                                                     augmented_doc_var,
+                                                     _report_metadata)
                     result = executor.submit(worker)
                     result.fragment = os.path.splitext(fragment.name)[0]
                     results.append(result)
@@ -417,8 +418,9 @@ class ReportCompiler:
                          for path_node in node.path][1:]))
                  for node in PreOrderIter(self.template_tree.node)
                  ]
-            output_doc = ReportCompiler.render_template(doc_var, context)
-            ReportCompiler.postprocess(output_doc, doc_var, context)
+            output_doc = ReportCompiler.render_template(augmented_doc_var,
+                                                        context)
+            ReportCompiler.postprocess(output_doc, augmented_doc_var, context)
             logger.info('[{}] Document generated'.format(
                 report_metadata['doc_suffix']))
             return output_doc
@@ -515,6 +517,32 @@ class ReportCompiler:
             aux_dict = aux_dict[item]
         aux_dict.update(frag_context)
 
+    @staticmethod
+    def augment_doc_var(doc_var, metadata):
+        """
+        Stage to "augment" the document variable with necessary additional data
+            for the document generation.
+        :param OrderedDict doc_var: Document variable
+        :param dict metadata: Metadata
+        :returns: Document variable "augmented" with the specified additional
+            data
+        :rtype: dict
+        """
+        logger = logging.getLogger(metadata['logger_name'])
+        message = 'Starting doc_var augmentation...'
+        logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
+        predata = FragmentCompiler.fetch_info(doc_var,
+                                              'param_augmentation',
+                                              metadata)
+        if len(predata) > 0:
+            flattened_predata = dict(ChainMap(*[df.ix[0, :].to_dict()
+                                                for df in predata.values()]))
+        else:
+            flattened_predata = {}
+        doc_var_augmented = deepcopy(doc_var)
+        doc_var_augmented.update(flattened_predata)
+        return doc_var_augmented
+
 
 class FragmentCompiler:
     """ Class responsible for compiling a fragment within a document """
@@ -539,11 +567,10 @@ class FragmentCompiler:
             doc_var,
             metadata)
         metadata.update(fragment_metadata)
-        doc_var_augmented = FragmentCompiler.prefetch_data(doc_var, metadata)
-        fragment_data = FragmentCompiler.fetch_data(doc_var_augmented,
+        fragment_data = FragmentCompiler.fetch_data(doc_var,
                                                     metadata)
         return FragmentCompiler.generate_context(fragment_data,
-                                                 doc_var_augmented,
+                                                 doc_var,
                                                  metadata)
 
     @staticmethod
@@ -571,37 +598,11 @@ class FragmentCompiler:
         return retriever.retrieve_fragment_metadata(doc_var, metadata)
 
     @staticmethod
-    def prefetch_data(doc_var, metadata):
-        """
-        Stage to "augment" the document variable with necessary data for
-        future stages (see architecture).
-        :param OrderedDict doc_var: Document variable
-        :param dict metadata: Metadata (report metadata, overriden by fragment)
-        :returns: Document variable "augmented" with the specified additional
-            data
-        :rtype: dict
-        """
-        logger = logging.getLogger(metadata['logger_name'])
-        message = 'Starting predata fetching...'
-        logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
-        predata = FragmentCompiler.fetch_info(doc_var,
-                                              'predata_fetcher',
-                                              metadata)
-        if len(predata) > 0:
-            flattened_predata = dict(ChainMap(*[df.ix[0, :].to_dict()
-                                                for df in predata.values()]))
-        else:
-            flattened_predata = {}
-        flattened_predata.update(doc_var)
-        return flattened_predata
-
-    @staticmethod
     def fetch_data(doc_var, metadata):
         """
         Stage to fetch the data to be used in the context generation stage
         (see architecture).
-        :param OrderedDict doc_var: Document variable (augmented by
-            prefetching)
+        :param OrderedDict doc_var: Document variable
         :param dict metadata: Metadata (report metadata, overriden by fragment)
         :returns: Pandas dataframe (or list of dataframes) with required data
         :rtype: pandas.DataFrame
@@ -615,8 +616,7 @@ class FragmentCompiler:
     def fetch_info(doc_var, fetcher_key, metadata):
         """
         Fetches data according to fetcher_key.
-        :param OrderedDict doc_var: Document variable (augmented by
-            prefetching)
+        :param OrderedDict doc_var: Document variable
         :param dict metadata: Metadata (report metadata, overriden by fragment)
         :returns: Pandas dataframe (or list of dataframes) with required data
         :rtype: pandas.DataFrame
@@ -695,8 +695,7 @@ class FragmentCompiler:
         rendering stage.
         :param pandas.DataFrame fragment_data: Pandas dataframe (or list
             of dataframes) with the current fragment's data
-        :param OrderedDict doc_var: Document variable (augmented by
-            prefetching)
+        :param OrderedDict doc_var: Document variable
         :param dict metadata: Metadata (report metadata, overriden by fragment)
         :returns: Dictionary with the context of the current fragment, to be
             used in the template rendering stage

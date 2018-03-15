@@ -50,7 +50,8 @@ class PluginModule(object, metaclass=PluginModuleMeta):
     def get(cls, id=None, **kwargs):
         """
         Instantiates the specified plugin
-        :param str id: plugin id (e.g. 'mysql', 'python', ...)
+        :param str id: plugin id (e.g. 'mysql', 'python', ...) or dict
+            with more info (with the 'type' key enclosed)
         :param dict kwargs: optional arguments
         :returns: Plugin
         :rtype: PluginModule
@@ -64,15 +65,13 @@ class PluginModule(object, metaclass=PluginModuleMeta):
                     id = id['type']
                 return class_dict[id]()
             except KeyError:
-                raise NotImplementedError(
-                    '{} "{}" does not exist'.format(cls.__name__, id))
-        else:
-            try:
-                return cls._get_default_handler(**kwargs)
-            except NotImplementedError:
-                raise NotImplementedError(
-                    'There is no default {} for extension .{}'.format(
-                        cls.__name__, id))
+                pass  # If type is not defined we try the default plugin
+        try:
+            return cls._get_default_handler(**kwargs)
+        except NotImplementedError:
+            raise NotImplementedError(
+                'There is no default {} for extension .{}'.format(
+                    cls.__name__, id))
 
     @classmethod
     def _get_plugins(cls):

@@ -23,8 +23,11 @@ class ConstantFetcher(DataFetcher):
                     metadata,
                     message="Constant fetcher values not a list.")
 
+            col_name = fetcher_info.get('name')
             return pd.DataFrame(data=values,
-                                columns=['value'])
+                                columns=['value'
+                                         if col_name is None
+                                         else col_name])
         except KeyError:
             # Since this fetcher is the default one, not finding the
             # 'values' key might mean that the user forgot the 'type'

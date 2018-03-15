@@ -63,6 +63,15 @@ class Report:
         with open(config_file) as config_data:
             config = json.loads(jsmin(config_data.read()),
                                 object_pairs_hook=OrderedDict)
+
+        params_file = '{}/params.json'.format(dir_path)
+        if os.path.exists(params_file):
+            with open(params_file) as params_data:
+                config.update(
+                    json.loads(jsmin(params_data.read()),
+                               object_pairs_hook=OrderedDict)
+                )
+
         self.name = name
         self.path = dir_path
         self.metadata = OrderedDict(config)
@@ -107,9 +116,6 @@ class Report:
             "verbose_name": "New report",
             "main_template": "report.tex",
 
-            /* Optional settings */
-            "mandatory_doc_vars": [],
-
             /* Workflow settings */
             "template_renderer": "jinja-latex",
             "postprocessor": "pdflatex"
@@ -118,6 +124,20 @@ class Report:
         with open(os.path.join(new_report_path, 'config.json'), 'w') \
                 as config_file:
             config_file.write(config_content)
+
+        param_content = """
+        {
+            // This parameters are parsed with data fetchers
+
+            /*
+            "name": "param",
+            "values": ["val1", "val2", "val3"]
+            */
+        }
+        """
+        with open(os.path.join(new_report_path, 'params.json'), 'w') \
+                as param_file:
+            param_file.write(param_content)
 
         main_template_content = r"""
         \documentclass[11pt]{article}
@@ -143,10 +163,7 @@ class Report:
             from doc_var are returned with value None.
         :rtype: dict
         """
-        try:
-            dt = ReportCompiler.fetch_info(doc_var, self.metadata)
-        except NotImplementedError:
-            return None
+        dt = ReportCompiler.fetch_info(doc_var, self.metadata)
         allowed_values = {}
         for col in dt.keys():
             data_list = dt[col].values.flatten().tolist()
@@ -183,7 +200,7 @@ class Report:
             logging.ERROR, ...)
         """
         if doc_vars is None:
-            doc_vars = {}
+            doc_vars = OrderedDict()
         if not isinstance(doc_vars, list):
             doc_vars = [doc_vars]
 
@@ -222,7 +239,9 @@ class Report:
                     format(doc_var))
 
     def _check_mandatory_variables(self, doc_var):
-        mandatory_vars = self.metadata.get('mandatory_doc_vars')
+        mandatory_vars = [par['name']
+                          for par in self.metadata['param_config']
+                          if par.get('mandatory')]
         if mandatory_vars is None:
             mandatory_vars = []
         mandatory_vars = set(mandatory_vars)
@@ -234,10 +253,12 @@ class Report:
                 'Some mandatory document variables were not specified: {}'.
                 format(', '.join(missing_vars)))
 
+    # TODO: Fix doc_var dependencies
     def _check_allowed_values(self, doc_var):
         allowed_values = self.fetch_allowed_var_values(doc_var)
         if allowed_values is not None:
-            allowed_values_msg = ' Allowed values for variable "{}" are {}'
+            allowed_values_msg = \
+                ' Allowed values for variable "{}" are {}: got {}'
             dependent_allowed_values_msg = \
                 ' Variable "{}" allowed values depend on "{}"'
             # Missing mandatory variables not appearing in the allowed_values
@@ -250,23 +271,32 @@ class Report:
                               if (var not in dependent_missing_vars or
                                   var in doc_var.keys())}
 
-            # TODO: Refactor
-            error_msgs = [
-                        allowed_values_msg.format(var, ', '.join(
-                            allowed_values[var]))
-                        if var not in dependent_missing_vars
-                        else dependent_allowed_values_msg.format(
+            allowed_values_errors = [(var, str(doc_var.get(var)), values)
+                                     for var, values in allowed_values.items()
+                                     if (doc_var.get(var) is not None and
+                                         doc_var[var] not in values)]
+
+            error_msgs = []
+            for var, defined_value, values in allowed_values_errors:
+                if var not in dependent_missing_vars:
+                    msg = allowed_values_msg.format(
+                                var,
+                                ', '.join(
+                                    [str(val) for val in allowed_values[var]]
+                                ),
+                                defined_value
+                            )
+                else:
+                    dependencies = [
+                            fetcher['dependencies']
+                            for fetcher in self.metadata[
+                                'param_config']
+                            if fetcher['name'] == var
+                    ][0]  # Dependencies of the first (and only) fetcher
+                    msg = dependent_allowed_values_msg.format(
                             var,
-                            ', '.join(
-                                [
-                                    fetcher['dependencies']
-                                    for fetcher in self.metadata[
-                                        'allowed_docvar_values_fetcher']
-                                    if fetcher['name'] == var
-                                ][0]))
-                        for var, values in allowed_values.items()
-                        if (doc_var.get(var) is not None and
-                            doc_var[var] not in values)]
+                            ', '.join(dependencies))
+                error_msgs.append(msg)
 
             if len(error_msgs) > 0:
                 allowed_values_msg = '\n'.join(error_msgs)
