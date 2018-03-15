@@ -112,9 +112,9 @@ class ReportCompiler:
         metadata['templates_path'] = os.path.join(metadata['report_path'],
                                                   'templates')
         metadata['src_path'] = os.path.join(metadata['report_path'], 'src')
-        metadata['logger_name'] = (metadata['name'] +
-                                   '_' +
-                                   metadata['doc_suffix'])
+        metadata['logger_name'] = 'reportcompiler.' + (metadata['name'] +
+                                                       '_' +
+                                                       metadata['doc_suffix'])
 
     def generate_template_tree(self):
         """
@@ -173,9 +173,7 @@ class ReportCompiler:
         :param dict report_metadata: Report metadata
         :param int log_level: Log level
         """
-        logger = logging.getLogger(report_metadata['name'] +
-                                   '_' +
-                                   report_metadata['doc_suffix'])
+        logger = logging.getLogger(report_metadata['logger_name'])
         log_path = report_metadata['log_path']
         file_handler = logging.FileHandler(
             os.path.join(log_path,
@@ -188,6 +186,25 @@ class ReportCompiler:
         file_handler.setFormatter(formatter)
         logger.setLevel(log_level)
         logger.addHandler(file_handler)
+
+    @staticmethod
+    def shutdown_loggers():
+        """
+        Shutdowns the logger and its handlers.
+        :param dict report_metadata: Report metadata
+        """
+        loggers = (logger for logger_name, logger
+                   in logging.getLogger().manager.loggerDict.items()
+                   if logger_name.startswith('reportcompiler.'))
+
+        for logger in loggers:
+            handlers = logger.handlers[:]
+            for handler in handlers:
+                handler.close()
+                logger.removeHandler(handler)
+
+        # for handler in logger.handlers:
+        #     logger.removeHandler(handler)
 
     def generate(self,
                  doc_vars,
@@ -232,6 +249,8 @@ class ReportCompiler:
                 result.doc = report_metadata_copy['doc_suffix']
                 results.append(result)
             executor.shutdown(wait=True)
+
+        ReportCompiler.shutdown_loggers()
 
         if debug_mode:
             self._post_doc_generation(report_metadata)
@@ -642,7 +661,7 @@ class FragmentCompiler:
         data = OrderedDict()
         for i, fetcher_info in enumerate(fetchers_info):
             fetcher = DataFetcher.get(id=fetcher_info)
-            if logger:
+            if logger and metadata.get('fragment_name'):
                 fetcher_name = fetcher_info.get('name')
                 if fetcher_name is None:
                     fetcher_name = '#' + str(i)
