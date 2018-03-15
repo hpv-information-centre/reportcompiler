@@ -168,10 +168,6 @@ class ContextGenerator(PluginModule):
         with open(fragment_hash_basename + '.ctx', 'w') as output_file:
             output_file.write(json.dumps(context, sort_keys=True))
 
-        if (metadata.get('delete_generator_files') and
-                metadata['delete_generator_files']):
-            os.remove(fragment_tmp_basename + '.json')
-
         del metadata['cache_file']
         return context
 

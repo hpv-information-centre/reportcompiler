@@ -400,17 +400,6 @@ class ReportCompiler:
             context = {'data': fragments_context, 'meta': report_metadata}
             sys.path = sys.path[:-1]
 
-            if (report_metadata.get('generate_context_file') and
-                    report_metadata['generate_context_file']):
-                logger.info('[{}] Generating context file...'.format(
-                    report_metadata['doc_suffix']))
-                suffix = report_metadata['doc_suffix']
-                file_name = \
-                    'document.json' if suffix == '' else suffix + '.json'
-                with open(os.path.join(report_metadata['tmp_path'],
-                                       file_name), 'w') as f:
-                    f.write(json.dumps(context, indent=2, sort_keys=True))
-
             context['meta']['template_context_info'] = \
                 [(
                     node.name, '.'.join(
@@ -621,11 +610,11 @@ class FragmentCompiler:
         :returns: Pandas dataframe (or list of dataframes) with required data
         :rtype: pandas.DataFrame
         """
-        fragment_path = metadata.get('fragment_path')
-        if fragment_path is None:
+        fragment_name = metadata.get('fragment_name')
+        if fragment_name is None:
             # If it's None, we are fetching data for the report itself
             # (e.g. allowed doc_vars)
-            fragment_path = fetcher_key
+            fragment_name = fetcher_key
 
         doc_suffix = metadata.get('doc_suffix')
         if doc_suffix is None:
@@ -641,7 +630,7 @@ class FragmentCompiler:
             fetchers_info = metadata[fetcher_key]
         except KeyError:
             message = '{}: Fetcher not specified'.format(
-                fragment_path)
+                fragment_name)
             if fetcher_key == 'fetch_data':
                 # Fetcher mandatory for data fetchers
                 if logger:

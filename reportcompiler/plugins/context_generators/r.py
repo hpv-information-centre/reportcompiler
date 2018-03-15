@@ -26,7 +26,8 @@ class RContextGenerator(ContextGenerator):
                         auto_unbox=TRUE))"
 
         r_code = r_code.format(metadata['fragment_path'].replace('\\', '\\\\'),
-                               metadata['cache_file'].replace('\\', '\\\\'))
+                               metadata['cache_file'].replace('\\', '\\\\')
+                                                     .replace('\'', '\\\''))
         output = None
         try:
             command = 'Rscript --vanilla -e "{}"'.format(
