@@ -14,7 +14,7 @@ setup(
     version='0.3.2',
     packages=find_packages('.'),
     include_package_data=True,
-    license='MIT License',
+    license='GPL-3.0 License',
     description='Report Compiler generates documents with information'
                 ' specified by a report directory (see documentation)',
     long_description=README,
