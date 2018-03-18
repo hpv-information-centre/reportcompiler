@@ -69,6 +69,10 @@ class SQLQueryBuilder:
     def _create_select_clause(self):
         if self.fetcher_info.get('fields') is None:
             self._raise_exception("'fields' field missing")
+
+        if self.fetcher_info.get('fields') == '*':
+            return 'SELECT *'
+
         column_aliases = self.fetcher_info['fields']
         if isinstance(column_aliases, list):
             column_aliases = OrderedDict([(c, c) for c in column_aliases])
@@ -156,12 +160,13 @@ class SQLQueryBuilder:
 
     def _create_where_clause(self):
         column_aliases = self.fetcher_info['fields']
-        if isinstance(column_aliases, list):
-            column_aliases = {v: v for v in column_aliases}
-        self._validate_sql_varname(
-            [name for name, alias in column_aliases.items()])
-        self._validate_sql_varname(
-            [alias for name, alias in column_aliases.items()])
+        if column_aliases != '*':
+            if isinstance(column_aliases, list):
+                column_aliases = {v: v for v in column_aliases}
+            self._validate_sql_varname(
+                [name for name, alias in column_aliases.items()])
+            self._validate_sql_varname(
+                [alias for name, alias in column_aliases.items()])
 
         filter_clause = []
         filter_clause.extend(
