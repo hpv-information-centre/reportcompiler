@@ -303,35 +303,35 @@ class ReportCompiler:
         last_errors_file.write('\n]')
         last_errors_file.close()
 
-    def _generate_fragment(self, _fragment, _doc_var, _report_metadata):
+    def _generate_fragment(self, fragment, doc_var, report_metadata):
         """
         Returns a function that generates a fragment for a particular document,
         used by the ThreadPoolExecutor.
-        :param str _fragment: Fragment name
-        :param OrderedDict _doc_var: Document variable
-        :param dict _report_metadata: Report metadata
+        :param str fragment: Fragment name
+        :param OrderedDict doc_var: Document variable
+        :param dict report_metadata: Report metadata
         :returns: Function that generates a fragment
         :rtype: function
         """
         def func():
             """ Fragment-generating closure """
-            fragment_name = _fragment.name
-            fragment_path = _fragment.path
-            fragment_path = '/'.join([elem.name for elem in fragment_path])
+            _fragment_name = fragment.name
+            _fragment_path = fragment.path
+            _fragment_path = '/'.join([elem.name for elem in _fragment_path])
             # Deep copy to avoid concurrency issues in parallel computation
             # TODO: Try to avoid copies
-            doc_var_copy = deepcopy(_doc_var)
-            report_metadata = deepcopy(_report_metadata)
-            if self.source_file_map.get(fragment_name):
+            _doc_var = deepcopy(doc_var)
+            _report_metadata = deepcopy(report_metadata)
+            if self.source_file_map.get(_fragment_name):
                 current_frag_context = FragmentCompiler.compile(
-                    self.source_file_map[fragment_name],
-                    doc_var_copy,
-                    report_metadata)
+                    self.source_file_map[_fragment_name],
+                    _doc_var,
+                    _report_metadata)
             else:
                 current_frag_context = {}
             if not isinstance(current_frag_context, dict):
                 current_frag_context = {'data': current_frag_context}
-            return current_frag_context, fragment_path
+            return current_frag_context, _fragment_path
         return func
 
     def _generate_doc(self,

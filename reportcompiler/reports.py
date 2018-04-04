@@ -50,33 +50,14 @@ class Report:
                 repo.create_remote('origin', repo_url)
                 repo.remotes.origin.pull(repo_branch)
             dir_path = os.path.join(dir_path, repo_relative_path)
-        name = os.path.basename(dir_path)
-        if not os.path.exists(dir_path):
+        self.path = dir_path
+        name = os.path.basename(self.path)
+        if not os.path.exists(self.path):
             raise FileNotFoundError(
-                "Directory '{}' doesn't exist".format(dir_path))
-
-        config_file = '{}/config.json'.format(dir_path)
-        if not os.path.exists(config_file):
-            raise FileNotFoundError(
-                "Report {} has no configuration file".format(name) +
-                " (config.json)")
-
-        with open(config_file) as config_data:
-            config = json.loads(jsmin(config_data.read()),
-                                object_pairs_hook=OrderedDict)
-
-        params_file = '{}/params.json'.format(dir_path)
-        if os.path.exists(params_file):
-            with open(params_file) as params_data:
-                config.update(
-                    json.loads(jsmin(params_data.read()),
-                               object_pairs_hook=OrderedDict)
-                )
+                "Directory '{}' doesn't exist".format(self.path))
 
         self.name = name
-        self.path = dir_path
-        self.metadata = OrderedDict(config)
-        self.metadata['report_path'] = self.path
+        self.metadata = self.build_metadata()
 
         self.allowed_values = self.fetch_allowed_var_values(doc_var={})
 
@@ -86,6 +67,28 @@ class Report:
             raise FileNotFoundError(
                 "Main template defined in config.ini ({}) doesn't exist".
                 format(self.metadata['main_template']))
+
+    def build_metadata(self):
+        config_file = '{}/config.json'.format(self.path)
+        if not os.path.exists(config_file):
+            raise FileNotFoundError(
+                "Report {} has no configuration file".format(name) +
+                " (config.json)")
+
+        with open(config_file) as config_data:
+            metadata = json.loads(jsmin(config_data.read()),
+                                  object_pairs_hook=OrderedDict)
+
+        params_file = '{}/params.json'.format(self.path)
+        if os.path.exists(params_file):
+            with open(params_file) as params_data:
+                metadata.update(
+                    json.loads(jsmin(params_data.read()),
+                               object_pairs_hook=OrderedDict)
+                )
+
+        metadata['report_path'] = self.path
+        return metadata
 
     def __str__(self):
         return self.metadata.get('verbose_name') or self.metadata['name']
@@ -251,6 +254,8 @@ class Report:
                     format(doc_var))
 
     def _check_mandatory_variables(self, doc_var):
+        if self.metadata.get('param_config') is None:
+            return
         mandatory_vars = [par['name']
                           for par in self.metadata['param_config']
                           if par.get('mandatory')]
@@ -299,12 +304,15 @@ class Report:
                                 defined_value
                             )
                 else:
-                    dependencies = [
-                            fetcher['dependencies']
-                            for fetcher in self.metadata[
-                                'param_config']
-                            if fetcher['name'] == var
-                    ][0]  # Dependencies of the first (and only) fetcher
+                    if self.metadata.get('param_config') is None:
+                        dependencies = []
+                    else:
+                        dependencies = [
+                                fetcher['dependencies']
+                                for fetcher in self.metadata[
+                                    'param_config']
+                                if fetcher['name'] == var
+                        ][0]  # Dependencies of the first (and only) fetcher
                     msg = dependent_allowed_values_msg.format(
                             var,
                             ', '.join(dependencies))
