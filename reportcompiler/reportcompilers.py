@@ -17,10 +17,8 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from anytree import PreOrderIter, Node, RenderTree as Tree
 from reportcompiler.plugins.data_fetchers.base import DataFetcher
-from reportcompiler.plugins.context_generators.base \
-    import ContextGenerator
-from reportcompiler.plugins.metadata_retrievers.base \
-    import MetadataRetriever
+from reportcompiler.plugins.source_parsers.base \
+    import SourceParser
 from reportcompiler.plugins.template_renderers.base import TemplateRenderer
 from reportcompiler.plugins.postprocessors.base import PostProcessor
 from reportcompiler.errors import FragmentGenerationError
@@ -575,9 +573,9 @@ class FragmentCompiler:
         _, file_extension = os.path.splitext(metadata['fragment_path'])
         try:
             retriever_name = metadata['metadata_retriever'][file_extension]
-            retriever = MetadataRetriever.get(id=retriever_name)
+            retriever = SourceParser.get(id=retriever_name)
         except KeyError:
-            retriever = MetadataRetriever.get(extension=file_extension)
+            retriever = SourceParser.get(extension=file_extension)
         logger = logging.getLogger(metadata['logger_name'])
         logger.debug(
             '[{}] {}: Retrieving metadata ({})...'.
@@ -590,6 +588,7 @@ class FragmentCompiler:
     def fetch_data(doc_var, metadata):
         """
         Stage to fetch the data to be used in the context generation stage
+    
         (see architecture).
         :param OrderedDict doc_var: Document variable
         :param dict metadata: Metadata (report metadata, overriden by fragment)
@@ -697,9 +696,9 @@ class FragmentCompiler:
         try:
             generator_info = metadata['context_generator']
             if isinstance(generator_info, str):
-                generator = ContextGenerator.get(id=generator_info)
+                generator = SourceParser.get(id=generator_info)
             elif isinstance(generator_info, dict):
-                generator = ContextGenerator.get(
+                generator = SourceParser.get(
                     id=generator_info[file_extension])
             else:
                 pass  # Context generator invalid, ignoring...
@@ -709,7 +708,7 @@ class FragmentCompiler:
 
         if generator is None:
             try:
-                generator = ContextGenerator.get(
+                generator = SourceParser.get(
                     extension=file_extension)
             except KeyError:
                 message = 'Data fetcher not specified for fragment {}'.format(
