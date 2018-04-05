@@ -588,7 +588,7 @@ class FragmentCompiler:
     def fetch_data(doc_var, metadata):
         """
         Stage to fetch the data to be used in the context generation stage
-    
+
         (see architecture).
         :param OrderedDict doc_var: Document variable
         :param dict metadata: Metadata (report metadata, overriden by fragment)
@@ -716,7 +716,7 @@ class FragmentCompiler:
                 logger.error('[{}] {}'.format(metadata['doc_suffix'], message))
                 raise NotImplementedError(message)
 
-        context = generator.generate_context_wrapper(doc_var,
-                                                     fragment_data,
-                                                     metadata)
+        context = generator.setup_and_generate_context(doc_var,
+                                                       fragment_data,
+                                                       metadata)
         return context

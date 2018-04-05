@@ -23,7 +23,7 @@ class SourceParser(PluginModule):
 
     entry_point_group = 'source_parsers'
 
-    def generate_context_wrapper(self, doc_var, data, metadata):
+    def setup_and_generate_context(self, doc_var, data, metadata):
         """
         Wraps the context generation with temporary file creation and hash
         checking to avoid unnecessary processing.
