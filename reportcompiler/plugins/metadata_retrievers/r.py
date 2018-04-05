@@ -6,6 +6,7 @@ This module includes the metadata retriever using R.
 
 import json
 from collections import OrderedDict
+from shutil import which
 from subprocess import run, PIPE, CalledProcessError
 from reportcompiler.plugins.metadata_retrievers.base \
     import MetadataRetriever
@@ -31,7 +32,12 @@ class RMetadataRetriever(MetadataRetriever):
                                json.dumps(metadata))
         output = None
         try:
-            # TODO: Check for Rscript first
+            if which('Rscript') is None:
+                MetadataRetriever.raise_retriever_exception(
+                    context,
+                    message='Rscript not found in PATH. Please install it '
+                            'or configure your PATH.')
+
             command = 'Rscript --vanilla -e "{}"'.format(r_code)
             output = run(command,
                          shell=True,

@@ -34,6 +34,16 @@ Architecture
 TODO: Include pipeline diagram
 
 
+Dependencies
+============
+
+Report Compiler has a set of common dependencies specified in the setup script (setup.py) that should
+be installed automatically with the install_package.sh script.
+
+Additionally, the different plugins might have additional dependencies not included in the main package 
+to avoid unnecessary libraries installed for unused plugins.
+
+
 Installation
 ============
 
@@ -60,8 +70,15 @@ Document generation example
                  repo_relative_path='example-music')
  report.generate({'artist_id': 1})
 
+For this example you will need:
+
+* `R environment`_ to generate context for R source files.
+* LaTeX environment such as MikTeX_ to compile to a PDF document.
+
 For more examples of reports ready to be compiled by this library please check here_.
 
+.. _`R environment`: https://www.r-project.org/
+.. _MikTeX: https://miktex.org/
 .. _here: https://github.com/hpv-information-centre/reportcompiler-examples
 
 

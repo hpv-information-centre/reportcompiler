@@ -7,14 +7,20 @@ This module includes the data fetcher using MySQL.
 import os
 import json
 import threading
-import pymysql.cursors
-import pymysql
-from pymysql.err import OperationalError
 import pandas as pd
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 from reportcompiler.plugins.data_fetchers.sql \
     import SQLFetcher
+
+try:
+    import pymysql.cursors
+    import pymysql
+    from pymysql.err import OperationalError
+except ImportError:
+    raise DataFetcher.raise_data_fetching_exception(
+        metadata,
+        message='Python package "pymysql" needed for mysql data fetcher')
 
 __all__ = ['MySQLFetcher', ]
 
@@ -72,7 +78,13 @@ class MySQLFetcher(SQLFetcher):
                       'r') as cred_file:
                 credentials = json.load(cred_file)
         except KeyError:
-            pass
+            pass  # No credentials file specified
+        except Exception as e:
+            print(e)
+            raise DataFetcher.raise_data_fetching_exception(
+                metadata,
+                message='MySQL credentials {} don\'t exist'.format(
+                    fetcher_info['credentials_file']))
 
         if credentials is None:
             credentials = {}

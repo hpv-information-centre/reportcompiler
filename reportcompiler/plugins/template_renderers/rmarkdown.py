@@ -22,6 +22,12 @@ class RMarkdownRenderer(TemplateRenderer):
 
     def render_template(self, doc_var, context):
         try:
+            if which('Rscript') is None:
+                TemplateRenderer.raise_rendering_exception(
+                    context,
+                    message='Rscript not found in PATH. Please install it '
+                            'or configure your PATH.')
+
             template_tmp_dir = os.path.join(
                 context['meta']['tmp_path'],
                 'templates')

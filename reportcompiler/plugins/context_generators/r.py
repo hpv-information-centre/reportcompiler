@@ -6,6 +6,7 @@ This module includes the context generator using R.
 
 import json
 from subprocess import run, PIPE, CalledProcessError
+from shutil import which
 from reportcompiler.plugins.context_generators.base \
     import ContextGenerator
 
@@ -30,6 +31,12 @@ class RContextGenerator(ContextGenerator):
                                                      .replace('\'', '\\\''))
         output = None
         try:
+            if which('Rscript') is None:
+                ContextGenerator.raise_generator_exception(
+                    context,
+                    message='Rscript not found in PATH. Please install it '
+                            'or configure your PATH.')
+
             command = 'Rscript --vanilla -e "{}"'.format(
                                                     r_code.replace('"', '\\"'))
             output = run(command,
