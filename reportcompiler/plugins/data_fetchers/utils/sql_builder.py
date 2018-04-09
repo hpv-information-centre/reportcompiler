@@ -76,6 +76,11 @@ class SQLQueryBuilder:
         column_aliases = self.fetcher_info['fields']
         if isinstance(column_aliases, list):
             column_aliases = OrderedDict([(c, c) for c in column_aliases])
+        if not isinstance(column_aliases, OrderedDict):
+            column_items = sorted(list(column_aliases.items()),
+                                  key=lambda x: x[0])
+            column_aliases = OrderedDict(column_items)
+
         alias_list = ['`{}` AS `{}`'.format(col_name.replace('.', '`.`'),
                                             alias)
                       for col_name, alias in column_aliases.items()]

@@ -56,6 +56,19 @@ class SQLBuilderTest(unittest.TestCase):
         query = self._build_expect_ok(fetcher_info)
         self.assertEqual(query, expected_query)
 
+    def test_simple_query_alias_order(self):
+        fetcher_info = {
+            'type': 'mysql',
+            'table': {'test_table': 'tt'},
+            'fields': {'var2': 'v2', 'var1': 'v1'}
+        }
+        expected_query = \
+            "SELECT `var1` AS `v1`, `var2` AS `v2` " \
+            "FROM `test_table` `tt`"
+
+        query = self._build_expect_ok(fetcher_info)
+        self.assertEqual(query, expected_query)
+
     def test_join_query(self):
         fetcher_info = {
             'type': 'mysql',
