@@ -11,10 +11,10 @@ os.chdir(
 
 setup(
     name='reportcompiler',
-    version='0.3.2',
+    version='0.3.3',
     packages=find_packages('.'),
     include_package_data=True,
-    license='MIT License',
+    license='GPL-3.0 License',
     description='Report Compiler generates documents with information'
                 ' specified by a report directory (see documentation)',
     long_description=README,
@@ -38,12 +38,6 @@ setup(
         'odictliteral',
     ],
     entry_points={
-        'reportcompiler.metadata_retrievers': [
-            'python=reportcompiler.plugins.metadata_retrievers.python:'
-            'PythonMetadataRetriever',
-            'r=reportcompiler.plugins.metadata_retrievers.r:'
-            'RMetadataRetriever',
-        ],
         'reportcompiler.data_fetchers': [
             'constant=reportcompiler.plugins.data_fetchers.constant:'
             'ConstantFetcher',
@@ -54,11 +48,11 @@ setup(
             'sqlite=reportcompiler.plugins.data_fetchers.sqlite:'
             'SQLiteFetcher',
         ],
-        'reportcompiler.context_generators': [
-            'python=reportcompiler.plugins.context_generators.python:'
-            'PythonContextGenerator',
-            'r=reportcompiler.plugins.context_generators.r:'
-            'RContextGenerator',
+        'reportcompiler.source_parsers': [
+            'python=reportcompiler.plugins.source_parsers.python:'
+            'PythonParser',
+            'r=reportcompiler.plugins.source_parsers.r:'
+            'RParser',
         ],
         'reportcompiler.template_renderers': [
             'jinja=reportcompiler.plugins.template_renderers.jinja2:'

@@ -10,17 +10,15 @@ import traceback
 import logging
 import json
 import sys
-from collections import OrderedDict, ChainMap
+from collections import OrderedDict, ChainMap, namedtuple
 from glob import glob
 from copy import deepcopy
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from anytree import PreOrderIter, Node, RenderTree as Tree
 from reportcompiler.plugins.data_fetchers.base import DataFetcher
-from reportcompiler.plugins.context_generators.base \
-    import ContextGenerator
-from reportcompiler.plugins.metadata_retrievers.base \
-    import MetadataRetriever
+from reportcompiler.plugins.source_parsers.base \
+    import SourceParser
 from reportcompiler.plugins.template_renderers.base import TemplateRenderer
 from reportcompiler.plugins.postprocessors.base import PostProcessor
 from reportcompiler.errors import FragmentGenerationError
@@ -117,6 +115,15 @@ class ReportCompiler:
                                                        '_' +
                                                        metadata['doc_suffix'])
 
+    @staticmethod
+    def _log_file_path(report_metadata):
+        return os.path.join(report_metadata['log_path'],
+                            report_metadata['doc_suffix'] +
+                            '__' +
+                            datetime.now().strftime(
+                               '%Y_%m_%d__%H_%M_%S') +
+                            '.log')
+
     def generate_template_tree(self):
         """
         Scans the template directory and creates a template dependency tree
@@ -176,13 +183,13 @@ class ReportCompiler:
         """
         logger = logging.getLogger(report_metadata['logger_name'])
         log_path = report_metadata['log_path']
+
+        tmp_logs = glob(os.path.join(log_path, '_*'))
+        for tmp_log in tmp_logs:
+            os.unlink(tmp_log)
+
         file_handler = logging.FileHandler(
-            os.path.join(log_path,
-                         report_metadata['doc_suffix'] +
-                         '__' +
-                         datetime.now().strftime(
-                             '%Y_%m_%d__%H_%M_%S') +
-                         '.log'))
+            ReportCompiler._log_file_path(report_metadata))
         formatter = logging.Formatter(ReportCompiler.LOG_FORMAT)
         file_handler.setFormatter(formatter)
         logger.setLevel(log_level)
@@ -203,9 +210,6 @@ class ReportCompiler:
             for handler in handlers:
                 handler.close()
                 logger.removeHandler(handler)
-
-        # for handler in logger.handlers:
-        #     logger.removeHandler(handler)
 
     def generate(self,
                  doc_vars,
@@ -232,36 +236,69 @@ class ReportCompiler:
         if debug_mode:
             n_doc_workers = 1
             n_frag_workers = 1
-            self._pre_doc_generation(report_metadata)
+            log_level = logging.DEBUG
+            self._prepare_debug_session(report_metadata)
 
+        report_metadata['debug_mode'] = debug_mode
+
+        doc_info = namedtuple('doc_info', ['doc', 'result', 'exception'])
         results = []
-        with ThreadPoolExecutor(max_workers=n_doc_workers) as executor:
+        if n_doc_workers == 1:
+            # If there is only one worker, do it in the same process
+            # (easier to debug)
             for doc_var in doc_vars:
-                # To avoid parallelism issues
-                report_metadata_copy = deepcopy(report_metadata)
-                ReportCompiler.setup_environment(report_metadata_copy, doc_var)
-                ReportCompiler.setup_logger(report_metadata_copy,
-                                            log_level)
-                report_metadata_copy['debug_mode'] = debug_mode
-                worker = self._generate_doc(doc_var,
-                                            report_metadata_copy,
-                                            n_frag_workers)
-                result = executor.submit(worker)
-                result.doc = report_metadata_copy['doc_suffix']
-                results.append(result)
-            executor.shutdown(wait=True)
+                result = None
+                ReportCompiler.setup_environment(report_metadata,
+                                                 doc_var)
+                try:
+                    result = self._generate_doc(doc_var,
+                                                report_metadata,
+                                                n_frag_workers,
+                                                log_level)
+                    exception = None
+                except Exception as e:
+                    exception = e
+                info = doc_info(doc=report_metadata['doc_suffix'],
+                                result=result,
+                                exception=exception)
+                results.append(info)
+        else:
+            future_results = []
+            with ProcessPoolExecutor(max_workers=n_doc_workers) as executor:
+                for doc_var in doc_vars:
+                    _report_metadata = deepcopy(report_metadata)
+                    ReportCompiler.setup_environment(_report_metadata,
+                                                     doc_var)
+                    worker = self._generate_doc
+                    result = executor.submit(worker,
+                                             doc_var,
+                                             _report_metadata,
+                                             n_frag_workers,
+                                             log_level)
+                    result.doc = _report_metadata['doc_suffix']
+                    future_results.append(result)
+                executor.shutdown(wait=True)
+            for r in future_results:
+                try:
+                    result = r.result()
+                except Exception as e:
+                    result = None
+                info = doc_info(doc=r.doc,
+                                result=result,
+                                exception=r.exception())
+                results.append(info)
 
         ReportCompiler.shutdown_loggers()
 
         if debug_mode:
-            self._post_doc_generation(report_metadata)
+            self._prepare_debug_output(report_metadata)
 
-        error_results = [r for r in results if r.exception() is not None]
+        error_results = [r for r in results if r.exception is not None]
         n_errors = len(error_results)
         if n_errors > 0:
             traceback_dict = {}
             for result in error_results:
-                error = result.exception()
+                error = result.exception
                 if isinstance(error, FragmentGenerationError):
                     traceback_dict.update(error.fragment_errors)
                 else:
@@ -274,9 +311,10 @@ class ReportCompiler:
             raise FragmentGenerationError(
                 'Error on document(s) generation:\n', traceback_dict)
 
-    def _pre_doc_generation(self, report_metadata):
+    def _prepare_debug_session(self, report_metadata):
         """
-        Actions made before starting the document generation process.
+        Actions made before starting the document generation process in debug
+        mode.
         :param dict report_metadata: Report metadata
         """
         meta_dir = os.path.join(report_metadata['report_path'], '..', '_meta')
@@ -285,9 +323,10 @@ class ReportCompiler:
         if os.path.exists(os.path.join(meta_dir, 'last_debug_errors')):
             os.remove(os.path.join(meta_dir, 'last_debug_errors'))
 
-    def _post_doc_generation(self, report_metadata):
+    def _prepare_debug_output(self, report_metadata):
         """
-        Actions made after finishing the document generation process.
+        Actions made after finishing the document generation process in debug
+        mode.
         :param dict report_metadata: Report metadata
         """
         meta_dir = os.path.join(report_metadata['report_path'], '..', '_meta')
@@ -303,44 +342,64 @@ class ReportCompiler:
         last_errors_file.write('\n]')
         last_errors_file.close()
 
-    def _generate_fragment(self, _fragment, _doc_var, _report_metadata):
+    def _build_final_log(self, doc_logfile_path, report_metadata):
+        """
+        When building fragments on parallel processes, this function assembles
+        each fragment log into the original one for the document.
+        :param str doc_logfile_path: Path to the document log file
+        :param dict report_metadata: Report metadata
+        """
+        tmp_logs = glob(os.path.join(report_metadata['log_path'], '_*'))
+        with open(doc_logfile_path, 'a') as log:
+            log.write('\n-------------------')
+            log.write('\nFragment logs below:')
+            log.write('\n-------------------\n\n')
+            for tmp_log in sorted(tmp_logs):
+                with open(tmp_log) as partial_log:
+                    log.write(partial_log.read())
+                os.unlink(tmp_log)
+
+    def _generate_fragment(self,
+                           fragment,
+                           doc_var,
+                           report_metadata,
+                           log_level=logging.INFO):
         """
         Returns a function that generates a fragment for a particular document,
-        used by the ThreadPoolExecutor.
-        :param str _fragment: Fragment name
-        :param OrderedDict _doc_var: Document variable
-        :param dict _report_metadata: Report metadata
+        used by the ProcessPoolExecutor.
+        :param str fragment: Fragment name
+        :param OrderedDict doc_var: Document variable
+        :param dict report_metadata: Report metadata
         :returns: Function that generates a fragment
         :rtype: function
         """
-        def func():
-            """ Fragment-generating closure """
-            fragment_name = _fragment.name
-            fragment_path = _fragment.path
-            fragment_path = '/'.join([elem.name for elem in fragment_path])
-            # Deep copy to avoid concurrency issues in parallel computation
-            # TODO: Try to avoid copies
-            doc_var_copy = deepcopy(_doc_var)
-            report_metadata = deepcopy(_report_metadata)
-            if self.source_file_map.get(fragment_name):
-                current_frag_context = FragmentCompiler.compile(
-                    self.source_file_map[fragment_name],
-                    doc_var_copy,
-                    report_metadata)
-            else:
-                current_frag_context = {}
-            if not isinstance(current_frag_context, dict):
-                current_frag_context = {'data': current_frag_context}
-            return current_frag_context, fragment_path
-        return func
+        _fragment_name = fragment.name
+        _fragment_path = fragment.path
+        _fragment_path = '/'.join([elem.name for elem in _fragment_path])
+        # Deep copy to avoid concurrency issues in parallel computation
+        # TODO: Try to avoid copies
+        _doc_var = deepcopy(doc_var)
+        _report_metadata = deepcopy(report_metadata)
+        if self.source_file_map.get(_fragment_name):
+            current_frag_context = FragmentCompiler.compile(
+                self.source_file_map[_fragment_name],
+                _doc_var,
+                _report_metadata,
+                log_level)
+        else:
+            current_frag_context = {}
+        if not isinstance(current_frag_context, dict):
+            current_frag_context = {'data': current_frag_context}
+        return current_frag_context, _fragment_path
 
     def _generate_doc(self,
                       doc_var,
                       report_metadata,
-                      n_frag_workers=2):
+                      n_frag_workers=2,
+                      log_level=logging.INFO):
         """
         Returns a function that generates a document, used by the
-        ThreadPoolExecutor.
+        ProcessPoolExecutor.
         :param OrderedDict _doc_var: Document variable
         :param dict _report_metadata: Report metadata
         :param int n_frag_workers: Number of concurrent fragment-generating
@@ -348,72 +407,109 @@ class ReportCompiler:
         :returns: Function that generates a document
         :rtype: function
         """
-        def func():
-            """ Document-generating closure """
-            augmented_doc_var = ReportCompiler.augment_doc_var(doc_var,
-                                                               report_metadata)
-            logger = logging.getLogger(report_metadata['logger_name'])
-            logger.info('[{}] Generating document...'.format(
-                report_metadata['doc_suffix']))
-            sys.path.append(os.path.join(self.report.path, 'src'))
+        ReportCompiler.setup_logger(report_metadata, log_level)
+        doc_logfile_path = ReportCompiler._log_file_path(report_metadata)
+        augmented_doc_var = ReportCompiler.augment_doc_var(doc_var,
+                                                           report_metadata)
+        logger = logging.getLogger(report_metadata['logger_name'])
+        logger.info('[{}] Generating document...'.format(
+            report_metadata['doc_suffix']))
+        sys.path.append(os.path.join(self.report.path, 'src'))
 
-            results = []
-            with ThreadPoolExecutor(max_workers=n_frag_workers) as executor:
+        fragment_info = namedtuple('fragment_info', ['fragment',
+                                                     'result',
+                                                     'exception'])
+        results = []
+        if n_frag_workers == 1:
+            # If there is only one worker, do it in the same process
+            # (easier to debug)
+            for fragment in PreOrderIter(self.template_tree.node):
+                result = None
+                try:
+                    result = self._generate_fragment(fragment,
+                                                     augmented_doc_var,
+                                                     report_metadata,
+                                                     log_level)
+                    exception = None
+                except Exception as e:
+                    exception = e
+                frag_info = fragment_info(fragment=fragment,
+                                          result=result,
+                                          exception=exception)
+                results.append(frag_info)
+        else:
+            future_results = []
+            with ProcessPoolExecutor(max_workers=n_frag_workers) as executor:
                 for fragment in PreOrderIter(self.template_tree.node):
                     # To avoid parallelism issues
                     _report_metadata = deepcopy(report_metadata)
-                    worker = self._generate_fragment(fragment,
-                                                     augmented_doc_var,
-                                                     _report_metadata)
-                    result = executor.submit(worker)
+                    worker = self._generate_fragment
+                    result = executor.submit(worker,
+                                             fragment,
+                                             augmented_doc_var,
+                                             _report_metadata,
+                                             log_level)
                     result.fragment = os.path.splitext(fragment.name)[0]
-                    results.append(result)
+                    future_results.append(result)
                 executor.shutdown(wait=True)
 
-            errors = [r for r in results if r.exception() is not None]
-            n_errors = len(errors)
-            if n_errors > 0:
-                frag_errors = {report_metadata['doc_suffix']: {}}
-                for result in [r
-                               for r in results
-                               if r.exception() is not None]:
-                    frag_errors[
-                            report_metadata['doc_suffix']][result.fragment] = (
-                        result.exception().args[0],
-                        traceback.format_tb(result.exception().__traceback__)
-                    )
-                exception = FragmentGenerationError(
-                    'Error on fragment(s) generation ({})...'.
-                    format(n_errors),
-                    frag_errors)
-                logger.error(exception)
-                raise exception
+                for r in future_results:
+                    try:
+                        result = r.result()
+                    except Exception:
+                        result = None
+                    frag_info = fragment_info(fragment=r.fragment,
+                                              result=result,
+                                              exception=r.exception())
+                    results.append(frag_info)
 
-            fragments_context = {}
-            for result in results:
-                if result.exception() is None:
-                    current_frag_context, fragment_path = result.result()
-                    ReportCompiler.update_nested_dict(fragments_context,
-                                                      fragment_path,
-                                                      current_frag_context)
+        errors = [r for r in results if r.exception is not None]
+        n_errors = len(errors)
+        if n_errors > 0:
+            frag_errors = {report_metadata['doc_suffix']: {}}
+            for result in [r
+                           for r in results
+                           if r.exception is not None]:
+                frag_errors[
+                        report_metadata['doc_suffix']][result.fragment] = (
+                    result.exception.args[0],
+                    traceback.format_tb(result.exception.__traceback__)
+                )
+            exception = FragmentGenerationError(
+                'Error on fragment(s) generation ({})...'.
+                format(n_errors),
+                frag_errors)
+            logger.error(exception)
+            raise exception
 
-            context = {'data': fragments_context, 'meta': report_metadata}
-            sys.path = sys.path[:-1]
+        fragments_context = {}
+        for result in results:
+            if result.exception is None:
+                current_frag_context, fragment_path = result.result
+                ReportCompiler.update_nested_dict(fragments_context,
+                                                  fragment_path,
+                                                  current_frag_context)
 
-            context['meta']['template_context_info'] = \
-                [(
-                    node.name, '.'.join(
-                        [os.path.splitext(path_node.name)[0]
-                         for path_node in node.path][1:]))
-                 for node in PreOrderIter(self.template_tree.node)
-                 ]
-            output_doc = ReportCompiler.render_template(augmented_doc_var,
-                                                        context)
-            ReportCompiler.postprocess(output_doc, augmented_doc_var, context)
-            logger.info('[{}] Document generated'.format(
-                report_metadata['doc_suffix']))
-            return output_doc
-        return func
+        context = {'data': fragments_context, 'meta': report_metadata}
+        sys.path = sys.path[:-1]
+
+        context['meta']['template_context_info'] = \
+            [(
+                node.name, '.'.join(
+                    [os.path.splitext(path_node.name)[0]
+                        for path_node in node.path][1:]))
+                for node in PreOrderIter(self.template_tree.node)
+             ]
+        output_doc = ReportCompiler.render_template(augmented_doc_var,
+                                                    context)
+        ReportCompiler.postprocess(output_doc, augmented_doc_var, context)
+        logger.info('[{}] Document generated'.format(
+            report_metadata['doc_suffix']))
+
+        if n_frag_workers > 1:
+            self._build_final_log(doc_logfile_path, report_metadata)
+
+        return output_doc
 
     def included_templates(self, content):
         """
@@ -509,7 +605,7 @@ class ReportCompiler:
     @staticmethod
     def augment_doc_var(doc_var, metadata):
         """
-        Stage to "augment" the document variable with necessary additional data
+        Stage to augment the document variable with necessary additional data
             for the document generation.
         :param OrderedDict doc_var: Document variable
         :param dict metadata: Metadata
@@ -535,8 +631,37 @@ class ReportCompiler:
 
 class FragmentCompiler:
     """ Class responsible for compiling a fragment within a document """
+
     @staticmethod
-    def compile(fragment, doc_var, report_metadata):
+    def setup_logger(fragment_name,
+                     report_metadata,
+                     log_level):
+        """
+        Initializes and sets up the logger.
+        :param str fragment_name: Name of the current fragment
+        :param dict report_metadata: Report metadata
+        :param int log_level: Log level
+        """
+        logger = logging.getLogger(report_metadata['logger_name'])
+        logger.handlers = []
+        log_path = report_metadata['log_path']
+        file_handler = logging.FileHandler(
+            os.path.join(log_path,
+                         '_' +
+                         report_metadata['doc_suffix'] +
+                         '-' +
+                         fragment_name +
+                         '__' +
+                         datetime.now().strftime(
+                             '%Y_%m_%d__%H_%M_%S') +
+                         '.log'))
+        formatter = logging.Formatter(ReportCompiler.LOG_FORMAT)
+        file_handler.setFormatter(formatter)
+        logger.setLevel(log_level)
+        logger.addHandler(file_handler)
+
+    @staticmethod
+    def compile(fragment, doc_var, report_metadata, log_level=logging.INFO):
         """
         Compiles a fragment within a document with the given document
             variables.
@@ -552,15 +677,25 @@ class FragmentCompiler:
         metadata['fragment_name'] = os.path.splitext(
             os.path.basename(fragment))[0]
 
+        if not report_metadata['debug_mode']:
+            FragmentCompiler.setup_logger(metadata['fragment_name'],
+                                          report_metadata,
+                                          log_level)
+
         fragment_metadata = FragmentCompiler.retrieve_fragment_metadata(
             doc_var,
             metadata)
         metadata.update(fragment_metadata)
         fragment_data = FragmentCompiler.fetch_data(doc_var,
                                                     metadata)
-        return FragmentCompiler.generate_context(fragment_data,
-                                                 doc_var,
-                                                 metadata)
+        context = FragmentCompiler.generate_context(fragment_data,
+                                                    doc_var,
+                                                    metadata)
+        logger = logging.getLogger(metadata['logger_name'])
+        logger.info('[{}] {}: Fragment done.\n'.
+                    format(metadata['doc_suffix'],
+                           metadata['fragment_name']))
+        return context
 
     @staticmethod
     def retrieve_fragment_metadata(doc_var, metadata):
@@ -575,9 +710,9 @@ class FragmentCompiler:
         _, file_extension = os.path.splitext(metadata['fragment_path'])
         try:
             retriever_name = metadata['metadata_retriever'][file_extension]
-            retriever = MetadataRetriever.get(id=retriever_name)
+            retriever = SourceParser.get(id=retriever_name)
         except KeyError:
-            retriever = MetadataRetriever.get(extension=file_extension)
+            retriever = SourceParser.get(extension=file_extension)
         logger = logging.getLogger(metadata['logger_name'])
         logger.debug(
             '[{}] {}: Retrieving metadata ({})...'.
@@ -590,15 +725,13 @@ class FragmentCompiler:
     def fetch_data(doc_var, metadata):
         """
         Stage to fetch the data to be used in the context generation stage
+
         (see architecture).
         :param OrderedDict doc_var: Document variable
         :param dict metadata: Metadata (report metadata, overriden by fragment)
         :returns: Pandas dataframe (or list of dataframes) with required data
         :rtype: pandas.DataFrame
         """
-        logger = logging.getLogger(metadata['logger_name'])
-        message = 'Starting data fetching...'
-        logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
         return FragmentCompiler.fetch_info(doc_var, 'data_fetcher', metadata)
 
     @staticmethod
@@ -697,9 +830,9 @@ class FragmentCompiler:
         try:
             generator_info = metadata['context_generator']
             if isinstance(generator_info, str):
-                generator = ContextGenerator.get(id=generator_info)
+                generator = SourceParser.get(id=generator_info)
             elif isinstance(generator_info, dict):
-                generator = ContextGenerator.get(
+                generator = SourceParser.get(
                     id=generator_info[file_extension])
             else:
                 pass  # Context generator invalid, ignoring...
@@ -709,7 +842,7 @@ class FragmentCompiler:
 
         if generator is None:
             try:
-                generator = ContextGenerator.get(
+                generator = SourceParser.get(
                     extension=file_extension)
             except KeyError:
                 message = 'Data fetcher not specified for fragment {}'.format(
@@ -717,7 +850,10 @@ class FragmentCompiler:
                 logger.error('[{}] {}'.format(metadata['doc_suffix'], message))
                 raise NotImplementedError(message)
 
-        context = generator.generate_context_wrapper(doc_var,
-                                                     fragment_data,
-                                                     metadata)
+        logger.info('[{}] {}: Starting context generation...'.format(
+            metadata['doc_suffix'],
+            metadata['fragment_name']))
+        context = generator.setup_and_generate_context(doc_var,
+                                                       fragment_data,
+                                                       metadata)
         return context

@@ -6,6 +6,7 @@ This module includes the postprocessor using pdflatex.
 
 import os
 from subprocess import run, PIPE, CalledProcessError
+from shutil import which
 from reportcompiler.plugins.postprocessors.base import PostProcessor
 
 __all__ = ['PdflatexPostProcessor', ]
@@ -25,6 +26,12 @@ class PdflatexPostProcessor(PostProcessor):
         tex_file = os.path.join(tmp_path, filename + '.tex')
 
         try:
+            if which('pdflatex') is None:
+                PostProcessor.raise_postprocessor_exception(
+                    context,
+                    message='pdflatex not found in PATH. Please install it '
+                            'or configure your PATH.')
+
             with open(tex_file, 'w') as f:
                 f.write(doc)
             command = 'pdflatex -interaction=nonstopmode ' \

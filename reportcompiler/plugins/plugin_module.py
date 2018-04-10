@@ -27,9 +27,9 @@ class PluginModuleMeta(type):
 class PluginModule(object, metaclass=PluginModuleMeta):
     """ Base class that implements the plugin architecture. All direct
     subclasses of this module represent different stages and they have a
-    factory method that scans their directory (e.g. context_generators,
+    factory method that scans their directory (e.g. source_parsers,
     data_fetchers, ...) and instantiates a particular subsubclass (e.g.
-    PythonContextGenerator) with only their name (e.g. 'python'). For new
+    PythonParser) with only their name (e.g. 'python'). For new
     plugins of a particular type this doesn't require any imports; this
     class automatically scans the directory for suitable modules and
     classes."""
@@ -58,14 +58,27 @@ class PluginModule(object, metaclass=PluginModuleMeta):
         """
         class_dict = cls._get_plugins()
         if id:
+            fetcher_id = None
             try:
                 # It might be a dictionary with more info, we get the type
                 # from within
                 if isinstance(id, dict):
-                    id = id['type']
-                return class_dict[id]()
+                    fetcher_id = id['type']
+                elif isinstance(id, str):
+                    fetcher_id = id
+                else:
+                    raise ValueError('"id" must be a string or a dict')
             except KeyError:
                 pass  # If type is not defined we try the default plugin
+
+            try:
+                return class_dict[fetcher_id]()
+            except KeyError:
+                raise NotImplementedError(
+                    'Plugin "{}" is not available. Check if the plugin '
+                    '(or its dependencies) are installed.'.format(
+                        fetcher_id
+                    ))
         try:
             return cls._get_default_handler(**kwargs)
         except NotImplementedError:

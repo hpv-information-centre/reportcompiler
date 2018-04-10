@@ -14,7 +14,7 @@ __all__ = ['PandocPostProcessor', 'PandocHTMLPostProcessor', ]
 
 class PandocPostProcessor(PostProcessor):
     """ Postprocessor for pandoc. """
-    # TODO: Testing
+    # TODO: Testing and finish implementation
 
     def postprocess(self, doc_var, doc, postprocessor_info, context):
         try:

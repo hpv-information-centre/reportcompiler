@@ -11,17 +11,19 @@ import logging
 from tempfile import NamedTemporaryFile
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
-from reportcompiler.plugins.errors import ContextGenerationError
+from reportcompiler.plugins.errors import \
+    ContextGenerationError, MetadataRetrievalError
 
-__all__ = ['ContextGenerator', ]
+__all__ = ['SourceParser', ]
 
 
-class ContextGenerator(PluginModule):
-    """ Plugin that implements the context generation stage for a fragment. """
+class SourceParser(PluginModule):
+    """ Plugin that implements the parsing for source files: the metadata
+    retrieval and the context generation stages for a fragment. """
 
-    entry_point_group = 'context_generators'
+    entry_point_group = 'source_parsers'
 
-    def generate_context_wrapper(self, doc_var, data, metadata):
+    def setup_and_generate_context(self, doc_var, data, metadata):
         """
         Wraps the context generation with temporary file creation and hash
         checking to avoid unnecessary processing.
@@ -91,7 +93,7 @@ class ContextGenerator(PluginModule):
             else:
                 if previous_hash == '':
                     logger.warning(
-                        "[{}] {}: No previous context found, generating...".
+                        "[{}] {}: No previous context found, regenerating...".
                         format(metadata['doc_suffix'],
                                metadata['fragment_name']))
                 else:
@@ -108,7 +110,7 @@ class ContextGenerator(PluginModule):
                     hash_differences_str = ', '.join(hash_differences)
                     if len(hash_differences) > 0:
                         logger.warning(
-                            "[{}] {}: {} differ, generating context...".
+                            "[{}] {}: {} differ, regenerating context...".
                             format(metadata['doc_suffix'],
                                    metadata['fragment_name'],
                                    hash_differences_str))
@@ -117,7 +119,7 @@ class ContextGenerator(PluginModule):
                             "[{}] {}: Output data not available".format(
                                 metadata['doc_suffix'],
                                 metadata['fragment_name']) +
-                            ", generating context...")
+                            ", regenerating context...")
                     else:
                         self.raise_generator_exception(
                             metadata,
@@ -134,12 +136,6 @@ class ContextGenerator(PluginModule):
                                          'data': json.loads(json_data),
                                          'metadata': metadata}, indent=2))
             metadata['cache_file'] = fragment_tmp_basename + '.json'
-
-        logger.debug(
-            '[{}] {}: Generating context ({})...'.format(
-                metadata['doc_suffix'],
-                metadata['fragment_name'],
-                self.__class__.__name__))
 
         if context is None:  # If context is defined, skip the generation
             try:
@@ -164,6 +160,13 @@ class ContextGenerator(PluginModule):
                                             metadata['report_path'])},
                                        indent=2))
                 raise e from None
+        else:
+            logger.info(
+                '[{}] {}: Same input, reusing previous context ({})...'
+                .format(
+                    metadata['doc_suffix'],
+                    metadata['fragment_name'],
+                    self.__class__.__name__))
 
         with open(fragment_hash_basename + '.ctx', 'w') as output_file:
             output_file.write(json.dumps(context, sort_keys=True))
@@ -186,6 +189,20 @@ class ContextGenerator(PluginModule):
         """
         raise NotImplementedError(
             'Context generation not implemented for {}'.format(self.__class__))
+
+    @abstractmethod
+    def retrieve_fragment_metadata(self, doc_var, metadata):
+        """
+        Retrieves the metadata required to process the fragment.
+
+        :param OrderedDict doc_var: Document variable
+        :param dict metadata: Report metadata (overriden by fragment metadata
+            when specified)
+        :returns: Dictionary with metadata
+        :rtype: dict
+        """
+        raise NotImplementedError(
+            'Metadata retrieval not implemented for {}'.format(self.__class__))
 
     @classmethod
     def raise_generator_exception(cls, context, exception=None,
@@ -215,6 +232,34 @@ class ContextGenerator(PluginModule):
         raise err from None
 
     @classmethod
+    def raise_retriever_exception(cls, context, exception=None,
+                                  message=None):
+        """
+        Returns a metadata retrieval exception with the necessary info
+        attached.
+
+        :param dict context: Context for fragment
+        :param Exception exception: Exception returned by metadata retrieval
+        :param str message: Optional message for exception
+        :raises MetadataRetrievalError: always
+        """
+        exception_info = message if message else str(exception)
+        if context.get('fragment_path'):
+            location = context['fragment_path']
+        else:
+            location = '<None>'
+        full_msg = '{}: Metadata retrieval error:\n\n{}'.format(
+            location,
+            exception_info)
+        if context.get('logger_name'):
+            logger = logging.getLogger(context['logger_name'])
+            logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
+        err = MetadataRetrievalError(full_msg)
+        if exception:
+            err.with_traceback(exception.__traceback__)
+        raise err from None
+
+    @classmethod
     def _get_default_handler(cls, **kwargs):
         extension_dict = {
             '.py': 'python',
@@ -226,7 +271,7 @@ class ContextGenerator(PluginModule):
             raise ValueError('File extension not specified')
 
         try:
-            return ContextGenerator.get(extension_dict[extension.lower()])
+            return SourceParser.get(extension_dict[extension.lower()])
         except KeyError:
             raise NotImplementedError(
                 'No {} specified and no default is available for extension {}'.

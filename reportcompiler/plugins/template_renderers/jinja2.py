@@ -8,10 +8,16 @@ import re
 import os
 import itertools
 import shutil
-import jinja2
-from jinja2.exceptions import UndefinedError
 from reportcompiler.plugins.template_renderers.base \
     import TemplateRenderer
+
+try:
+    import jinja2
+    from jinja2.exceptions import UndefinedError
+except ImportError:
+    raise TemplateRenderer.raise_rendering_exception(
+        metadata,
+        message='Python package "jinja2" needed for jinja template renderer')
 
 __all__ = ['JinjaRenderer', 'JinjaLatexRenderer', ]
 
