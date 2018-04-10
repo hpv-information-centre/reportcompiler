@@ -11,7 +11,7 @@ os.chdir(
 
 setup(
     name='reportcompiler',
-    version='0.3.2',
+    version='0.3.3',
     packages=find_packages('.'),
     include_package_data=True,
     license='GPL-3.0 License',
