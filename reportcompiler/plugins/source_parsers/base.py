@@ -93,7 +93,7 @@ class SourceParser(PluginModule):
             else:
                 if previous_hash == '':
                     logger.warning(
-                        "[{}] {}: No previous context found, generating...".
+                        "[{}] {}: No previous context found, regenerating...".
                         format(metadata['doc_suffix'],
                                metadata['fragment_name']))
                 else:
@@ -110,7 +110,7 @@ class SourceParser(PluginModule):
                     hash_differences_str = ', '.join(hash_differences)
                     if len(hash_differences) > 0:
                         logger.warning(
-                            "[{}] {}: {} differ, generating context...".
+                            "[{}] {}: {} differ, regenerating context...".
                             format(metadata['doc_suffix'],
                                    metadata['fragment_name'],
                                    hash_differences_str))
@@ -119,7 +119,7 @@ class SourceParser(PluginModule):
                             "[{}] {}: Output data not available".format(
                                 metadata['doc_suffix'],
                                 metadata['fragment_name']) +
-                            ", generating context...")
+                            ", regenerating context...")
                     else:
                         self.raise_generator_exception(
                             metadata,
@@ -136,12 +136,6 @@ class SourceParser(PluginModule):
                                          'data': json.loads(json_data),
                                          'metadata': metadata}, indent=2))
             metadata['cache_file'] = fragment_tmp_basename + '.json'
-
-        logger.debug(
-            '[{}] {}: Generating context ({})...'.format(
-                metadata['doc_suffix'],
-                metadata['fragment_name'],
-                self.__class__.__name__))
 
         if context is None:  # If context is defined, skip the generation
             try:
@@ -166,6 +160,13 @@ class SourceParser(PluginModule):
                                             metadata['report_path'])},
                                        indent=2))
                 raise e from None
+        else:
+            logger.info(
+                '[{}] {}: Same input, reusing previous context ({})...'
+                .format(
+                    metadata['doc_suffix'],
+                    metadata['fragment_name'],
+                    self.__class__.__name__))
 
         with open(fragment_hash_basename + '.ctx', 'w') as output_file:
             output_file.write(json.dumps(context, sort_keys=True))
