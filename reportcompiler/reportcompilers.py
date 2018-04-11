@@ -379,25 +379,19 @@ class ReportCompiler:
         :returns: (context, path of the fragment)
         :rtype: tuple
         """
-        _fragment_name = fragment.name
-        _fragment_path = fragment.path
-        _fragment_path = '/'.join([elem.name for elem in _fragment_path])
-        # Deep copy to avoid concurrency issues in parallel computation
-        # TODO: Try to avoid copies
-        _doc_var = deepcopy(doc_var)
-        _report_metadata = deepcopy(report_metadata)
-        if self.source_file_map.get(_fragment_name):
+        fragment_path = '/'.join([elem.name for elem in fragment.path])
+        if self.source_file_map.get(fragment.name):
             current_frag_context = FragmentCompiler.compile(
-                self.source_file_map[_fragment_name],
-                _doc_var,
-                _report_metadata,
+                self.source_file_map[fragment.name],
+                doc_var,
+                report_metadata,
                 multiprocessing,
                 log_level)
         else:
             current_frag_context = {}
         if not isinstance(current_frag_context, dict):
             current_frag_context = {'data': current_frag_context}
-        return current_frag_context, _fragment_path
+        return current_frag_context, fragment_path
 
     def _generate_doc(self,
                       doc_var,
@@ -500,13 +494,11 @@ class ReportCompiler:
         future_results = []
         with ProcessPoolExecutor(max_workers=n_frag_workers) as executor:
             for fragment in PreOrderIter(self.template_tree.node):
-                # To avoid parallelism issues
-                _report_metadata = deepcopy(report_metadata)
                 worker = self._generate_fragment
                 result = executor.submit(worker,
                                          fragment,
                                          augmented_doc_var,
-                                         _report_metadata,
+                                         report_metadata,
                                          multiprocessing=True,
                                          log_level=log_level)
                 result.fragment = os.path.splitext(fragment.name)[0]
@@ -709,9 +701,8 @@ class ReportCompiler:
                                                 for df in predata.values()]))
         else:
             flattened_predata = {}
-        doc_var_augmented = deepcopy(doc_var)
-        doc_var_augmented.update(flattened_predata)
-        return doc_var_augmented
+        doc_var.update(flattened_predata)
+        return doc_var
 
 
 class FragmentCompiler:
