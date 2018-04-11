@@ -88,6 +88,8 @@ class Report:
                 )
 
         metadata['report_path'] = self.path
+        metadata['skip_unchanged_fragments'] = \
+            metadata.get('skip_unchanged_fragments', True)
         return metadata
 
     def __str__(self):

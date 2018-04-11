@@ -8,8 +8,10 @@ __all__ = ['FragmentGenerationError', ]
 
 
 class FragmentGenerationError(Exception):
-    """ Exception that encapsulates the different errors that might occur in
-    the compilation of fragments of a document"""
+    """
+    Exception that encapsulates the different errors that might occur in
+    the compilation of fragments of a document
+    """
     def __init__(self, message, enclosed_errors_dict):
         Exception.__init__(self, message)
         self.fragment_errors = enclosed_errors_dict

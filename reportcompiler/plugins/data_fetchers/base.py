@@ -45,8 +45,8 @@ class DataFetcher(PluginModule):
         :raises DataFetchingError: always
         """
         exception_info = message if message else str(exception)
-        if context.get('fragment_path'):
-            location = context['fragment_path']
+        if context.get('fragment_name'):
+            location = context['fragment_name']
         else:
             location = 'config.json'
         full_msg = '{}: Data fetching error:\n\n{}'.format(location,

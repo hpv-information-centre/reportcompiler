@@ -8,6 +8,7 @@ import json
 import os
 import hashlib
 import logging
+import traceback
 from tempfile import NamedTemporaryFile
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
@@ -57,8 +58,7 @@ class SourceParser(PluginModule):
         else:
             json_data = data.to_json(orient='records')
 
-        if (metadata.get('skip_unchanged_fragments') is None or
-                not metadata['skip_unchanged_fragments']):
+        if metadata['skip_unchanged_fragments']:
             context = None
             with open(metadata['fragment_path'], 'rb') as f:
                 code_hash = hashlib.sha256(f.read()).hexdigest()
@@ -127,10 +127,6 @@ class SourceParser(PluginModule):
                                 metadata['doc_suffix'],
                                 metadata['fragment_name']))
 
-            if context is None:
-                with open(fragment_hash_basename + '.hash', 'w') as hash_file:
-                    hash_file.write(current_hash)
-
         with open(fragment_tmp_basename + '.json', 'w') as cache_file:
             cache_file.write(json.dumps({'doc_var': doc_var,
                                          'data': json.loads(json_data),
@@ -140,6 +136,10 @@ class SourceParser(PluginModule):
         if context is None:  # If context is defined, skip the generation
             try:
                 context = self.generate_context(doc_var, data, metadata)
+
+                if metadata['skip_unchanged_fragments']:
+                    with open(fragment_hash_basename + '.hash', 'w') as hash_f:
+                        hash_f.write(current_hash)
             except Exception as e:
                 meta_dir = os.path.join(metadata['report_path'],
                                         '..',
@@ -216,13 +216,20 @@ class SourceParser(PluginModule):
         :param str message: Optional message for exception
         :raises ContextGenerationError: always
         """
-        exception_info = message if message else str(exception)
-        if context.get('fragment_path'):
-            location = context['fragment_path']
+        exception_info = (message
+                          if message
+                          else ''.join(
+                              traceback.format_tb(exception.__traceback__)))
+        if context.get('fragment_name'):
+            location = context['fragment_name']
         else:
             location = '<None>'
-        full_msg = '{}: Context generation error:\n{}'.format(location,
-                                                              exception_info)
+        exception_type = type(exception).__name__
+        full_msg = '{}: Context generation error ({}): {}\n{}\n'.format(
+            location,
+            exception_type,
+            str(exception) if exception_type != 'CalledProcessError' else '',
+            exception_info)
         if context.get('logger_name'):
             logger = logging.getLogger(context['logger_name'])
             logger.error('[{}] {}'.format(context['doc_suffix'], full_msg))
@@ -243,12 +250,12 @@ class SourceParser(PluginModule):
         :param str message: Optional message for exception
         :raises MetadataRetrievalError: always
         """
-        exception_info = message if message else str(exception)
-        if context.get('fragment_path'):
-            location = context['fragment_path']
+        exception_info = message if message else '    ' + str(exception)
+        if context.get('fragment_name'):
+            location = context['fragment_name']
         else:
             location = '<None>'
-        full_msg = '{}: Metadata retrieval error:\n\n{}'.format(
+        full_msg = '{}: Metadata retrieval error:\n{}\n'.format(
             location,
             exception_info)
         if context.get('logger_name'):
