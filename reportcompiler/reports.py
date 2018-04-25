@@ -102,7 +102,9 @@ class Report:
             The parent path must exist, and the last directory in the path will
             be created.
         """
-        if not os.path.exists(os.path.join(new_report_path, os.path.pardir)):
+        if not os.path.exists(
+            os.path.normpath(
+                os.path.join(new_report_path, os.path.pardir))):
             raise EnvironmentError(
                 "Parent path for new report doesn't exist"
             )

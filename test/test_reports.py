@@ -11,8 +11,9 @@ class ReportTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.test_tmp_path = mkdtemp()
-        cls.test_report = Report(os.path.join(cls.test_tmp_path,
-                                              'test_report'),
+        cls.test_report = Report(os.path.join(
+                                    cls.test_tmp_path,
+                                    'test_report'),
                                  create=True)
 
     @classmethod
