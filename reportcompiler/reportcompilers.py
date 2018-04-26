@@ -108,7 +108,7 @@ class ReportCompiler:
         for d in dirs:
             metadata['{}_path'.format(d)] = _build_subpath(d)
             if not os.path.exists(metadata['{}_path'.format(d)]):
-                os.makedirs(metadata['{}_path'.format(d)], os.O_RDWR)
+                os.makedirs(metadata['{}_path'.format(d)], 0o770)
         metadata['data_path'] = os.path.join(metadata['report_path'], 'data')
         metadata['templates_path'] = os.path.join(metadata['report_path'],
                                                   'templates')
