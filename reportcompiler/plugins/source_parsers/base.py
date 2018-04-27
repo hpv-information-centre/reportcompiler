@@ -95,7 +95,7 @@ class SourceParser(PluginModule):
             else:
                 if previous_hash == '':
                     logger.warning(
-                        "[{}] {}: No previous context found, regenerating...".
+                        "[{}] {}: No previous context found, generating...".
                         format(metadata['doc_suffix'],
                                metadata['fragment_name']))
                 else:
@@ -124,6 +124,8 @@ class SourceParser(PluginModule):
                             ", regenerating context...")
                     else:
                         self.raise_generator_exception(
+                            doc_var,
+                            json_data,
                             metadata,
                             message="[{}] {}: Unexpected error".format(
                                 metadata['doc_suffix'],
@@ -135,38 +137,13 @@ class SourceParser(PluginModule):
                                          'metadata': metadata}, indent=2))
             metadata['cache_file'] = fragment_tmp_basename + '.json'
 
-        if context is None:  # If context is defined, skip the generation
-            try:
-                context = self.generate_context(doc_var, data, metadata)
+        if context is None:
+            context = self.generate_context(doc_var, data, metadata)
 
-                if metadata['skip_unchanged_fragments']:
-                    with open(fragment_hash_basename + '.hash', 'w') as hash_f:
-                        hash_f.write(current_hash)
-            except Exception as e:
-                meta_dir = os.path.join(metadata['report_path'],
-                                        '..',
-                                        '_meta')
-                if metadata['debug_mode']:
-                    if not os.path.exists(meta_dir):
-                        os.mkdir(meta_dir)
-                    with NamedTemporaryFile(dir=meta_dir,
-                                            prefix='error_',
-                                            delete=False,
-                                            mode='w') \
-                            as err_file:
-                        ts = time.time()
-                        timestamp = datetime.fromtimestamp(ts).strftime(
-                            '%Y-%m-%d %H:%M:%S')
-                        err_file.write(
-                            json.dumps({'timestamp': timestamp,
-                                        'doc_var': doc_var,
-                                        'data': json.loads(json_data),
-                                        'metadata': metadata,
-                                        'report': os.path.basename(
-                                            metadata['report_path'])},
-                                       indent=2))
-                raise e from None
-        else:
+            if metadata['skip_unchanged_fragments']:
+                with open(fragment_hash_basename + '.hash', 'w') as hash_f:
+                    hash_f.write(current_hash)
+        else:  # If context is defined, skip the generation
             logger.info(
                 '[{}] {}: Same input, reusing previous context ({})...'
                 .format(
@@ -179,6 +156,41 @@ class SourceParser(PluginModule):
 
         del metadata['cache_file']
         return context
+
+    @classmethod
+    def _build_debug_info(cls, doc_var, data, metadata):
+        if isinstance(data, dict):
+            json_data = "{" + \
+                        ", ".join(
+                            ['"' + key + '": ' + df.to_json(orient='records')
+                                for key, df
+                                in data.items()]
+                            ) + \
+                        "}"
+        else:
+            json_data = data.to_json(orient='records')
+
+        meta_dir = os.path.join(metadata['report_path'],
+                                '..',
+                                '_meta')
+        if not os.path.exists(meta_dir):
+            os.mkdir(meta_dir)
+        with NamedTemporaryFile(dir=meta_dir,
+                                prefix='error_',
+                                delete=False,
+                                mode='w') \
+                as err_file:
+            ts = time.time()
+            timestamp = datetime.fromtimestamp(ts).strftime(
+                '%Y-%m-%d %H:%M:%S')
+            err_file.write(
+                json.dumps({'timestamp': timestamp,
+                            'doc_var': doc_var,
+                            'data': json_data,
+                            'metadata': metadata,
+                            'report': os.path.basename(
+                                metadata['report_path'])},
+                           indent=2))
 
     @abstractmethod
     def generate_context(self, doc_var, data, metadata):
@@ -211,7 +223,7 @@ class SourceParser(PluginModule):
             'Metadata retrieval not implemented for {}'.format(self.__class__))
 
     @classmethod
-    def raise_generator_exception(cls, context, exception=None,
+    def raise_generator_exception(cls, doc_var, data, context, exception=None,
                                   message=None):
         """
         Returns a context generation exception with the necessary info
@@ -222,6 +234,8 @@ class SourceParser(PluginModule):
         :param str message: Optional message for exception
         :raises ContextGenerationError: always
         """
+        if context['debug_mode']:
+            SourceParser._build_debug_info(doc_var, data, context)
         exception_info = (message
                           if message
                           else ''.join(
@@ -245,7 +259,7 @@ class SourceParser(PluginModule):
         raise err from None
 
     @classmethod
-    def raise_retriever_exception(cls, context, exception=None,
+    def raise_retriever_exception(cls, doc_var, context, exception=None,
                                   message=None):
         """
         Returns a metadata retrieval exception with the necessary info
@@ -256,6 +270,8 @@ class SourceParser(PluginModule):
         :param str message: Optional message for exception
         :raises MetadataRetrievalError: always
         """
+        if context['debug_mode']:
+            SourceParser._build_debug_info(doc_var, {}, context)
         exception_info = message if message else '    ' + str(exception)
         if context.get('fragment_name'):
             location = context['fragment_name']

@@ -34,7 +34,7 @@ class RParser(SourceParser):
         try:
             if which('Rscript') is None:
                 SourceParser.raise_generator_exception(
-                    context,
+                    doc_var, data, context,
                     message='Rscript not found in PATH. Please install it '
                             'or configure your PATH.')
 
@@ -48,6 +48,8 @@ class RParser(SourceParser):
                          universal_newlines=True)
         except CalledProcessError as e:
             SourceParser.raise_generator_exception(
+                doc_var,
+                data,
                 metadata,
                 exception=e,
                 message=e.stderr)
@@ -70,6 +72,7 @@ class RParser(SourceParser):
         try:
             if which('Rscript') is None:
                 SourceParser.raise_retriever_exception(
+                    doc_var,
                     metadata,
                     message='Rscript not found in PATH. Please install it '
                             'or configure your PATH.')
@@ -83,6 +86,7 @@ class RParser(SourceParser):
                          universal_newlines=True)
         except CalledProcessError as e:
             SourceParser.raise_retriever_exception(
+                doc_var,
                 metadata,
                 exception=e,
                 message=e.stderr)

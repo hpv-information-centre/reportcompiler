@@ -353,9 +353,9 @@ class ReportCompiler:
         """
         tmp_logs = glob(os.path.join(report_metadata['log_path'], '_*'))
         with open(doc_logfile_path, 'a') as log:
-            log.write('\n-------------------')
-            log.write('\nFragment logs below:')
-            log.write('\n-------------------\n\n')
+            log.write('\n--------------')
+            log.write('\nFragment logs:')
+            log.write('\n--------------\n\n')
             for tmp_log in sorted(tmp_logs):
                 with open(tmp_log) as partial_log:
                     log.write(partial_log.read())
