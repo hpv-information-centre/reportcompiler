@@ -9,6 +9,8 @@ import os
 import hashlib
 import logging
 import traceback
+import time
+from datetime import datetime
 from tempfile import NamedTemporaryFile
 from abc import abstractmethod
 from reportcompiler.plugins.plugin_module import PluginModule
@@ -152,8 +154,12 @@ class SourceParser(PluginModule):
                                             delete=False,
                                             mode='w') \
                             as err_file:
+                        ts = time.time()
+                        timestamp = datetime.fromtimestamp(ts).strftime(
+                            '%Y-%m-%d %H:%M:%S')
                         err_file.write(
-                            json.dumps({'doc_var': doc_var,
+                            json.dumps({'timestamp': timestamp,
+                                        'doc_var': doc_var,
                                         'data': json.loads(json_data),
                                         'metadata': metadata,
                                         'report': os.path.basename(
