@@ -6,6 +6,7 @@ This module includes the source parser using python.
 
 import importlib
 import os
+import json
 from reportcompiler.plugins.source_parsers.base \
     import SourceParser
 
@@ -32,7 +33,7 @@ class PythonParser(SourceParser):
             try:
                 json.dumps(x)
                 return True
-            except:
+            except TypeError:
                 return False
 
         module_name = metadata['fragment_name']
@@ -46,5 +47,6 @@ class PythonParser(SourceParser):
 
         module_vars = {var: fragment_module.__dict__[var]
                        for var in dir(fragment_module)
-                       if (is_jsonable(fragment_module.__dict__[var]))}
+                       if (is_jsonable(fragment_module.__dict__[var]) and
+                           not var.startswith('__'))}
         return module_vars

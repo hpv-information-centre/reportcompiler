@@ -21,9 +21,9 @@ class RParser(SourceParser):
         r_code = "library(jsonlite, quietly=TRUE);\
                     source('{}');\
                     cache_file <- fromJSON(file('{}'));\
-                    doc_var <- cache_file$doc_var;\
-                    data <- cache_file['data'];\
-                    metadata <- cache_file['metadata'];\
+                    doc_var <- cache_file[['doc_var']];\
+                    data <- cache_file[['data']];\
+                    metadata <- cache_file[['metadata']];\
                     print(toJSON(generate_context(doc_var, data, metadata),\
                         auto_unbox=TRUE))"
 
