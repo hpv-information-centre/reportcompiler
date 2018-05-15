@@ -7,6 +7,7 @@ This module includes the source parser using python.
 import importlib
 import os
 import json
+from copy import deepcopy
 from reportcompiler.plugins.source_parsers.base \
     import SourceParser
 
@@ -22,7 +23,9 @@ class PythonParser(SourceParser):
         fragment_module = importlib.import_module(basename)
         context = None
         try:
-            context = fragment_module.generate_context(doc_var, data, metadata)
+            context = fragment_module.generate_context(doc_var,
+                                                       deepcopy(data),
+                                                       metadata)
         except Exception as e:
             SourceParser.raise_generator_exception(
                 doc_var, data, metadata, exception=e)
