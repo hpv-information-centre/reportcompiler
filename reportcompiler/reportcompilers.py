@@ -457,6 +457,8 @@ class ReportCompiler:
 
             logger.info('[{}] Document generated'.format(
                 report_metadata['doc_suffix']))
+
+            return output_doc
         except (FragmentGenerationError,
                 TemplateRendererException,
                 PostProcessorError) as e:
@@ -470,7 +472,7 @@ class ReportCompiler:
             if n_frag_workers > 1:
                 self._build_final_log(doc_logfile_path, report_metadata)
 
-        return output_doc
+        return None
 
     def _generate_doc_fragments_parallel(self,
                                          augmented_doc_var,
