@@ -13,6 +13,7 @@ import time
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 from abc import abstractmethod
+import pandas as pd
 from reportcompiler.plugins.plugin_module import PluginModule
 from reportcompiler.plugins.errors import \
     ContextGenerationError, MetadataRetrievalError
@@ -49,19 +50,10 @@ class SourceParser(PluginModule):
                                               doc_suffix + '_' +
                                               metadata['fragment_name'])
 
-        if isinstance(data, dict):
-            json_data = "{" + \
-                        ", ".join(
-                            ['"' + key + '": ' + df.to_json(orient='records')
-                                for key, df
-                                in data.items()]
-                            ) + \
-                        "}"
-        else:
-            json_data = data.to_json(orient='records')
+        json_data = convert_to_json(data)
 
+        context = None
         if metadata['skip_unchanged_fragments']:
-            context = None
             with open(metadata['fragment_path'], 'rb') as f:
                 code_hash = hashlib.sha256(f.read()).hexdigest()
 
@@ -152,23 +144,14 @@ class SourceParser(PluginModule):
                     self.__class__.__name__))
 
         with open(fragment_hash_basename + '.ctx', 'w') as output_file:
-            output_file.write(json.dumps(context, sort_keys=True))
+            output_file.write(convert_to_json(context))
 
         del metadata['cache_file']
         return context
 
     @classmethod
     def _build_debug_info(cls, doc_var, data, metadata):
-        if isinstance(data, dict):
-            json_data = "{" + \
-                        ", ".join(
-                            ['"' + key + '": ' + df.to_json(orient='records')
-                                for key, df
-                                in data.items()]
-                            ) + \
-                        "}"
-        else:
-            json_data = data.to_json(orient='records')
+        json_data = convert_to_json(data)
 
         meta_dir = os.path.join(metadata['report_path'],
                                 '..',
@@ -186,7 +169,7 @@ class SourceParser(PluginModule):
             err_file.write(
                 json.dumps({'timestamp': timestamp,
                             'doc_var': doc_var,
-                            'data': json_data,
+                            'data': json.loads(json_data),
                             'metadata': metadata,
                             'report': os.path.basename(
                                 metadata['report_path'])},
@@ -305,3 +288,18 @@ class SourceParser(PluginModule):
             raise NotImplementedError(
                 'No {} specified and no default is available for extension {}'.
                 format(cls, extension))
+
+
+def convert_to_json(dt):
+    if isinstance(dt, dict):
+        return ("{" +
+                ", ".join(
+                        ['"' + key + '": ' + convert_to_json(val)
+                            for key, val
+                            in dt.items()]
+                        ) +
+                "}")
+    elif isinstance(dt, pd.DataFrame):
+        return dt.to_json(orient='records')
+    else:
+        return json.dumps(dt, sort_keys=True)
