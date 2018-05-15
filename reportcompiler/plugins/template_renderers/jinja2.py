@@ -27,14 +27,21 @@ class JinjaRenderer(TemplateRenderer):
 
     def render_template(self, doc_var, context):
         try:
+            template_dirs = []
             template_tmp_dir = os.path.join(
                 context['meta']['tmp_path'],
                 'templates')
             if not os.path.exists(template_tmp_dir):
                 os.mkdir(template_tmp_dir)
+            template_dirs.append(template_tmp_dir)
+
+            template_common_dir = os.environ[
+                'RC_TEMPLATE_LIBRARY_PATH']
+            if os.path.exists(template_common_dir):
+                template_dirs.append(template_common_dir)
 
             environment = jinja2.Environment(
-                loader=jinja2.FileSystemLoader(template_tmp_dir),
+                loader=jinja2.FileSystemLoader(template_dirs),
                 undefined=jinja2.StrictUndefined,
                 trim_blocks=True)
             self._setup_environment(environment)
@@ -54,21 +61,30 @@ class JinjaRenderer(TemplateRenderer):
     def _generate_temp_templates(self, env, context):
         context_info = context['meta']['template_context_info']
         for template_file, dict_path in context_info:
-            with open(os.path.join(context['meta']['templates_path'],
-                                   template_file), 'r') as f_orig, \
-                 open(os.path.join(context['meta']['tmp_path'],
-                                   'templates',
-                                   template_file), 'w') as f_tmp:
-                content = f_orig.read()
-                header = env.block_start_string + \
-                    'with ctx = {}'.format(
-                        'data.' + dict_path if dict_path != '' else 'data') + \
-                    env.block_end_string + '\n'
-                footer = '\n' + \
-                         env.block_start_string + \
-                         'endwith' + \
-                         env.block_end_string
-                f_tmp.write(header + content + footer)
+            try:
+                with open(os.path.join(context['meta']['templates_path'],
+                                       template_file), 'r') as f_orig, \
+                    open(os.path.join(context['meta']['tmp_path'],
+                                      'templates',
+                                      template_file), 'w') as f_tmp:
+                    content = f_orig.read()
+                    header = env.block_start_string + \
+                        'with ctx = {}'.format(
+                            'data.' + dict_path
+                            if dict_path != ''
+                            else 'data') + \
+                        env.block_end_string + '\n'
+                    footer = '\n' + \
+                             env.block_start_string + \
+                             'endwith' + \
+                             env.block_end_string
+                    f_tmp.write(header + content + footer)
+            except FileNotFoundError:
+                common_template_dir = os.environ['RC_TEMPLATE_LIBRARY_PATH']
+                if not os.path.exists(common_template_dir + template_file):
+                    raise FileNotFoundError(
+                        'Template {} does not exist in report nor in the '
+                        'RC_TEMPLATE_LIBRARY_PATH')
 
     def included_templates(self, content):
         templates = re.findall(pattern='{%.*%}', string=content)

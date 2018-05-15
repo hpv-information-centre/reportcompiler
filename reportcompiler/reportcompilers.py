@@ -137,13 +137,20 @@ class ReportCompiler:
         stack = [root_template]
         while len(stack) > 0:
             current_node = stack.pop()
-            with open(os.path.join(self.report.path,
-                                   'templates',
-                                   current_node.name)) as f:
-                content = f.read()
-            fragments_found = self.included_templates(content)
-            for f in fragments_found:
-                stack.append(Node(f, parent=current_node))
+            try:
+                with open(os.path.join(self.report.path,
+                                       'templates',
+                                       current_node.name)) as f:
+                    content = f.read()
+                fragments_found = self.included_templates(content)
+                for f in fragments_found:
+                    stack.append(Node(f, parent=current_node))
+            except FileNotFoundError:
+                common_template_dir = os.environ['RC_TEMPLATE_LIBRARY_PATH']
+                if not os.path.exists(common_template_dir + current_node.name):
+                    raise FileNotFoundError(
+                        'Template {} does not exist in report nor in the '
+                        'RC_TEMPLATE_LIBRARY_PATH')
 
         return Tree(root_template)
 
