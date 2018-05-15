@@ -87,11 +87,12 @@ class MySQLFetcher(SQLFetcher):
                 message='MySQL credentials {} don\'t exist'.format(
                     fetcher_info['credentials_file']))
 
-        try:
-            credentials = CredentialManager.retrieve(
-                            fetcher_info['credentials'])
-        except KeyError:
-            pass  # No credentials specified
+        if credentials is None:
+            try:
+                credentials = CredentialManager.retrieve(
+                                fetcher_info['credentials'])
+            except KeyError:
+                pass  # No credentials specified
 
         if credentials is None:
             credentials = {}

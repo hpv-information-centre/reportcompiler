@@ -35,7 +35,8 @@ class JinjaRenderer(TemplateRenderer):
 
             environment = jinja2.Environment(
                 loader=jinja2.FileSystemLoader(template_tmp_dir),
-                undefined=jinja2.StrictUndefined)
+                undefined=jinja2.StrictUndefined,
+                trim_blocks=True)
             self._setup_environment(environment)
             self._generate_temp_templates(environment, context)
             # TODO: render vs generate
@@ -47,7 +48,7 @@ class JinjaRenderer(TemplateRenderer):
             shutil.rmtree(template_tmp_dir, ignore_errors=True)
 
             return rendered_template
-        except UndefinedError as e:
+        except Exception as e:
             TemplateRenderer.raise_rendering_exception(context, exception=e)
 
     def _generate_temp_templates(self, env, context):
