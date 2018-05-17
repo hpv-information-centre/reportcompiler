@@ -150,7 +150,15 @@ class ReportCompiler:
                 if not os.path.exists(common_template_dir + current_node.name):
                     raise FileNotFoundError(
                         'Template {} does not exist in report nor in the '
-                        'RC_TEMPLATE_LIBRARY_PATH')
+                        'RC_TEMPLATE_LIBRARY_PATH ({})'.format(
+                            common_template_dir)
+                        )
+                else:
+                    # Ignoring library templates for tree parsing purposes
+                    # Removing node from tree
+                    children = list(current_node.parent.children)
+                    children.remove(current_node)
+                    current_node.parent.children = children
 
         return Tree(root_template)
 
