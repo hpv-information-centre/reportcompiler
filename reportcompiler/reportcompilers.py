@@ -23,7 +23,7 @@ from reportcompiler.plugins.template_renderers.base \
     import TemplateRenderer, TemplateRendererException
 from reportcompiler.plugins.postprocessors.base \
     import PostProcessor, PostProcessorError
-from reportcompiler.errors import FragmentGenerationError
+from reportcompiler.errors import DocumentGenerationError
 
 __all__ = ['ReportCompiler', 'FragmentCompiler', ]
 
@@ -316,7 +316,7 @@ class ReportCompiler:
             traceback_dict = {}
             for result in error_results:
                 error = result.exception
-                if isinstance(error, FragmentGenerationError):
+                if isinstance(error, DocumentGenerationError):
                     traceback_dict.update(error.fragment_errors)
                 else:
                     error_msg = (str(error) + '\n' +
@@ -325,7 +325,7 @@ class ReportCompiler:
                                             error.__traceback__)))
                     traceback_dict.update({result.doc: {
                                             '<global>': error_msg}})
-            raise FragmentGenerationError(
+            raise DocumentGenerationError(
                 'Error on document(s) generation:\n', traceback_dict)
 
     def _prepare_debug_session(self, report_metadata):
@@ -474,7 +474,7 @@ class ReportCompiler:
                 report_metadata['doc_suffix']))
 
             return output_doc
-        except (FragmentGenerationError,
+        except (DocumentGenerationError,
                 TemplateRendererException,
                 PostProcessorError) as e:
             logger.error(
@@ -599,7 +599,7 @@ class ReportCompiler:
                 result.exception.args[0],
                 traceback.format_tb(result.exception.__traceback__)
             )
-        exception = FragmentGenerationError(
+        exception = DocumentGenerationError(
             'Error on fragment(s) generation ({})...'.
             format(len(errors)),
             frag_errors)
