@@ -1,6 +1,10 @@
 """ Module for installing module as pip package """
 import os
 from setuptools import find_packages, setup
+import sys
+
+sys.path.insert(0, os.path.abspath(__file__))
+from reportcompiler import __version__
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
     README = readme.read()
@@ -11,7 +15,7 @@ os.chdir(
 
 setup(
     name='reportcompiler',
-    version='0.3.4',
+    version=__version__,
     packages=find_packages('.'),
     include_package_data=True,
     license='GPL-3.0 License',
@@ -55,9 +59,9 @@ setup(
             'RParser',
         ],
         'reportcompiler.template_renderers': [
-            'jinja=reportcompiler.plugins.template_renderers.jinja2:'
+            'jinja2=reportcompiler.plugins.template_renderers.jinja2:'
             'JinjaRenderer',
-            'jinja-latex=reportcompiler.plugins.template_renderers.jinja2:'
+            'jinja2-latex=reportcompiler.plugins.template_renderers.jinja2:'
             'JinjaLatexRenderer',
             'rmarkdown=reportcompiler.plugins.template_renderers.rmarkdown:'
             'RMarkdownRenderer',

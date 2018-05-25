@@ -18,7 +18,7 @@ class ExcelFetcher(DataFetcher):
     def fetch(self, doc_var, fetcher_info, metadata):
         params = [
             {'name': 'file', 'default_value': ValueError},
-            {'name': 'sheet_name', 'default_value': 0},
+            {'name': 'sheet', 'default_value': 0},
             {'name': 'columns', 'default_value': None},
             {'name': 'na_values', 'default_value': None},
         ]
@@ -42,7 +42,7 @@ class ExcelFetcher(DataFetcher):
                                  filename)
 
         df = pd.read_excel(io=file_path,
-                           sheet_name=arguments['sheet_name'],
+                           sheet_name=arguments['sheet'],
                            usecols=arguments['columns'],
                            na_values=arguments['na_values'])
         return df

@@ -4,17 +4,32 @@ This module defines the error structure that document generation can return.
 
 """
 
-__all__ = ['FragmentGenerationError', ]
+__all__ = ['DocumentGenerationError', ]
 
 
-class FragmentGenerationError(Exception):
+class DocumentGenerationError(Exception):
     """
     Exception that encapsulates the different errors that might occur in
     the compilation of fragments of a document
     """
-    def __init__(self, message, enclosed_errors_dict=None):
+    def __init__(self, message, enclosed_errors=None):
+        """
+        Creates new DocumentGenerationError with a particular message and
+        a dictionary of enclosed errors (from the failed fragments).
+
+        :param str message: exception message
+        :param dict enclosed_errors: dictionary with failed fragments
+            errors for each failed document, e.g:
+            {'document1': {
+                'fragment1': 'Error #1',
+                'fragment2': ('Error #2', <error2_traceback>),
+                ...
+                }
+            ...
+            }
+        """
         Exception.__init__(self, message)
-        self.fragment_errors = enclosed_errors_dict
+        self.fragment_errors = enclosed_errors
 
     def __str__(self):
         msg = self.args[0] + '\n'

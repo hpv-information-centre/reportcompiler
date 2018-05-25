@@ -23,7 +23,7 @@ from reportcompiler.plugins.template_renderers.base \
     import TemplateRenderer, TemplateRendererException
 from reportcompiler.plugins.postprocessors.base \
     import PostProcessor, PostProcessorError
-from reportcompiler.errors import FragmentGenerationError
+from reportcompiler.errors import DocumentGenerationError
 
 __all__ = ['ReportCompiler', 'FragmentCompiler', ]
 
@@ -108,7 +108,7 @@ class ReportCompiler:
         for d in dirs:
             metadata['{}_path'.format(d)] = _build_subpath(d)
             if not os.path.exists(metadata['{}_path'.format(d)]):
-                os.makedirs(metadata['{}_path'.format(d)], 0o770)
+                os.makedirs(metadata['{}_path'.format(d)], 0o777)
         metadata['data_path'] = os.path.join(metadata['report_path'], 'data')
         metadata['templates_path'] = os.path.join(metadata['report_path'],
                                                   'templates')
@@ -137,13 +137,28 @@ class ReportCompiler:
         stack = [root_template]
         while len(stack) > 0:
             current_node = stack.pop()
-            with open(os.path.join(self.report.path,
-                                   'templates',
-                                   current_node.name)) as f:
-                content = f.read()
-            fragments_found = self.included_templates(content)
-            for f in fragments_found:
-                stack.append(Node(f, parent=current_node))
+            try:
+                with open(os.path.join(self.report.path,
+                                       'templates',
+                                       current_node.name)) as f:
+                    content = f.read()
+                fragments_found = self.included_templates(content)
+                for f in fragments_found:
+                    stack.append(Node(f, parent=current_node))
+            except FileNotFoundError:
+                common_template_dir = os.environ['RC_TEMPLATE_LIBRARY_PATH']
+                if not os.path.exists(common_template_dir + current_node.name):
+                    raise FileNotFoundError(
+                        'Template {} does not exist in report nor in the '
+                        'RC_TEMPLATE_LIBRARY_PATH ({})'.format(
+                            common_template_dir)
+                        )
+                else:
+                    # Ignoring library templates for tree parsing purposes
+                    # Removing node from tree
+                    children = list(current_node.parent.children)
+                    children.remove(current_node)
+                    current_node.parent.children = children
 
         return Tree(root_template)
 
@@ -301,7 +316,7 @@ class ReportCompiler:
             traceback_dict = {}
             for result in error_results:
                 error = result.exception
-                if isinstance(error, FragmentGenerationError):
+                if isinstance(error, DocumentGenerationError):
                     traceback_dict.update(error.fragment_errors)
                 else:
                     error_msg = (str(error) + '\n' +
@@ -310,7 +325,7 @@ class ReportCompiler:
                                             error.__traceback__)))
                     traceback_dict.update({result.doc: {
                                             '<global>': error_msg}})
-            raise FragmentGenerationError(
+            raise DocumentGenerationError(
                 'Error on document(s) generation:\n', traceback_dict)
 
     def _prepare_debug_session(self, report_metadata):
@@ -459,15 +474,13 @@ class ReportCompiler:
                 report_metadata['doc_suffix']))
 
             return output_doc
-        except (FragmentGenerationError,
+        except (DocumentGenerationError,
                 TemplateRendererException,
                 PostProcessorError) as e:
             logger.error(
                 '[{}] Error(s) in document generation, see below'.format(
                     report_metadata['doc_suffix']))
             raise e from None
-        except Exception as e:
-            print(e)
         finally:
             if n_frag_workers > 1:
                 self._build_final_log(doc_logfile_path, report_metadata)
@@ -584,7 +597,7 @@ class ReportCompiler:
                 result.exception.args[0],
                 traceback.format_tb(result.exception.__traceback__)
             )
-        exception = FragmentGenerationError(
+        exception = DocumentGenerationError(
             'Error on fragment(s) generation ({})...'.
             format(len(errors)),
             frag_errors)
