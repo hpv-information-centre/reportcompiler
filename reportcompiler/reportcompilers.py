@@ -108,7 +108,7 @@ class ReportCompiler:
         for d in dirs:
             metadata['{}_path'.format(d)] = _build_subpath(d)
             if not os.path.exists(metadata['{}_path'.format(d)]):
-                os.makedirs(metadata['{}_path'.format(d)], 0o770)
+                os.makedirs(metadata['{}_path'.format(d)], 0o777)
         metadata['data_path'] = os.path.join(metadata['report_path'], 'data')
         metadata['templates_path'] = os.path.join(metadata['report_path'],
                                                   'templates')
@@ -481,8 +481,6 @@ class ReportCompiler:
                 '[{}] Error(s) in document generation, see below'.format(
                     report_metadata['doc_suffix']))
             raise e from None
-        except Exception as e:
-            print(e)
         finally:
             if n_frag_workers > 1:
                 self._build_final_log(doc_logfile_path, report_metadata)

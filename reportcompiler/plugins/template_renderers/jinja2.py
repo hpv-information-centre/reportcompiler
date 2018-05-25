@@ -135,6 +135,7 @@ class JinjaLatexRenderer(JinjaRenderer):
         jinja_env.filters['escape_tex'] = escape_tex
         jinja_env.filters['escape_path'] = escape_path
         jinja_env.trim_blocks = True
+        jinja_env.lstrip_blocks = True
         jinja_env.autoescape = False
 
     def included_templates(self, content):
