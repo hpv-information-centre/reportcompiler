@@ -33,7 +33,8 @@ class SQLQueryBuilder:
     def build(self):
         """
         Builds the SQL query string with the JSON specification provided
-            in the constructor.
+        in the constructor.
+
         :returns: SQL query string
         :rtype: str
         """

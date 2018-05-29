@@ -39,6 +39,7 @@ class PluginModule(object, metaclass=PluginModuleMeta):
         """
         In case no explicit plugin is specified, each plugin type can specify
         a default plugin.
+
         :param dict kwargs: Parameters to decide on a default
         :returns: Default plugin
         :rtype: PluginModule
@@ -49,7 +50,8 @@ class PluginModule(object, metaclass=PluginModuleMeta):
     @classmethod
     def get(cls, id=None, **kwargs):
         """
-        Instantiates the specified plugin
+        Instantiates the specified plugin.
+
         :param str id: plugin id (e.g. 'mysql', 'python', ...) or dict
             with more info (with the 'type' key enclosed)
         :param dict kwargs: optional arguments
@@ -91,6 +93,7 @@ class PluginModule(object, metaclass=PluginModuleMeta):
         """
         Returns the plugins of cls defined on the entry_point
         'reportcompiler.<plugin_class>'.
+
         :returns: Dictionary with elements {plugin_name: plugin_class}
         :rtype: dict
         """

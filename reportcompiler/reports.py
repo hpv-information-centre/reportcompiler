@@ -164,6 +164,7 @@ class Report:
         """
         Returns the allowed values for the document variables for the current
         report if specified in the configuration file.
+
         :param OrderedDict doc_var: Document variable to check, necessary when
             checking dependent variables
         :returns: Dictionary with possible values of the variables specified in
@@ -184,6 +185,7 @@ class Report:
     def main_template(self):
         """
         Returns the main template filename.
+
         :returns: main template filename
         :rtype: str
         """
@@ -198,6 +200,7 @@ class Report:
         """
         Generates the documents with document variables doc_vars from the
         current report.
+
         :param OrderedDict|list doc_vars: Document variables to generate
             documents
         :param int n_doc_workers: Number of concurrent document-generating
@@ -234,7 +237,8 @@ class Report:
 
     def _clean_and_validate_doc_vars(self, doc_vars):
         """
-        Validation and cleaning of input document variable list
+        Validation and cleaning of input document variable list.
+
         :param list doc_vars: Input document variable list
         :returns: Cleaned up document variable list
         :rtype: list
