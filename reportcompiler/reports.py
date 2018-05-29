@@ -171,7 +171,7 @@ class Report:
             from doc_var are returned with value None.
         :rtype: dict
         """
-        dt = ReportCompiler.fetch_info(doc_var, self.metadata)
+        dt = ReportCompiler.fetch_allowed_param_values(doc_var, self.metadata)
         allowed_values = {}
         for col in dt.keys():
             data_list = dt[col].values.flatten().tolist()
@@ -258,11 +258,9 @@ class Report:
                     format(doc_var))
 
     def _check_mandatory_variables(self, doc_var):
-        if self.metadata.get('param_config') is None:
+        if self.metadata.get('params_mandatory') is None:
             return
-        mandatory_vars = [par['name']
-                          for par in self.metadata['param_config']
-                          if par.get('mandatory')]
+        mandatory_vars = self.metadata['params_mandatory']
         if mandatory_vars is None:
             mandatory_vars = []
         mandatory_vars = set(mandatory_vars)
@@ -300,21 +298,38 @@ class Report:
             error_msgs = []
             for var, defined_value, values in allowed_values_errors:
                 if var not in dependent_missing_vars:
+                    MAX_VALUES_DISPLAYED = 30
+                    if len(allowed_values[var]) < MAX_VALUES_DISPLAYED:
+                        list_values = ', '.join(
+                            [str(val)
+                                if not isinstance(val, str)
+                                else "'" + val + "'"
+                                for val
+                                in allowed_values[var]]
+                        )
+                    else:
+                        list_values = ', '.join(
+                            [str(val)
+                                if not isinstance(val, str)
+                                else "'" + val + "'"
+                                for val
+                                in allowed_values[var][:MAX_VALUES_DISPLAYED]]
+                        ) + ', ...'
                     msg = allowed_values_msg.format(
                                 var,
-                                ', '.join(
-                                    [str(val) for val in allowed_values[var]]
-                                ),
+                                list_values,
                                 defined_value
+                                if not isinstance(defined_value, str)
+                                else "'" + defined_value + "'"
                             )
                 else:
-                    if self.metadata.get('param_config') is None:
+                    if self.metadata.get('params_allowed_values') is None:
                         dependencies = []
                     else:
                         dependencies = [
                                 fetcher['dependencies']
                                 for fetcher in self.metadata[
-                                    'param_config']
+                                    'params_allowed_values']
                                 if fetcher['name'] == var
                         ][0]  # Dependencies of the first (and only) fetcher
                     msg = dependent_allowed_values_msg.format(

@@ -67,9 +67,10 @@ class ReportCompiler:
         self.source_file_map = self.generate_fragments_mapping()
 
     @staticmethod
-    def fetch_info(doc_var, metadata):
+    def fetch_allowed_param_values(doc_var, metadata):
         """
         Fetches the information about the allowed document variables.
+
         :param OrderedDict doc_var: Document variable
         :param dict metadata: Report metadata
         :returns: Dictionary with the allowed values for mandatory variables.
@@ -77,7 +78,7 @@ class ReportCompiler:
         """
         return FragmentCompiler.fetch_info(
                                 doc_var=doc_var,
-                                fetcher_key='param_config',
+                                fetcher_key='params_allowed_values',
                                 metadata=metadata)
 
     @staticmethod
@@ -709,7 +710,7 @@ class ReportCompiler:
         message = 'Starting doc_var augmentation...'
         logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
         predata = FragmentCompiler.fetch_info(doc_var,
-                                              'param_augmentation',
+                                              'params_augmentation',
                                               metadata)
         if len(predata) > 0:
             flattened_predata = dict(ChainMap(*[df.ix[0, :].to_dict()
