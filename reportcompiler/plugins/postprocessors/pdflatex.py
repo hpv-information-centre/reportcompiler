@@ -17,7 +17,7 @@ class PdflatexPostProcessor(PostProcessor):
 
     def postprocess(self, doc_var, doc, postprocessor_info, context):
         suffix = context['meta']['doc_suffix']
-        filename = context['meta']['name']
+        filename = context['meta']['report_name']
         if suffix != '':
             filename = filename + '-' + suffix
 

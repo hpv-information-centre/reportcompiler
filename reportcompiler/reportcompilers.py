@@ -116,9 +116,10 @@ class ReportCompiler:
         metadata['templates_path'] = os.path.join(metadata['report_path'],
                                                   'templates')
         metadata['src_path'] = os.path.join(metadata['report_path'], 'src')
-        metadata['logger_name'] = 'reportcompiler.' + (metadata['name'] +
-                                                       '_' +
-                                                       metadata['doc_suffix'])
+        metadata['logger_name'] = ('reportcompiler.' +
+                                   metadata['report_name'] +
+                                   '_' +
+                                   metadata['doc_suffix'])
 
     @staticmethod
     def _get_log_file_path(report_metadata):
@@ -831,7 +832,7 @@ class FragmentCompiler:
         """
         _, file_extension = os.path.splitext(metadata['fragment_path'])
         try:
-            retriever_name = metadata['metadata_retriever'][file_extension]
+            retriever_name = metadata['source_parser'][file_extension]
             retriever = SourceParser.get(id=retriever_name)
         except KeyError:
             retriever = SourceParser.get(extension=file_extension)
@@ -952,7 +953,7 @@ class FragmentCompiler:
 
         generator = None
         try:
-            generator_info = metadata['context_generator']
+            generator_info = metadata['source_parser']
             if isinstance(generator_info, str):
                 generator = SourceParser.get(id=generator_info)
             elif isinstance(generator_info, dict):

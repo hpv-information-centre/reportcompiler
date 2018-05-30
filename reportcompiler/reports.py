@@ -93,7 +93,8 @@ class Report:
         return metadata
 
     def __str__(self):
-        return self.metadata.get('verbose_name') or self.metadata['name']
+        return self.metadata.get('verbose_name') or \
+            self.metadata['report_name']
 
     def _create_report_specification(self, new_report_path):
         """

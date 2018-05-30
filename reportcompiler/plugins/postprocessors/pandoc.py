@@ -23,7 +23,7 @@ class PandocPostProcessor(PostProcessor):
                     context['meta']['tmp_path'],
                     context['meta']['main_template']))[0] + '.md'
             suffix = context['meta']['doc_suffix']
-            filename = context['meta']['name']
+            filename = context['meta']['report_name']
             if suffix != '':
                 filename = filename + '-' + suffix
 
