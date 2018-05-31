@@ -1,6 +1,6 @@
 .. _config-parameters:
 
-Report configuration parameters
-===============================
+Document configuration parameters
+=================================
 
 TODO

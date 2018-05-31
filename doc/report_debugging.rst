@@ -1,4 +1,4 @@
-Report debugging
-================
+Document debugging
+==================
 
 TODO

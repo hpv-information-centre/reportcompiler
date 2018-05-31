@@ -11,10 +11,10 @@ Contents:
 .. toctree::
    
    getting_started.rst
-   report_specification.rst
+   document_specification.rst
    config_parameters.rst
    metadata.rst
-   report_debugging.rst
+   document_debugging.rst
    plugin_modules.rst
    plugin_development.rst
    architecture.rst

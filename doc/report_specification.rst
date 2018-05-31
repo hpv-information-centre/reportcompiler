@@ -1,9 +1,9 @@
-.. _`report_specification`: 
+.. _`document_specification`: 
 
-Report specification
-====================
+Document specification
+======================
 
-Each report specification is contained in a directory with the following content.
+Each document specification is contained in a directory with the following content.
 
 .. image:: _static/report-specification-files.svg
 
@@ -11,7 +11,7 @@ Each report specification is contained in a directory with the following content
 config.json
 -----------
 
-This JSON file contains the report specification parameters (a more detailed list of possible 
+This JSON file contains the document specification parameters (a more detailed list of possible 
 values can be found in :ref:`config-parameters`). Before being parsed, this file is minified_, 
 allowing for Javascript-style comments (i.e. //, /\*, \*/).
 
@@ -20,7 +20,7 @@ allowing for Javascript-style comments (i.e. //, /\*, \*/).
 params.json
 -----------
 
-This JSON file extends config.json with other settings related to the report parameters:
+This JSON file extends config.json with other settings related to the document parameters:
 
 .. _`parameter_augmentation`: 
 

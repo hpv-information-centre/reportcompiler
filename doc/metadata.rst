@@ -1,22 +1,22 @@
 .. _`metadata`: 
 
 
-Report and fragment metadata
-============================
+Document and fragment metadata
+==============================
 
 When generating the context for a particular fragment, a metadata dictionary is available along with the document parameter and the fetched data. This dictionary is generated following a hierarchical process: the default metadata items for all fragments are the ones defined in the *config.json* and *params.json* files, but each fragment can then add new items or override existing ones in the fragment source file. The method depends on the plugin implementation, but usually a new key/value pair should be implemented as a value assigned to a variable.
 
 Even though new metadata options can be defined as needed (such as the parameters for each plugin, see :ref:`plugin_modules`), here are the ones used by the Report Compiler library:
 
-* report_name: Simple name of the report.
-* verbose_name: Long name of the report.
+* doc_name: Simple name of the base document. For actual generated documents a document suffix will be appended to this name.
+* verbose_name: Long name of the document.
 * main_template: Root template (that includes the rest of templates).
-* report_path: Absolute path to the report specification.
+* doc_spec_path: Absolute path to the document specification directory.
 * logger_name: Name of the logger, to be used when 
 * debug_mode: True if debug mode is enabled, false (default) otherwise. In debug mode a document will be generated in a single thread to facilitate debugging and all errors will be tracked in order to be debugged easily (see `Debugging tools`_).
 * skip_unchanged_fragments: True (default) if context generation should be skipped when no changes have been made for a fragment, false otherwise. Changes detected include code (fragment source file), fetched data and metadata. Changes in modules or libraries imported in the source file are not accounted for.
 * cache_file: File generated before each fragment context generation that contains the three parameters: document parameter, data and metadata. This allows reproducibility when compiling fragments.
-* doc_suffix: Suffix to the filename that identifies the particular document according to a document parameter. The resulting document filename is typically the report name plus this suffix (even though it depends on the corresponding plugin implementation).
+* doc_suffix: Suffix to the filename that identifies the particular document according to a document parameter. The resulting document filename is typically the document name plus this suffix (even though it depends on the corresponding plugin implementation).
 
 * template_renderer: the template renderer plugin to be used (*jinja2* by default).
 * source_parser: the source parser(s) to be used. It should be a dictionary with file extensions as keys and source parser module names as values. File extensions are considered case insensitive when resolving the appropriate parser. E.g:
