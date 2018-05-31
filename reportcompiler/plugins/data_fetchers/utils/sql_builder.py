@@ -25,15 +25,16 @@ class SQLQueryBuilder:
     Class responsible of building the SQL query string with the
     JSON specification.
     """
-    def __init__(self, doc_var, fetcher_info, metadata):
-        self.doc_var = doc_var
+    def __init__(self, doc_param, fetcher_info, metadata):
+        self.doc_param = doc_param
         self.fetcher_info = fetcher_info
         self.metadata = metadata
 
     def build(self):
         """
         Builds the SQL query string with the JSON specification provided
-            in the constructor.
+        in the constructor.
+
         :returns: SQL query string
         :rtype: str
         """
@@ -200,12 +201,12 @@ class SQLQueryBuilder:
                         value = [value]
                     for i, v in enumerate(value):
                         try:
-                            value[i] = self.doc_var[v]
+                            value[i] = self.doc_param[v]
                         except KeyError:
                             self._raise_exception(
                                     'Variable "{}" used in fetcher '
                                     '"condition" field is not available in '
-                                    'doc_var'
+                                    'doc_param'
                                     .format(v))
                 if isinstance(value, list):
                     value = ["'" + str(v) + "'" for v in value]

@@ -18,7 +18,7 @@ class SQLFetcher(DataFetcher):
     common methods to handle any kind of SQL dialects (mysql, sqlite,...)
     """
 
-    def _build_sql_query(self, doc_var, fetcher_info, metadata):
-        return SQLQueryBuilder(doc_var,
+    def _build_sql_query(self, doc_param, fetcher_info, metadata):
+        return SQLQueryBuilder(doc_param,
                                fetcher_info,
                                metadata).build()

@@ -18,14 +18,14 @@ class DataFetcher(PluginModule):
     entry_point_group = 'data_fetchers'
 
     @abstractmethod
-    def fetch(self, doc_var, fetcher_info, metadata):
+    def fetch(self, doc_param, fetcher_info, metadata):
         """
         Fetches the necessary data for the current fragment.
 
-        :param OrderedDict doc_var: Document variable
+        :param OrderedDict doc_param: Document variable
         :param dict fetcher_info: Information about the current fetcher
             (multiple can be used for fragment)
-        :param dict metadata: Report metadata (overriden by fragment metadata
+        :param dict metadata: Document metadata (overriden by fragment metadata
             when specified)
         :returns: Dataframe (or list of dataframes)
         :rtype: pandas.DataFrame

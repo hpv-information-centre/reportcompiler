@@ -17,21 +17,21 @@ __all__ = ['PythonParser', ]
 class PythonParser(SourceParser):
     """ Context generator for python scripts. """
 
-    def generate_context(self, doc_var, data, metadata):
+    def generate_context(self, doc_param, data, metadata):
         filename, _ = os.path.splitext(metadata['fragment_path'])
         basename = os.path.basename(filename)
         fragment_module = importlib.import_module(basename)
         context = None
         try:
-            context = fragment_module.generate_context(doc_var,
+            context = fragment_module.generate_context(doc_param,
                                                        deepcopy(data),
                                                        metadata)
         except Exception as e:
             SourceParser.raise_generator_exception(
-                doc_var, data, metadata, exception=e)
+                doc_param, data, metadata, exception=e)
         return context
 
-    def retrieve_fragment_metadata(self, doc_var, metadata):
+    def retrieve_fragment_metadata(self, doc_param, metadata):
         def is_jsonable(x):
             try:
                 json.dumps(x)
@@ -46,7 +46,7 @@ class PythonParser(SourceParser):
             fragment_module = importlib.import_module(module_name)
         except Exception as e:
             SourceParser.raise_retriever_exception(
-                doc_var, metadata, exception=e)
+                doc_param, metadata, exception=e)
 
         module_vars = {var: fragment_module.__dict__[var]
                        for var in dir(fragment_module)

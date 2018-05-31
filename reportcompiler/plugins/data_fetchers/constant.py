@@ -15,7 +15,7 @@ __all__ = ['ConstantFetcher', ]
 class ConstantFetcher(DataFetcher):
     """ Constant data fetcher. """
 
-    def fetch(self, doc_var, fetcher_info, metadata):
+    def fetch(self, doc_param, fetcher_info, metadata):
         try:
             values = fetcher_info['values']
             if not isinstance(values, list):

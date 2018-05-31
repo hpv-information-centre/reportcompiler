@@ -40,13 +40,13 @@ class MySQLFetcher(SQLFetcher):
                                      cursorclass=pymysql.cursors.DictCursor)
         return connection
 
-    def fetch(self, doc_var, fetcher_info, metadata):
+    def fetch(self, doc_param, fetcher_info, metadata):
         # TODO: Look for ways to avoid mutex
         with MySQLFetcher.mutex:
-            data = self._fetch(doc_var, fetcher_info, metadata)
+            data = self._fetch(doc_param, fetcher_info, metadata)
         return data
 
-    def _fetch(self, doc_var, fetcher_info, metadata):
+    def _fetch(self, doc_param, fetcher_info, metadata):
         credentials = MySQLFetcher._create_context_credentials(fetcher_info,
                                                                metadata)
         try:
@@ -57,7 +57,7 @@ class MySQLFetcher(SQLFetcher):
                     exception=e)
 
         try:
-            sql_string = self._build_sql_query(doc_var,
+            sql_string = self._build_sql_query(doc_param,
                                                fetcher_info,
                                                metadata)
         except KeyError:
@@ -73,7 +73,7 @@ class MySQLFetcher(SQLFetcher):
         credentials = None
 
         try:
-            with open(os.path.join(metadata['report_path'],
+            with open(os.path.join(metadata['docspec_path'],
                                    'credentials',
                                    fetcher_info['credentials_file']),
                       'r') as cred_file:

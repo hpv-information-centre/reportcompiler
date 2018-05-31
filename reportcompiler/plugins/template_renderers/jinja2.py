@@ -25,7 +25,7 @@ __all__ = ['JinjaRenderer', 'JinjaLatexRenderer', ]
 class JinjaRenderer(TemplateRenderer):
     """ Template renderer for jinja2. """
 
-    def render_template(self, doc_var, context):
+    def render_template(self, doc_param, context):
         try:
             template_dirs = []
             template_tmp_dir = os.path.join(
@@ -83,8 +83,8 @@ class JinjaRenderer(TemplateRenderer):
                 common_template_dir = os.environ['RC_TEMPLATE_LIBRARY_PATH']
                 if not os.path.exists(common_template_dir + template_file):
                     raise FileNotFoundError(
-                        'Template {} does not exist in report nor in the '
-                        'RC_TEMPLATE_LIBRARY_PATH')
+                        'Template {} does not exist in document specification '
+                        ' nor in the RC_TEMPLATE_LIBRARY_PATH')
 
     def included_templates(self, content):
         templates = re.findall(pattern='{%.*%}', string=content)

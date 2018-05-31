@@ -2,8 +2,8 @@
 
 This module provides access to credentials stored in a secure and convenient
 location in a server environment. For this purpose all credentials are stored
-in a JSON file whose path is defined in an environment variable
-('RC_CREDENTIALS_FILE').
+in a JSON file whose path is defined in the RC_CREDENTIALS_FILE environment
+variable.
 
 """
 
@@ -16,10 +16,25 @@ __all__ = ['CredentialManager', ]
 # TODO: Finer-grained access control
 class CredentialManager:
     """
-    Class responsible for retrieving credentials from the credential file
+    Class responsible for retrieving credentials from the credential file. Its
+    motivation is to avoid having plaintext credentials in the document
+    specification itself, though currently there is no access control to limit
+    their use on a user basis.
     """
     @staticmethod
     def retrieve(credential_name, manager_type='default', **kwargs):
+        """
+        Retrieves generic credentials with the given credential_name. Currently
+        there is no access control so it should not be used for sensitive
+        applications.
+
+        :param str credential_name: Key of the requested credentials
+        :param str manager_type: Type of credential manager, currently only
+            'default' available. This should define how (or which) credentials
+            are available in future implementations.
+        :returns: dictionary with the requested credentials.
+        :rtype: dict
+        """
         manager_dict = {
             'default': CredentialManager._retrieve_credentials
         }
@@ -27,12 +42,6 @@ class CredentialManager:
 
     @staticmethod
     def _retrieve_credentials(credential_name, **kwargs):
-        """
-        Returns the information associated with credential_name.
-        :param str credential_name: Key of the requested credentials
-        :returns: dictionary with the requested credentials.
-        :rtype: dict
-        """
         if 'RC_CREDENTIALS_FILE' not in os.environ:
             raise EnvironmentError(
                 'RC_CREDENTIALS_FILE not set')

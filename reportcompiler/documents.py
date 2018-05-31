@@ -1,6 +1,6 @@
-""" reports.py
+""" documents.py
 
-This module is responsible for the representation and handling of report
+This module is responsible for the representation and handling of document
 specifications.
 
 """
@@ -13,13 +13,16 @@ from collections import OrderedDict
 
 import git
 from jsmin import jsmin
-from reportcompiler.reportcompilers import ReportCompiler
+from reportcompiler.documentcompilers import DocumentCompiler
 
-__all__ = ['Report', ]
+__all__ = ['DocumentSpecification', ]
 
 
-class Report:
-    """Represents a report with its file structure and configuration."""
+class DocumentSpecification:
+    """
+    Represents a document specification with its file structure and
+    configuration.
+    """
     def __init__(self,
                  dir_path=None,
                  repo_url=None,
@@ -30,8 +33,8 @@ class Report:
             if repo_url:
                 raise ValueError(
                     "Repository info can't be specified on "
-                    "new report directory creation")
-            self._create_report_specification(dir_path)
+                    "new document specification creation")
+            self._create_document_specification(dir_path)
 
         if dir_path is None and repo_url is None:
             raise ValueError("'dir_path' or 'repo' must be specified")
@@ -59,7 +62,7 @@ class Report:
         self.name = name
         self.metadata = self.build_metadata()
 
-        self.allowed_values = self.fetch_allowed_var_values(doc_var={})
+        self.allowed_values = self.fetch_allowed_var_values(doc_param={})
 
         if not os.path.exists('{}/templates/{}'.format(
                 self.path,
@@ -72,7 +75,8 @@ class Report:
         config_file = '{}/config.json'.format(self.path)
         if not os.path.exists(config_file):
             raise FileNotFoundError(
-                "Report {} has no configuration file".format(name) +
+                "Document specification {} has no configuration file".format(
+                    name) +
                 " (config.json)")
 
         with open(config_file) as config_data:
@@ -87,36 +91,35 @@ class Report:
                                object_pairs_hook=OrderedDict)
                 )
 
-        metadata['report_path'] = self.path
+        metadata['docspec_path'] = self.path
         metadata['skip_unchanged_fragments'] = \
             metadata.get('skip_unchanged_fragments', True)
         return metadata
 
     def __str__(self):
-        return self.metadata.get('verbose_name') or self.metadata['name']
+        return self.metadata.get('verbose_name') or \
+            self.metadata['doc_name']
 
-    def _create_report_specification(self, new_report_path):
+    def _create_document_specification(self, new_docspec_path):
         """
-        Creates a new report specification.
-        :param str new_report_path: Full path of the new report specification.
-            The parent path must exist, and the last directory in the path will
-            be created.
+        Creates a new document specification.
+        :param str new_docspec_path: Full path of the new document
+            specification. The parent path must exist, and the last
+            directory in the path will be created.
         """
         if not os.path.exists(
             os.path.normpath(
-                os.path.join(new_report_path, os.path.pardir))):
+                os.path.join(new_docspec_path, os.path.pardir))):
             raise EnvironmentError(
-                "Parent path for new report doesn't exist"
+                "Parent path for new document specification doesn't exist"
             )
-        if os.path.exists(new_report_path):
-            # Report directory already exists, assume report specification
-            # exists
-            return
+        if os.path.exists(new_docspec_path):
+            raise EnvironmentError("Document specification already exists")
 
-        os.mkdir(new_report_path)
+        os.mkdir(new_docspec_path)
         dirs = ['src', 'templates', 'data', 'credentials']
         for d in dirs:
-            os.mkdir(os.path.join(new_report_path, d))
+            os.mkdir(os.path.join(new_docspec_path, d))
         config_content = """
         {
             /* Mandatory settings */
@@ -129,7 +132,7 @@ class Report:
             "postprocessor": "pdflatex"
         }
         """
-        with open(os.path.join(new_report_path, 'config.json'), 'w') \
+        with open(os.path.join(new_docspec_path, 'config.json'), 'w') \
                 as config_file:
             config_file.write(config_content)
 
@@ -143,7 +146,7 @@ class Report:
             */
         }
         """
-        with open(os.path.join(new_report_path, 'params.json'), 'w') \
+        with open(os.path.join(new_docspec_path, 'params.json'), 'w') \
                 as param_file:
             param_file.write(param_content)
 
@@ -151,27 +154,31 @@ class Report:
         \documentclass[11pt]{article}
 
         \begin{document}
-        This is a sample document. You can customize this report by editing
-        the templates and source files along with the configuration file.
+        This is a sample document. You can customize this document
+        specification by editing the templates and source files along
+        with the configuration file.
+
         \end{document}
         """
-        with open(os.path.join(new_report_path,
+        with open(os.path.join(new_docspec_path,
                                'templates',
                                'report.tex'), 'w') as main_template_file:
             main_template_file.write(main_template_content)
 
-    def fetch_allowed_var_values(self, doc_var):
+    def fetch_allowed_var_values(self, doc_param):
         """
         Returns the allowed values for the document variables for the current
-        report if specified in the configuration file.
-        :param OrderedDict doc_var: Document variable to check, necessary when
-            checking dependent variables
+        document specification if specified in the configuration file.
+
+        :param OrderedDict doc_param: Document variable to check, necessary
+            when checking dependent variables
         :returns: Dictionary with possible values of the variables specified in
-            the report configuration. Variables dependent on others missing
-            from doc_var are returned with value None.
+            the document specification configuration. Variables dependent on
+            others missing from doc_param are returned with value None.
         :rtype: dict
         """
-        dt = ReportCompiler.fetch_info(doc_var, self.metadata)
+        dt = DocumentCompiler.fetch_allowed_param_values(
+                                doc_param, self.metadata)
         allowed_values = {}
         for col in dt.keys():
             data_list = dt[col].values.flatten().tolist()
@@ -184,21 +191,23 @@ class Report:
     def main_template(self):
         """
         Returns the main template filename.
+
         :returns: main template filename
         :rtype: str
         """
         return self.metadata['main_template']
 
     def generate(self,
-                 doc_vars=None,
+                 doc_params=None,
                  n_doc_workers=2,
                  n_frag_workers=2,
                  debug_mode=False,
                  log_level=logging.DEBUG):
         """
-        Generates the documents with document variables doc_vars from the
-        current report.
-        :param OrderedDict|list doc_vars: Document variables to generate
+        Generates the documents with document variables doc_params from the
+        current document specification.
+
+        :param OrderedDict|list doc_params: Document variables to generate
             documents
         :param int n_doc_workers: Number of concurrent document-generating
             threads
@@ -207,15 +216,15 @@ class Report:
         :param int log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
             logging.ERROR, ...)
         """
-        if doc_vars is None:
-            doc_vars = OrderedDict()
-        if not isinstance(doc_vars, list):
-            doc_vars = [doc_vars]
+        if doc_params is None:
+            doc_params = OrderedDict()
+        if not isinstance(doc_params, list):
+            doc_params = [doc_params]
 
-        doc_vars = self._clean_and_validate_doc_vars(doc_vars)
+        doc_params = self._clean_and_validate_doc_params(doc_params)
 
-        compiler = ReportCompiler(self)
-        compiler.generate(doc_vars, self.metadata,
+        compiler = DocumentCompiler(self)
+        compiler.generate(doc_params, self.metadata,
                           n_doc_workers=n_doc_workers,
                           n_frag_workers=n_frag_workers,
                           debug_mode=debug_mode,
@@ -232,51 +241,50 @@ class Report:
         if len(os.listdir(os.path.join(self.path, 'gen'))) == 0:
             shutil.rmtree(os.path.join(self.path, 'gen'))
 
-    def _clean_and_validate_doc_vars(self, doc_vars):
+    def _clean_and_validate_doc_params(self, doc_params):
         """
-        Validation and cleaning of input document variable list
-        :param list doc_vars: Input document variable list
+        Validation and cleaning of input document variable list.
+
+        :param list doc_params: Input document variable list
         :returns: Cleaned up document variable list
         :rtype: list
         """
-        Report._check_and_clean_duplicate_variables(doc_vars)
+        DocumentSpecification._check_and_clean_duplicate_variables(doc_params)
 
-        for doc_var in doc_vars:
-            self._check_mandatory_variables(doc_var)
-            self._check_allowed_values(doc_var)
+        for doc_param in doc_params:
+            self._check_mandatory_variables(doc_param)
+            self._check_allowed_values(doc_param)
 
-        return doc_vars
+        return doc_params
 
     @staticmethod
-    def _check_and_clean_duplicate_variables(doc_vars):
-        for doc_var in doc_vars:
-            num_occurrences = doc_vars.count(doc_var)
+    def _check_and_clean_duplicate_variables(doc_params):
+        for doc_param in doc_params:
+            num_occurrences = doc_params.count(doc_param)
             if num_occurrences > 1:
-                doc_vars.remove(doc_var)
+                doc_params.remove(doc_param)
                 logging.warning(
                     '{} appears more than once, duplicates will be ignored...'.
-                    format(doc_var))
+                    format(doc_param))
 
-    def _check_mandatory_variables(self, doc_var):
-        if self.metadata.get('param_config') is None:
+    def _check_mandatory_variables(self, doc_param):
+        if self.metadata.get('params_mandatory') is None:
             return
-        mandatory_vars = [par['name']
-                          for par in self.metadata['param_config']
-                          if par.get('mandatory')]
+        mandatory_vars = self.metadata['params_mandatory']
         if mandatory_vars is None:
             mandatory_vars = []
         mandatory_vars = set(mandatory_vars)
 
-        current_var_keys = set(doc_var.keys())
+        current_var_keys = set(doc_param.keys())
         if not mandatory_vars.issubset(current_var_keys):
             missing_vars = mandatory_vars - current_var_keys
             raise ValueError(
                 'Some mandatory document variables were not specified: {}'.
                 format(', '.join(missing_vars)))
 
-    # TODO: Fix doc_var dependencies
-    def _check_allowed_values(self, doc_var):
-        allowed_values = self.fetch_allowed_var_values(doc_var)
+    # TODO: Fix doc_param dependencies
+    def _check_allowed_values(self, doc_param):
+        allowed_values = self.fetch_allowed_var_values(doc_param)
         if allowed_values is not None:
             allowed_values_msg = \
                 ' Allowed values for variable "{}" are {}: got {}'
@@ -290,31 +298,48 @@ class Report:
             allowed_values = {var: values
                               for var, values in allowed_values.items()
                               if (var not in dependent_missing_vars or
-                                  var in doc_var.keys())}
+                                  var in doc_param.keys())}
 
-            allowed_values_errors = [(var, str(doc_var.get(var)), values)
+            allowed_values_errors = [(var, str(doc_param.get(var)), values)
                                      for var, values in allowed_values.items()
-                                     if (doc_var.get(var) is not None and
-                                         doc_var[var] not in values)]
+                                     if (doc_param.get(var) is not None and
+                                         doc_param[var] not in values)]
 
             error_msgs = []
             for var, defined_value, values in allowed_values_errors:
                 if var not in dependent_missing_vars:
+                    MAX_VALUES_DISPLAYED = 30
+                    if len(allowed_values[var]) < MAX_VALUES_DISPLAYED:
+                        list_values = ', '.join(
+                            [str(val)
+                                if not isinstance(val, str)
+                                else "'" + val + "'"
+                                for val
+                                in allowed_values[var]]
+                        )
+                    else:
+                        list_values = ', '.join(
+                            [str(val)
+                                if not isinstance(val, str)
+                                else "'" + val + "'"
+                                for val
+                                in allowed_values[var][:MAX_VALUES_DISPLAYED]]
+                        ) + ', ...'
                     msg = allowed_values_msg.format(
                                 var,
-                                ', '.join(
-                                    [str(val) for val in allowed_values[var]]
-                                ),
+                                list_values,
                                 defined_value
+                                if not isinstance(defined_value, str)
+                                else "'" + defined_value + "'"
                             )
                 else:
-                    if self.metadata.get('param_config') is None:
+                    if self.metadata.get('params_allowed_values') is None:
                         dependencies = []
                     else:
                         dependencies = [
                                 fetcher['dependencies']
                                 for fetcher in self.metadata[
-                                    'param_config']
+                                    'params_allowed_values']
                                 if fetcher['name'] == var
                         ][0]  # Dependencies of the first (and only) fetcher
                     msg = dependent_allowed_values_msg.format(

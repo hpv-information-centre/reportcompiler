@@ -20,7 +20,7 @@ setup(
     include_package_data=True,
     license='GPL-3.0 License',
     description='Report Compiler generates documents with information'
-                ' specified by a report directory (see documentation)',
+                ' specified by a document specification (see documentation)',
     long_description=README,
     url='https://www.hpvcentre.net',
     author='David Gómez',

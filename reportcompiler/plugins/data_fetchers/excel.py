@@ -15,7 +15,7 @@ __all__ = ['ExcelFetcher', ]
 class ExcelFetcher(DataFetcher):
     """ Data fetcher for excel files. """
 
-    def fetch(self, doc_var, fetcher_info, metadata):
+    def fetch(self, doc_param, fetcher_info, metadata):
         params = [
             {'name': 'file', 'default_value': ValueError},
             {'name': 'sheet', 'default_value': 0},

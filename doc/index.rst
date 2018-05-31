@@ -3,21 +3,27 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Report Compiler's documentation!
-===========================================
+Report Compiler documentation
+=============================
 
 Contents:
 
 .. toctree::
+   
+   getting_started.rst
+   report_specification.rst
+   config_parameters.rst
+   metadata.rst
+   report_debugging.rst
+   plugin_modules.rst
+   plugin_development.rst
+   architecture.rst
+   glossary.rst
 
-   reportcompiler/reportcompiler
-
-
-
-Indices and tables
+Module contents
 ==================
 
+.. toctree::
+   reportcompiler/reportcompiler.rst
+   
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

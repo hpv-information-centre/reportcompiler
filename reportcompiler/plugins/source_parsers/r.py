@@ -17,14 +17,14 @@ __all__ = ['RParser', ]
 class RParser(SourceParser):
     """ Context generator for R scripts. """
 
-    def generate_context(self, doc_var, data, metadata):
+    def generate_context(self, doc_param, data, metadata):
         r_code = "library(jsonlite, quietly=TRUE);\
                     source('{}');\
                     cache_file <- fromJSON(file('{}'));\
-                    doc_var <- cache_file[['doc_var']];\
+                    doc_param <- cache_file[['doc_param']];\
                     data <- cache_file[['data']];\
                     metadata <- cache_file[['metadata']];\
-                    print(toJSON(generate_context(doc_var, data, metadata),\
+                    print(toJSON(generate_context(doc_param, data, metadata),\
                         auto_unbox=TRUE))"
 
         r_code = r_code.format(metadata['fragment_path'].replace('\\', '\\\\'),
@@ -34,7 +34,7 @@ class RParser(SourceParser):
         try:
             if which('Rscript') is None:
                 SourceParser.raise_generator_exception(
-                    doc_var, data, context,
+                    doc_param, data, context,
                     message='Rscript not found in PATH. Please install it '
                             'or configure your PATH.')
 
@@ -48,14 +48,14 @@ class RParser(SourceParser):
                          universal_newlines=True)
         except CalledProcessError as e:
             SourceParser.raise_generator_exception(
-                doc_var,
+                doc_param,
                 data,
                 metadata,
                 exception=e,
                 message=e.stderr)
         return json.loads(output.stdout)
 
-    def retrieve_fragment_metadata(self, doc_var, metadata):
+    def retrieve_fragment_metadata(self, doc_param, metadata):
         r_code = "library(jsonlite, quietly=TRUE);\
                     source('{}');\
                     all.var.names <- ls();\
@@ -66,13 +66,13 @@ class RParser(SourceParser):
                     }};\
                     print(toJSON(var.list, auto_unbox=TRUE))"
         r_code = r_code.format(metadata['fragment_path'].replace('\\', '\\\\'),
-                               json.dumps(doc_var),
+                               json.dumps(doc_param),
                                json.dumps(metadata))
         output = None
         try:
             if which('Rscript') is None:
                 SourceParser.raise_retriever_exception(
-                    doc_var,
+                    doc_param,
                     metadata,
                     message='Rscript not found in PATH. Please install it '
                             'or configure your PATH.')
@@ -86,7 +86,7 @@ class RParser(SourceParser):
                          universal_newlines=True)
         except CalledProcessError as e:
             SourceParser.raise_retriever_exception(
-                doc_var,
+                doc_param,
                 metadata,
                 exception=e,
                 message=e.stderr)
