@@ -27,15 +27,15 @@ class SourceParser(PluginModule):
 
     entry_point_group = 'source_parsers'
 
-    def setup_and_generate_context(self, doc_var, data, metadata):
+    def setup_and_generate_context(self, doc_param, data, metadata):
         """
         Wraps the context generation with temporary file creation and hash
         checking to avoid unnecessary processing.
 
-        :param OrderedDict doc_var: Document variable
+        :param OrderedDict doc_param: Document variable
         :param pandas.DataFrame data: Dataframe (or list of dataframes)
             with the specified input data
-        :param dict metadata: Report metadata (overriden by fragment metadata
+        :param dict metadata: Document metadata (overriden by fragment metadata
             when specified)
         :returns: Dictionary with context for the template rendering stage
         :rtype: dict
@@ -58,7 +58,7 @@ class SourceParser(PluginModule):
                 code_hash = hashlib.sha256(f.read()).hexdigest()
 
             docvar_hash = hashlib.sha256(
-                json.dumps(doc_var, sort_keys=True).encode('utf-8')
+                json.dumps(doc_param, sort_keys=True).encode('utf-8')
                 ).hexdigest()
             data_hash = hashlib.sha256(json_data.encode('utf-8')).hexdigest()
             metadata_hash = hashlib.sha256(
@@ -116,7 +116,7 @@ class SourceParser(PluginModule):
                             ", regenerating context...")
                     else:
                         self.raise_generator_exception(
-                            doc_var,
+                            doc_param,
                             json_data,
                             metadata,
                             message="[{}] {}: Unexpected error".format(
@@ -124,13 +124,13 @@ class SourceParser(PluginModule):
                                 metadata['fragment_name']))
 
         with open(fragment_tmp_basename + '.json', 'w') as cache_file:
-            cache_file.write(json.dumps({'doc_var': doc_var,
+            cache_file.write(json.dumps({'doc_param': doc_param,
                                          'data': json.loads(json_data),
                                          'metadata': metadata}, indent=2))
             metadata['cache_file'] = fragment_tmp_basename + '.json'
 
         if context is None:
-            context = self.generate_context(doc_var, data, metadata)
+            context = self.generate_context(doc_param, data, metadata)
 
             if metadata['skip_unchanged_fragments']:
                 with open(fragment_hash_basename + '.hash', 'w') as hash_f:
@@ -150,10 +150,10 @@ class SourceParser(PluginModule):
         return context
 
     @classmethod
-    def _build_debug_info(cls, doc_var, data, metadata):
+    def _build_debug_info(cls, doc_param, data, metadata):
         json_data = convert_to_json(data)
 
-        meta_dir = os.path.join(metadata['report_path'],
+        meta_dir = os.path.join(metadata['docspec_path'],
                                 '..',
                                 '_meta')
         if not os.path.exists(meta_dir):
@@ -168,22 +168,22 @@ class SourceParser(PluginModule):
                 '%Y-%m-%d %H:%M:%S')
             err_file.write(
                 json.dumps({'timestamp': timestamp,
-                            'doc_var': doc_var,
+                            'doc_param': doc_param,
                             'data': json.loads(json_data),
                             'metadata': metadata,
-                            'report': os.path.basename(
-                                metadata['report_path'])},
+                            'doc_spec': os.path.basename(
+                                metadata['doc_spec_path'])},
                            indent=2))
 
     @abstractmethod
-    def generate_context(self, doc_var, data, metadata):
+    def generate_context(self, doc_param, data, metadata):
         """
         Generates the dictionary context.
 
-        :param OrderedDict doc_var: Document variable
+        :param OrderedDict doc_param: Document variable
         :param pandas.DataFrame data: Pandas dataframe (or list of dataframes)
             with the specified input data
-        :param dict metadata: Report metadata (overriden by fragment metadata
+        :param dict metadata: Document metadata (overriden by fragment metadata
             when specified)
         :returns: Dictionary with context for the template rendering stage
         :rtype: dict
@@ -192,12 +192,12 @@ class SourceParser(PluginModule):
             'Context generation not implemented for {}'.format(self.__class__))
 
     @abstractmethod
-    def retrieve_fragment_metadata(self, doc_var, metadata):
+    def retrieve_fragment_metadata(self, doc_param, metadata):
         """
         Retrieves the metadata required to process the fragment.
 
-        :param OrderedDict doc_var: Document variable
-        :param dict metadata: Report metadata (overriden by fragment metadata
+        :param OrderedDict doc_param: Document variable
+        :param dict metadata: Document metadata (overriden by fragment metadata
             when specified)
         :returns: Dictionary with metadata
         :rtype: dict
@@ -206,8 +206,8 @@ class SourceParser(PluginModule):
             'Metadata retrieval not implemented for {}'.format(self.__class__))
 
     @classmethod
-    def raise_generator_exception(cls, doc_var, data, context, exception=None,
-                                  message=None):
+    def raise_generator_exception(cls, doc_param, data, context,
+                                  exception=None, message=None):
         """
         Returns a context generation exception with the necessary info
         attached.
@@ -218,7 +218,7 @@ class SourceParser(PluginModule):
         :raises ContextGenerationError: always
         """
         if context['debug_mode']:
-            SourceParser._build_debug_info(doc_var, data, context)
+            SourceParser._build_debug_info(doc_param, data, context)
         exception_info = (message
                           if message
                           else ''.join(
@@ -242,7 +242,7 @@ class SourceParser(PluginModule):
         raise err from None
 
     @classmethod
-    def raise_retriever_exception(cls, doc_var, context, exception=None,
+    def raise_retriever_exception(cls, doc_param, context, exception=None,
                                   message=None):
         """
         Returns a metadata retrieval exception with the necessary info
@@ -254,7 +254,7 @@ class SourceParser(PluginModule):
         :raises MetadataRetrievalError: always
         """
         if context['debug_mode']:
-            SourceParser._build_debug_info(doc_var, {}, context)
+            SourceParser._build_debug_info(doc_param, {}, context)
         exception_info = message if message else '    ' + str(exception)
         if context.get('fragment_name'):
             location = context['fragment_name']

@@ -16,14 +16,14 @@ class PandocPostProcessor(PostProcessor):
     """ Postprocessor for pandoc. """
     # TODO: Testing and finish implementation
 
-    def postprocess(self, doc_var, doc, postprocessor_info, context):
+    def postprocess(self, doc_param, doc, postprocessor_info, context):
         try:
             md_file = os.path.splitext(
                 os.path.join(
                     context['meta']['tmp_path'],
                     context['meta']['main_template']))[0] + '.md'
             suffix = context['meta']['doc_suffix']
-            filename = context['meta']['report_name']
+            filename = context['meta']['doc_name']
             if suffix != '':
                 filename = filename + '-' + suffix
 

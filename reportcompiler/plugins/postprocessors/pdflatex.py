@@ -15,9 +15,9 @@ __all__ = ['PdflatexPostProcessor', ]
 class PdflatexPostProcessor(PostProcessor):
     """ Postprocessor for pdflatex. """
 
-    def postprocess(self, doc_var, doc, postprocessor_info, context):
+    def postprocess(self, doc_param, doc, postprocessor_info, context):
         suffix = context['meta']['doc_suffix']
-        filename = context['meta']['report_name']
+        filename = context['meta']['doc_name']
         if suffix != '':
             filename = filename + '-' + suffix
 

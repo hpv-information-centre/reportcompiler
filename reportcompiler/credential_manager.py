@@ -17,7 +17,7 @@ __all__ = ['CredentialManager', ]
 class CredentialManager:
     """
     Class responsible for retrieving credentials from the credential file. Its
-    motivation is to avoid having plaintext credentials in the report
+    motivation is to avoid having plaintext credentials in the document
     specification itself, though currently there is no access control to limit
     their use on a user basis.
     """

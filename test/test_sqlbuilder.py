@@ -89,7 +89,7 @@ class SQLBuilderTest(unittest.TestCase):
         self.assertEqual(query, expected_query)
 
     def test_condition_query(self):
-        doc_var = {'iso': 'ESP'}
+        doc_param = {'iso': 'ESP'}
         fetcher_info = {
             'type': 'mysql',
             'table': {'test_table': 'tt'},
@@ -102,7 +102,7 @@ class SQLBuilderTest(unittest.TestCase):
             "FROM `test_table` `tt` " \
             "WHERE `tt`.`iso` IN ('ESP') AND `tt`.`type` IN ('country')"
 
-        query = self._build_expect_ok(fetcher_info, doc_var=doc_var)
+        query = self._build_expect_ok(fetcher_info, doc_param=doc_param)
         self.assertEqual(query, expected_query)
 
     def test_group_by_query(self):
@@ -187,15 +187,15 @@ class SQLBuilderTest(unittest.TestCase):
         }
         self._build_expect_exception(fetcher_info)
 
-    def _build_expect_exception(self, fetcher_info, doc_var={}):
-        builder = SQLQueryBuilder(doc_var,
+    def _build_expect_exception(self, fetcher_info, doc_param={}):
+        builder = SQLQueryBuilder(doc_param,
                                   fetcher_info,
                                   SQLBuilderTest.test_metadata)
         with self.assertRaises(DataFetchingError):
             builder.build()
 
-    def _build_expect_ok(self, fetcher_info, doc_var={}):
-        builder = SQLQueryBuilder(doc_var,
+    def _build_expect_ok(self, fetcher_info, doc_param={}):
+        builder = SQLQueryBuilder(doc_param,
                                   fetcher_info,
                                   SQLBuilderTest.test_metadata)
         return _strip(builder.build())

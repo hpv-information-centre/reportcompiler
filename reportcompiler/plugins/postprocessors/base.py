@@ -19,15 +19,15 @@ class PostProcessor(PluginModule):
     entry_point_group = 'postprocessors'
 
     @abstractmethod
-    def postprocess(self, doc_var, doc, postprocessor_info, context):
+    def postprocess(self, doc_param, doc, postprocessor_info, context):
         """
         Applies the postprocessing after the document has been rendered.
 
-        :param OrderedDict doc_var: Document variable
+        :param OrderedDict doc_param: Document variable
         :param dict postprocessor_info: Information about the current
             postprocessor (multiple can be used for fragment)
         :param dict context: Context dictionary with keys 'data' (context
-            generated from fragments) and 'meta' (report metadata)
+            generated from fragments) and 'meta' (document metadata)
         """
         raise NotImplementedError(
             'Postprocessing not implemented for {}'.format(self.__class__))

@@ -2,16 +2,16 @@ import unittest
 import os
 import shutil
 from tempfile import mkdtemp
-from reportcompiler.reports import Report
+from reportcompiler.documents import DocumentSpecification
 
 
-class ReportTestCase(unittest.TestCase):
-    """ Tests for 'reports.py' """
+class DocumentsTestCase(unittest.TestCase):
+    """ Tests for 'documents.py' """
 
     @classmethod
     def setUpClass(cls):
         cls.test_tmp_path = mkdtemp()
-        cls.test_report = Report(os.path.join(
+        cls.test_report = DocumentSpecification(os.path.join(
                                     cls.test_tmp_path,
                                     'test_report'),
                                  create=True)
@@ -20,9 +20,9 @@ class ReportTestCase(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.test_tmp_path)
 
-    def test_init_empty_report(self):
+    def test_init_empty_document(self):
         with self.assertRaises(ValueError):
-            Report()
+            DocumentSpecification()
 
 """
 Report

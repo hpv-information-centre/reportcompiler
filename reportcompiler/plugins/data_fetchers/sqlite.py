@@ -17,11 +17,11 @@ __all__ = ['SQLiteFetcher', ]
 class SQLiteFetcher(SQLFetcher):
     """ Data fetcher for SQLite databases. """
 
-    def fetch(self, doc_var, fetcher_info, metadata):
+    def fetch(self, doc_param, fetcher_info, metadata):
         conn = sqlite3.connect(os.path.join(metadata['data_path'],
                                             fetcher_info['file']))
         c = conn.cursor()
-        sql_string = self._build_sql_query(doc_var, fetcher_info, metadata)
+        sql_string = self._build_sql_query(doc_param, fetcher_info, metadata)
         logger = logging.getLogger(metadata['logger_name'])
         logger.debug('[{}] {}'.format(metadata['doc_suffix'], sql_string))
         c.execute(sql_string)

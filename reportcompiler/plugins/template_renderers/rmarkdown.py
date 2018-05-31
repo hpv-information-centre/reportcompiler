@@ -20,7 +20,7 @@ class RMarkdownRenderer(TemplateRenderer):
     """ Template renderer for RMarkdown. """
     # TODO: Testing
 
-    def render_template(self, doc_var, context):
+    def render_template(self, doc_param, context):
         try:
             if which('Rscript') is None:
                 TemplateRenderer.raise_rendering_exception(
@@ -34,7 +34,7 @@ class RMarkdownRenderer(TemplateRenderer):
             if not os.path.exists(template_tmp_dir):
                 os.mkdir(template_tmp_dir)
 
-            self._generate_temp_templates(doc_var, context)
+            self._generate_temp_templates(doc_param, context)
 
             try:
                 r_code = "library(knitr);" + \
@@ -66,7 +66,7 @@ class RMarkdownRenderer(TemplateRenderer):
         except UndefinedError as e:
             TemplateRenderer.raise_rendering_exception(context, exception=e)
 
-    def _generate_temp_templates(self, doc_var, context):
+    def _generate_temp_templates(self, doc_param, context):
         context_info = context['meta']['template_context_info']
         for template_file, _ in context_info:
             with open(os.path.join(context['meta']['templates_path'],
@@ -86,7 +86,7 @@ class RMarkdownRenderer(TemplateRenderer):
                              docvar = fromJSON('{}')
                              context = fromJSON('{}')
                              ```
-                             """.format(json.dumps(doc_var),
+                             """.format(json.dumps(doc_param),
                                         json.dumps(context).replace(
                                             '\\', '\\\\'))
                     content = '\n'.join([metadata, header, content])
