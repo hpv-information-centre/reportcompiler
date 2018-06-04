@@ -200,6 +200,7 @@ class DocumentSpecification:
                  n_doc_workers=2,
                  n_frag_workers=2,
                  debug_mode=False,
+                 random_seed=None,
                  log_level=logging.DEBUG):
         """
         Generates the documents with document variables doc_params from the
@@ -211,6 +212,8 @@ class DocumentSpecification:
             threads
         :param int n_frag_workers: Number of concurrent fragment-generating
             threads (within each document-generating thread)
+        :param int random_seed: Seed to initialize any possible
+            pseudorandom generators.
         :param int log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
             logging.ERROR, ...)
         """
@@ -226,6 +229,7 @@ class DocumentSpecification:
                           n_doc_workers=n_doc_workers,
                           n_frag_workers=n_frag_workers,
                           debug_mode=debug_mode,
+                          random_seed=random_seed,
                           log_level=log_level)
 
     def clean(self, docs='all', keep=[]):
