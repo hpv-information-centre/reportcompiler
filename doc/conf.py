@@ -38,7 +38,6 @@ extensions = [
     'sphinx.ext.inheritance_diagram',
     'autoapi.sphinx',
     'sphinx.ext.graphviz',
-    'sphinx.ext.inheritance_diagram',
 ]
 
 autoapi_modules = {

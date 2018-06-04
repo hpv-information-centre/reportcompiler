@@ -19,9 +19,8 @@ try:
     import pymysql
     from pymysql.err import OperationalError
 except ImportError:
-    raise DataFetcher.raise_data_fetching_exception(
-        metadata,
-        message='Python package "pymysql" needed for mysql data fetcher')
+    print('Python package "pymysql" needed for mysql data fetcher. '
+          'This module will not work without it.')
 
 __all__ = ['MySQLFetcher', ]
 
