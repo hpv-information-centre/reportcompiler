@@ -3,15 +3,19 @@
 Plugin modules
 ==============
 
-The different stages of the report generation pipeline are developed as plugin modules, allowing an easy extendibility for most use cases. 
+The different stages of the document generation pipeline are developed as plugin modules, allowing an easy extendibility for most use cases. 
 
-The plugins can be divided in two groups: per-fragment plugins (source parser, data_fetcher) and per-report plugins (template renderer, postprocessor). The resolution method to determine which plugin to use in a particular case uses the following priority:
+Plugin specifications are JSON-like structures that define which plugins are used for a particular pipeline stage and how they will work. Document-level specifications are defined in the *config.conf* file while fragment-level specifications are defined in the fragment source file and parsed by the metadata retriever stage. Examples are shown below.
+
+The plugins can be divided in two groups: per-fragment plugins (source parser, data_fetcher) and per-document plugins (template renderer, postprocessor). The resolution method to determine which plugin to use in a particular case uses the following priority:
 
 1. Fragment source file (if it's a per-fragment plugin).
-2. Report specification (*config.json*).
+2. Document specification (*config.conf*).
 3. Default value (if available).
 
-This allows to set up default plugins for general use and override them when necessary. For instance, we could configure a MySQL data fetcher in the *config.json* to be used in all fragments but define an Excel fetcher in one particular fragment.
+This allows to set up default plugins for general use and override them when necessary. For instance, we could configure a MySQL data fetcher in the *config.conf* to be used in all fragments but define an Excel fetcher in one particular fragment.
+
+Plugin specifications are selected using a mandatory **type** parameter. This value identifies the type of plugin to be used (see below). In case of specifications as strings, such string will always be the implicit type.
 
 .. _`data_fetchers`: 
 
@@ -23,10 +27,7 @@ Each fragment can have several data fetchers assigned, defined by the *data_fetc
 
 Each data fetcher implementation receives three arguments: the document parameter, a dictionary with the information related to that fetcher definition and the whole fragment metadata. Note that the whole metadata includes the fetcher definition, but it is necessary to specify separately since a fragment can have more than one data fetcher.
 
-The common parameters for all data fetchers are:
-
-* **name**: The unique name identifying the fetcher for that fragment. In the context generation stage, the *data* parameter will be a dictionary with this parameter as the key for each data fetching result. If missing, the name assigned will be the index of the fetcher ('0' if there is only one).
-* **type**: The identifier for the type of data fetcher to be used (see below).
+Data fetchers specifications can include a **name** parameter. This parameter is used to index the different fetched dataframes when using the *data* parameter in the context generation stage. If no name is assigned, the dataframe will be indexed as the index of the fetcher in the fetcher list represented as a string (e.g. '0' if there is only one).
 
 The data fetchers currently included in the core library are:
 
@@ -64,7 +65,7 @@ Excel files
 ************
 **Type name**: 'excel'
 
-This fetcher returns a single worksheet from a MS excel file using the pandas *read_excel* method. The file should be included in the 'data' folder within the report specification.
+This fetcher returns a single worksheet from a MS excel file using the pandas *read_excel* method. The file should be included in the 'data' folder within the document specification.
 
 Parameters:
 
@@ -99,14 +100,14 @@ This fetcher returns data from a MySQL database as specified by the parameters b
 
 Parameters:
 
-* **credentials_file**: Name of the JSON file with the credentials to connect to the database, stored in the 'credentials' folder within the report specification. The structure should be a dictionary with the following keys:
+* **credentials_file**: Name of the JSON file with the credentials to connect to the database, stored in the 'credentials' folder within the document specification. The structure should be a dictionary with the following keys:
   * **host**: Hostname
   * **user**: Username
   * **password**: Password
   * **db**: Database name
    
   It is recommended to avoid this parameter and use **credentials** instead to avoid having passwords in plaintext.
-* **credentials**: Name of the credential to be used by the credential manager. Currently it needs a JSON file with a dictionary of keys and be setup by the RC_CREDENTIALS_FILE. This alternative is more secure that **credentials_file** but there is no access control in place yet.
+* **credentials**: Name of the credential to be used by the credential manager. It currently needs a JSON file with a dictionary of keys and be setup by the RC_CREDENTIALS_FILE. This alternative is more secure that **credentials_file** but there is no access control in place yet.
 * **fields**: Table fields to retrieve (mandatory). It can be a list of fields or a dictionary where each key is the table field and the value is the alias that will be returned.
 * **distinct**: Whether to make a a distinct query or not (false by default).
 * **table**: Name of the table (mandatory).
@@ -131,9 +132,9 @@ Example:
     "type": "mysql",
     "credentials": "countries_db",
     "fields": {
-      "country_name": "country"
+      "area_name": "country"
     },
-    "table": "countries_tbl",
+    "table": "areas_tbl",
     "condition": {
       "iso3code": "iso"
     },
@@ -150,7 +151,7 @@ This fetcher returns data from a SQLite database as specified by the parameters 
 
 Parameters:
 
-* **file**: Filename of the SQLite database. This file should be in the 'data' folder within the report specification.
+* **file**: Filename of the SQLite database. This file should be in the 'data' folder within the document specification.
 
 Example:
 
@@ -161,9 +162,9 @@ Example:
     "type": "sqlite",
     "file": "countries.db",
     "fields": {
-      "country_name": "country"
+      "area_name": "country"
     },
-    "table": "countries_tbl",
+    "table": "areas_tbl",
     "condition": {
       "iso3code": "iso"
     },
@@ -180,11 +181,11 @@ Source parsers
 
 These modules parse the source files for each fragment in order to extract the metadata (including the data fetcher specification) and the context generation code. Thus, each source parser plugin implements two functions: retrieve_metadata and generate_context.
 
-The *retrieve_metadata* function parses the source file and returns a dictionary with the included metadata. This is usually implemented as parsing variable assignments and returning a dictionary with items <variable_name>: <variable_value>. It receives two arguments: the document parameter and the report metadata.
+The *retrieve_metadata* function parses the source file and returns a dictionary with the included metadata. This is usually implemented as parsing variable assignments and returning a dictionary with items <variable_name>: <variable_value>. It receives two arguments: the document parameter and the document metadata.
 
 The *generate_context* function generates the fragment context for the template rendering stage. It receives three arguments: the document parameter, the fetched data and the fragment metadata.
 
-By default files get a default parser corresponding to their (case insensitive) file extension, but they can be overridden in the report configuration.
+By default files get a default parser corresponding to their (case insensitive) file extension, but they can be overridden in the document configuration.
 
 Example ('python' parser for '.py' files and 'r' parser for '.r' files):
 
@@ -224,11 +225,11 @@ Template renderers
 
 These modules combine the templates in the *templates* directory with the context dictionaries generated in the context generation stage in order to generate a document in the *gen/<doc_suffix>/out* folder. This document will be further refined on the postprocessing stage if necessary.
 
-As an additional tool, an optional common directory referenced by the *RC_TEMPLATE_LIBRARY_PATH* can hold additional templates to be shared among different reports. This functionality can be used in further plugins (see `Report Compiler IC Tools`_).
+As an additional tool, an optional common directory referenced by the *RC_TEMPLATE_LIBRARY_PATH* can hold additional templates to be shared among different document specifications. This functionality can be used in further plugins (see `Report Compiler IC Tools`_).
 
 Each template renderer plugin implements a *render_template* function. This function uses two arguments: the document parameter and the full document context. This context is a dictionary with two items:
 
-* *meta*: the report metadata, with an additional item with key *template_context_info* that contains a list of tuples of (template file, fragment path) for each fragment. The fragment path is the chain of parent fragments separated by dots (e.g. root.parent.child).
+* *meta*: the document metadata, with an additional item with key *template_context_info* that contains a list of tuples of (template file, fragment path) for each fragment. The fragment path is the chain of parent fragments separated by dots (e.g. root.parent.child).
 * *data*: the context generated in the previous stage, nested by fragment path. 
 
 By default the jinja2 template system is used.
@@ -297,7 +298,7 @@ These modules process the document generated by the template rendering stage for
 
 Each postprocessor plugin implements a *postprocess* function. This function uses four arguments: the document parameter, the document, a dictionary with the current postprocessor information and the full document context. Like the template rendering stage, this context is a dictionary with two items:
 
-* *meta*: the report metadata, with an additional item with key *template_context_info* that contains a list of tuples of (template file, fragment path) for each fragment. The fragment path is the chain of parent fragments separated by dots (e.g. root.parent.child).
+* *meta*: the document metadata, with an additional item with key *template_context_info* that contains a list of tuples of (template file, fragment path) for each fragment. The fragment path is the chain of parent fragments separated by dots (e.g. root.parent.child).
 * *data*: the context generated in the previous stage, nested by fragment path. 
 
 Note that the whole context includes the postprocessor definition, but it is necessary to specify separately since a fragment can have more than one postprocessing stage.

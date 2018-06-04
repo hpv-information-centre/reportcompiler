@@ -10,6 +10,7 @@ import traceback
 import logging
 import json
 import sys
+import numpy as np
 from collections import OrderedDict, ChainMap, namedtuple
 from glob import glob
 from copy import deepcopy
@@ -245,6 +246,7 @@ class DocumentCompiler:
                  n_doc_workers=2,
                  n_frag_workers=2,
                  debug_mode=False,
+                 random_seed=None,
                  log_level=logging.DEBUG):
         """
         Generates documents from a list of document variables.
@@ -259,7 +261,9 @@ class DocumentCompiler:
             n_doc_workers * n_frag_workers.
         :param boolean debug_mode: If enabled, the document generation will
             be limited to one thread and several measures will be taken to
-            facilitate debugging: each
+            facilitate debugging.
+        :param int random_seed: Seed to initialize any possible
+            pseudorandom generators.
         :param int log_level: Log level
         """
         if debug_mode:
@@ -269,6 +273,11 @@ class DocumentCompiler:
             self._prepare_debug_session(doc_metadata)
 
         doc_metadata['debug_mode'] = debug_mode
+
+        if random_seed:
+            doc_metadata['random_seed'] = random_seed
+        else:
+            doc_metadata['random_seed'] = np.random.randint(sys.maxsize)
 
         doc_info = namedtuple('doc_info', ['doc', 'result', 'exception'])
         results = []
@@ -336,7 +345,7 @@ class DocumentCompiler:
                                         traceback.format_tb(
                                             error.__traceback__)))
                     traceback_dict.update({result.doc: {
-                                            '<global>': error_msg}})
+                                            '<global>': (error_msg, None)}})
             raise DocumentGenerationError(
                 'Error on document(s) generation:\n', traceback_dict)
 

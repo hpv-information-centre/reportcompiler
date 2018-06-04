@@ -15,7 +15,7 @@ Dictionary with the necessary info to generate a document given a document speci
 
 Fragment
 ----------------------
-Pieces that structure a document specification. Each fragment can be, for example, a section of a document or a figure. Fragments can include other fragments in an arbitrarily complex tree structure. Each fragment has a template file and, usually, a source file to generate its context. The root fragment that includes the rest is called the main template and is defined on the config.json file.
+Pieces that structure a document specification. Each fragment can be, for example, a section of a document or a figure. Fragments can include other fragments in an arbitrarily complex tree structure. Each fragment has a template file and, usually, a source file to generate its context. The root fragment that includes the rest is called the main template and is defined on the config.conf file.
 
 Workflow
 ----------------------

@@ -83,7 +83,7 @@ class RMarkdownRenderer(TemplateRenderer):
                     header = """
                              ```{{r echo=FALSE, message=FALSE}}
                              library(jsonlite)
-                             docvar = fromJSON('{}')
+                             docparam = fromJSON('{}')
                              context = fromJSON('{}')
                              ```
                              """.format(json.dumps(doc_param),

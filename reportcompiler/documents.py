@@ -72,18 +72,23 @@ class DocumentSpecification:
                 format(self.metadata['main_template']))
 
     def build_metadata(self):
-        config_file = '{}/config.json'.format(self.path)
+        config_file = '{}/config.conf'.format(self.path)
         if not os.path.exists(config_file):
             raise FileNotFoundError(
+<<<<<<< HEAD
+                "Document specification '{}' has no configuration file".format(
+                    self.path) +
+=======
                 "Document specification {} has no configuration file".format(
-                    name) +
-                " (config.json)")
+                    self.name) +
+>>>>>>> doc
+                " (config.conf)")
 
         with open(config_file) as config_data:
             metadata = json.loads(jsmin(config_data.read()),
                                   object_pairs_hook=OrderedDict)
 
-        params_file = '{}/params.json'.format(self.path)
+        params_file = '{}/params.conf'.format(self.path)
         if os.path.exists(params_file):
             with open(params_file) as params_data:
                 metadata.update(
@@ -122,17 +127,15 @@ class DocumentSpecification:
             os.mkdir(os.path.join(new_docspec_path, d))
         config_content = """
         {
-            /* Mandatory settings */
             "name": "new_report",
             "verbose_name": "New report",
             "main_template": "report.tex",
 
-            /* Workflow settings */
-            "template_renderer": "jinja-latex",
+            "template_renderer": "jinja2-latex",
             "postprocessor": "pdflatex"
         }
         """
-        with open(os.path.join(new_docspec_path, 'config.json'), 'w') \
+        with open(os.path.join(new_docspec_path, 'config.conf'), 'w') \
                 as config_file:
             config_file.write(config_content)
 
@@ -146,7 +149,7 @@ class DocumentSpecification:
             */
         }
         """
-        with open(os.path.join(new_docspec_path, 'params.json'), 'w') \
+        with open(os.path.join(new_docspec_path, 'params.conf'), 'w') \
                 as param_file:
             param_file.write(param_content)
 
@@ -202,6 +205,7 @@ class DocumentSpecification:
                  n_doc_workers=2,
                  n_frag_workers=2,
                  debug_mode=False,
+                 random_seed=None,
                  log_level=logging.DEBUG):
         """
         Generates the documents with document variables doc_params from the
@@ -213,6 +217,8 @@ class DocumentSpecification:
             threads
         :param int n_frag_workers: Number of concurrent fragment-generating
             threads (within each document-generating thread)
+        :param int random_seed: Seed to initialize any possible
+            pseudorandom generators.
         :param int log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
             logging.ERROR, ...)
         """
@@ -228,6 +234,7 @@ class DocumentSpecification:
                           n_doc_workers=n_doc_workers,
                           n_frag_workers=n_frag_workers,
                           debug_mode=debug_mode,
+                          random_seed=random_seed,
                           log_level=log_level)
 
     def clean(self, docs='all', keep=[]):

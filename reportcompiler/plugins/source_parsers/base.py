@@ -57,7 +57,7 @@ class SourceParser(PluginModule):
             with open(metadata['fragment_path'], 'rb') as f:
                 code_hash = hashlib.sha256(f.read()).hexdigest()
 
-            docvar_hash = hashlib.sha256(
+            docparam_hash = hashlib.sha256(
                 json.dumps(doc_param, sort_keys=True).encode('utf-8')
                 ).hexdigest()
             data_hash = hashlib.sha256(json_data.encode('utf-8')).hexdigest()
@@ -72,9 +72,9 @@ class SourceParser(PluginModule):
             except FileNotFoundError:
                 previous_hash = ''  # Invalid hash, will not match
 
-            hash_components = [code_hash, docvar_hash,
+            hash_components = [code_hash, docparam_hash,
                                data_hash, metadata_hash]
-            hash_component_names = ['code_hash', 'docvar_hash',
+            hash_component_names = ['code_hash', 'docparam_hash',
                                     'data_hash', 'metadata_hash']
             current_hash = '\n'.join(hash_components)
             if (current_hash == previous_hash and
