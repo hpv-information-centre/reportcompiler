@@ -340,7 +340,7 @@ texinfo_documents = [
      'Report Compiler Documentation',
      author,
      'ReportCompiler',
-     'Generates highly customizable reports from a report specification.',
+     'Generates highly customizable documents from a document specification.',
      'Miscellaneous'),
 ]
 

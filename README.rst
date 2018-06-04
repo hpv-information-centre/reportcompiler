@@ -40,7 +40,7 @@ Document generation
 .. image:: img/report-generation.svg
    :align: center
 
-Once a document specification is made, a document can be generated: first, a document parameter is provided as a dictionary. This parameter is augmented with additional information if necessary and, along with the report metadata, each fragment's context is generated (see below). These fragments are merged into a full context that is used to render the templates (using one of the available template rendering plugins) to create the document. Optionally, some postprocessing plugins can be applied to the document.
+Once a document specification is made, a document can be generated: first, a document parameter is provided as a dictionary. This parameter is augmented with additional information if necessary and, along with the document metadata, each fragment's context is generated (see below). These fragments are merged into a full context that is used to render the templates (using one of the available template rendering plugins) to create the document. Optionally, some postprocessing plugins can be applied to the document.
 
 Fragment generation
 -------------------
@@ -48,7 +48,7 @@ Fragment generation
 .. image:: img/fragment-generation.svg
    :align: center
 
-Each fragment follows a three-step process. First, the fragment source file is inspected (using source parser plugins) for possible metadata to be added or overriden into the report metadata. Then, this metadata and the document parameter is used to fetch the required data from one of the available sources implemented via plugins. Finally, this data along with the document parameter and the metadata is used to generate a dictionary that will be returned as the context to fill the corresponding template in the template rendering stage (see above).
+Each fragment follows a three-step process. First, the fragment source file is inspected (using source parser plugins) for possible metadata to be added or overriden into the document metadata. Then, this metadata and the document parameter is used to fetch the required data from one of the available sources implemented via plugins. Finally, this data along with the document parameter and the metadata is used to generate a dictionary that will be returned as the context to fill the corresponding template in the template rendering stage (see above).
 
 Dependencies
 ============
@@ -91,7 +91,7 @@ For this example you will need:
 * `R environment`_ to generate context for R source files.
 * LaTeX environment such as MikTeX_ to compile to a PDF document.
 
-For more examples of reports ready to be compiled by this library please check here_.
+For more examples of documents ready to be compiled by this library please check here_.
 
 .. _`R environment`: https://www.r-project.org/
 .. _MikTeX: https://miktex.org/
