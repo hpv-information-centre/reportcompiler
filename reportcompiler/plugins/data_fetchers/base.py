@@ -48,7 +48,7 @@ class DataFetcher(PluginModule):
         if context.get('fragment_name'):
             location = context['fragment_name']
         else:
-            location = 'config.json'
+            location = 'config.conf'
         full_msg = '{}: Data fetching error:\n\n{}'.format(location,
                                                            exception_info)
         if context.get('logger_name'):

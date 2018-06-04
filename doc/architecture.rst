@@ -1,5 +1,5 @@
-Architecture
-============
+Architecture overview
+=====================
 
 Document specification
 ----------------------

@@ -5,13 +5,17 @@ Plugin modules
 
 The different stages of the document generation pipeline are developed as plugin modules, allowing an easy extendibility for most use cases. 
 
+Plugin specifications are JSON-like structures that define which plugins are used for a particular pipeline stage and how they will work. Document-level specifications are defined in the *config.conf* file while fragment-level specifications are defined in the fragment source file and parsed by the metadata retriever stage. Examples are shown below.
+
 The plugins can be divided in two groups: per-fragment plugins (source parser, data_fetcher) and per-document plugins (template renderer, postprocessor). The resolution method to determine which plugin to use in a particular case uses the following priority:
 
 1. Fragment source file (if it's a per-fragment plugin).
-2. Document specification (*config.json*).
+2. Document specification (*config.conf*).
 3. Default value (if available).
 
-This allows to set up default plugins for general use and override them when necessary. For instance, we could configure a MySQL data fetcher in the *config.json* to be used in all fragments but define an Excel fetcher in one particular fragment.
+This allows to set up default plugins for general use and override them when necessary. For instance, we could configure a MySQL data fetcher in the *config.conf* to be used in all fragments but define an Excel fetcher in one particular fragment.
+
+Plugin specifications are selected using a mandatory **type** parameter. This value identifies the type of plugin to be used (see below). In case of specifications as strings, such string will always be the implicit type.
 
 .. _`data_fetchers`: 
 
@@ -23,10 +27,7 @@ Each fragment can have several data fetchers assigned, defined by the *data_fetc
 
 Each data fetcher implementation receives three arguments: the document parameter, a dictionary with the information related to that fetcher definition and the whole fragment metadata. Note that the whole metadata includes the fetcher definition, but it is necessary to specify separately since a fragment can have more than one data fetcher.
 
-The common parameters for all data fetchers are:
-
-* **name**: The unique name identifying the fetcher for that fragment. In the context generation stage, the *data* parameter will be a dictionary with this parameter as the key for each data fetching result. If missing, the name assigned will be the index of the fetcher ('0' if there is only one).
-* **type**: The identifier for the type of data fetcher to be used (see below).
+Data fetchers specifications can include a **name** parameter. This parameter is used to index the different fetched dataframes when using the *data* parameter in the context generation stage. If no name is assigned, the dataframe will be indexed as the index of the fetcher in the fetcher list represented as a string (e.g. '0' if there is only one).
 
 The data fetchers currently included in the core library are:
 
@@ -106,7 +107,7 @@ Parameters:
   * **db**: Database name
    
   It is recommended to avoid this parameter and use **credentials** instead to avoid having passwords in plaintext.
-* **credentials**: Name of the credential to be used by the credential manager. Currently it needs a JSON file with a dictionary of keys and be setup by the RC_CREDENTIALS_FILE. This alternative is more secure that **credentials_file** but there is no access control in place yet.
+* **credentials**: Name of the credential to be used by the credential manager. It currently needs a JSON file with a dictionary of keys and be setup by the RC_CREDENTIALS_FILE. This alternative is more secure that **credentials_file** but there is no access control in place yet.
 * **fields**: Table fields to retrieve (mandatory). It can be a list of fields or a dictionary where each key is the table field and the value is the alias that will be returned.
 * **distinct**: Whether to make a a distinct query or not (false by default).
 * **table**: Name of the table (mandatory).
@@ -131,9 +132,9 @@ Example:
     "type": "mysql",
     "credentials": "countries_db",
     "fields": {
-      "country_name": "country"
+      "area_name": "country"
     },
-    "table": "countries_tbl",
+    "table": "areas_tbl",
     "condition": {
       "iso3code": "iso"
     },
@@ -161,9 +162,9 @@ Example:
     "type": "sqlite",
     "file": "countries.db",
     "fields": {
-      "country_name": "country"
+      "area_name": "country"
     },
-    "table": "countries_tbl",
+    "table": "areas_tbl",
     "condition": {
       "iso3code": "iso"
     },

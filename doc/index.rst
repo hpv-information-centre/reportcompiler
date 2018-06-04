@@ -9,15 +9,19 @@ Report Compiler documentation
 Contents:
 
 .. toctree::
-   
-   getting_started.rst
-   document_specification.rst
-   config_parameters.rst
-   metadata.rst
-   document_debugging.rst
-   plugin_modules.rst
-   plugin_development.rst
+   :maxdepth: 2
+
    architecture.rst
+   document_specification.rst
+   document_configuration.rst
+   parameters_specification.rst
+   plugin_modules.rst
+   document_debugging.rst
+   plugin_development.rst
+
+.. toctree::
+   :maxdepth: 1
+   
    glossary.rst
 
 Module contents
