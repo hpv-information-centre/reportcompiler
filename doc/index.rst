@@ -11,6 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   getting_started.rst
    architecture.rst
    document_specification.rst
    document_configuration.rst
