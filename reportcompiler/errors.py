@@ -21,7 +21,7 @@ class DocumentGenerationError(Exception):
         :param dict enclosed_errors: dictionary with failed fragments
             errors for each failed document, e.g:
             {'document1': {
-                'fragment1': 'Error #1',
+                'fragment1': ('Error #1', <error1_traceback>),
                 'fragment2': ('Error #2', <error2_traceback>),
                 ...
                 }
@@ -39,8 +39,8 @@ class DocumentGenerationError(Exception):
         for doc, fragments_tb_dict in self.fragment_errors.items():
             for fragment, error in fragments_tb_dict.items():
                 count += 1
-                if isinstance(error, tuple):
-                    error_msg, error_tb = error
+                error_msg, error_tb = error
+                if error_tb is not None:
                     msg += '[{}] {}:\n {}\n{}\n\n'.format(doc,
                                                           fragment,
                                                           ''.join(

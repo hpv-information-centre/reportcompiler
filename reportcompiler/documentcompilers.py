@@ -336,7 +336,7 @@ class DocumentCompiler:
                                         traceback.format_tb(
                                             error.__traceback__)))
                     traceback_dict.update({result.doc: {
-                                            '<global>': error_msg}})
+                                            '<global>': (error_msg, None)}})
             raise DocumentGenerationError(
                 'Error on document(s) generation:\n', traceback_dict)
 
