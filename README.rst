@@ -14,10 +14,10 @@ This library is being developed by the ICO/IARC Information Centre on HPV and Ca
    :align: center
    :target: http://www.hpvcentre.net
 
-.. |docs| image:: https://readthedocs.org/projects/reportcompiler/badge/?version=doc
+.. |docs| image:: https://readthedocs.org/projects/reportcompiler/badge/?version=develop
     :alt: Documentation Status
     :scale: 100%
-    :target: https://reportcompiler.readthedocs.io/en/doc/?badge=doc
+    :target: https://reportcompiler.readthedocs.io/en/doc/?badge=develop
 
 Features
 ============
