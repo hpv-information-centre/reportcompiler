@@ -38,8 +38,10 @@ extensions = [
     'sphinx.ext.inheritance_diagram',
     'autoapi.sphinx',
     'sphinx.ext.graphviz',
-    'sphinx.ext.inheritance_diagram',
 ]
+
+autoapi_type = 'python'
+autoapi_dirs = ['../reportcompiler']
 
 autoapi_modules = {
     'reportcompiler': None,

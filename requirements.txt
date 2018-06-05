@@ -1,0 +1,9 @@
+pandas
+anytree
+jsmin
+GitPython
+odictliteral
+setuptools
+sphinx
+autoapi
+sphinxcontrib-websupport

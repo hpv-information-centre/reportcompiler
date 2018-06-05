@@ -5,7 +5,7 @@ Document specification
 
 Each document specification is contained in a directory with the following content.
 
-.. image:: _static/report-specification-files.svg
+.. image:: ../img/report-specification-files.svg
 
 
 config.conf

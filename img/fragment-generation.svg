@@ -57,9 +57,9 @@
      inkscape:window-height="1145"
      id="namedview206"
      showgrid="false"
-     inkscape:zoom="1.2350798"
-     inkscape:cx="268.77993"
-     inkscape:cy="159.23955"
+     inkscape:zoom="1.7466666"
+     inkscape:cx="462.74186"
+     inkscape:cy="255.70216"
      inkscape:window-x="0"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
@@ -188,23 +188,21 @@
       <text
          x="227.2388"
          font-size="18px"
-         y="322.7378"
+         y="322.73779"
          clip-path="url(#clipPath2)"
-         font-family="sans-serif"
-         stroke="none"
          xml:space="preserve"
          id="text34"
-         style="-inkscape-font-specification:'sans-serif, Normal';font-family:sans-serif;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:15.30612245px;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">parameter</text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15.30612278px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none"
+         transform="translate(1.0953809,-1.8256349)">document</text>
       <text
          x="229.7393"
          font-size="18px"
-         y="344.7896"
+         y="344.78961"
          clip-path="url(#clipPath2)"
-         font-family="sans-serif"
-         stroke="none"
          xml:space="preserve"
          id="text36"
-         style="-inkscape-font-specification:'sans-serif, Normal';font-family:sans-serif;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:15.30612245px;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">dictionary</text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15.30612278px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:none"
+         transform="translate(-2.9210158,-5.6594682)">parameter</text>
     </g>
     <g
        fill="white"
