@@ -40,6 +40,9 @@ extensions = [
     'sphinx.ext.graphviz',
 ]
 
+autoapi_type = 'python'
+autoapi_dirs = ['../reportcompiler']
+
 autoapi_modules = {
     'reportcompiler': None,
 }

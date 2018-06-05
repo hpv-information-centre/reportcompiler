@@ -1,3 +1,5 @@
+.. _`plugin_development`: 
+
 Plugin development
 ==================
 

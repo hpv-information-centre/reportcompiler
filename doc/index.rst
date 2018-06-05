@@ -6,16 +6,14 @@
 Report Compiler documentation
 =============================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
 
    getting_started.rst
    architecture.rst
    document_specification.rst
-   document_configuration.rst
    parameters_specification.rst
+   document_configuration.rst
    plugin_modules.rst
    document_debugging.rst
    plugin_development.rst
@@ -25,10 +23,9 @@ Contents:
    
    glossary.rst
 
-Module contents
-==================
-
 .. toctree::
-   reportcompiler/reportcompiler.rst
+   :maxdepth: 1
    
+   module_contents.rst
+
 * :ref:`genindex`

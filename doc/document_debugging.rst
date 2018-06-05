@@ -1,3 +1,5 @@
+.. _`debugging`: 
+
 Document debugging
 ==================
 
