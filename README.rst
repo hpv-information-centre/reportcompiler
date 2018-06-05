@@ -1,9 +1,11 @@
 Report Compiler
 ###############
 
-The Report Compiler is a python library that uses a JSON specification and custom code to compile highly parameterizable and reusable documents. This specification, along document parameters represented by a dictionary, is processed by a pipeline to generate highly customizable content. The pipeline stages are designed as plugin modules, making it very easy to extend for particular needs.
+|docs|
 
-This library is currently under heavy development so at this time the architecture might change at any time until considered sufficiently mature. It will not be ready for production until significant, real-world usage shows shortcomings/limitations to be considered for potential architecture redesign. Therefore, at this time, the API(particularly the JSON specification) can change between versions.
+The Report Compiler is a python library that uses document specifications and custom code to compile parameterizable and reusable documents. This specification, along document parameters represented by a dictionary, is processed by a pipeline to generate highly customizable content. The pipeline stages are designed as plugin modules, making it very easy to extend for particular needs.
+
+This library is currently under heavy development so at this time the architecture might change at any time until considered sufficiently mature. It will not be ready for production until significant, real-world usage shows shortcomings/limitations to be considered for potential architecture redesign. Therefore, at this time, the API (particularly the JSON specification) can change between versions.
 
 This library is being developed by the ICO/IARC Information Centre on HPV and Cancer and will be used in our internal report generation tasks.
 
@@ -12,11 +14,15 @@ This library is being developed by the ICO/IARC Information Centre on HPV and Ca
    :align: center
    :target: http://www.hpvcentre.net
 
+.. |docs| image:: https://readthedocs.org/projects/reportcompiler/badge/?version=doc
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://reportcompiler.readthedocs.io/en/doc/?badge=doc
 
 Features
 ============
 
-* Adaptable parameterized document generation from a variety of data sources, programming languages and processing stages.
+* Adaptable, parameterized document generation from a variety of data sources, programming languages and processing stages.
 * Complete customization via plugins for each stage.
 * Use of template libraries to separate logic from presentation.
 * Division of documents in independent fragments.

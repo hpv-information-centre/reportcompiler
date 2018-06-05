@@ -40,6 +40,11 @@ setup(
         'jsmin',
         'GitPython',
         'odictliteral',
+        'sphinx-autoapi',
+        'setuptools',  # 34.3.2
+        'sphinx',
+        'autoapi',
+        'sphinxcontrib-websupport'
     ],
     entry_points={
         'reportcompiler.data_fetchers': [
