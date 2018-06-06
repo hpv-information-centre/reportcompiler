@@ -75,13 +75,8 @@ class DocumentSpecification:
         config_file = '{}/config.conf'.format(self.path)
         if not os.path.exists(config_file):
             raise FileNotFoundError(
-<<<<<<< HEAD
-                "Document specification '{}' has no configuration file".format(
-                    self.path) +
-=======
                 "Document specification {} has no configuration file".format(
                     self.name) +
->>>>>>> doc
                 " (config.conf)")
 
         with open(config_file) as config_data:
