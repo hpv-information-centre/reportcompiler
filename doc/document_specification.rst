@@ -3,7 +3,7 @@
 Document specification
 ======================
 
-Each document specification is contained in a directory with the following content.
+Each document specification is contained in a directory with the following structure.
 
 .. image:: ../img/report-specification-files.svg
 
@@ -11,9 +11,7 @@ Each document specification is contained in a directory with the following conte
 config.conf
 -----------
 
-This JSON file contains the document specification parameters (a more detailed list of possible 
-values can be found in :ref:`document_configuration`). Before being parsed, this file is minified_, 
-allowing for Javascript-style comments (i.e. //, /\*, \*/).
+This JSON file contains the document specification parameters (a more detailed list of possible values can be found in :ref:`document_configuration`). Before being parsed, this file is minified_, allowing for Javascript-style comments (i.e. //, /\*, \*/).
 
 .. _minified: https://en.wikipedia.org/wiki/Minification_(programming)
 
@@ -56,7 +54,16 @@ Since these files will include sensitive information, this folder is not advised
 gen
 ****
 
-This folder contains all the generated data created by this library. Inside it, each document will be in its own subfolder (named after the document parameter value). All the data inside *gen* should be able to be recreated entirely from scratch.
+This folder contains all the generated data created by this library. Inside it, each document will be in its own subfolder (named after the document parameter value). Specifically, each folder will have the name of the document parameter values (represented as string) separated by hyphens. For example, the document with parameter:
+
+.. code-block:: javascript
+
+  {
+    "iso": "ESP",
+    "region": "Catalunya"
+  }
+
+will be created in the folder "ESP-Catalunya". To consistently preserve the order of the dictionary keys the use of an ordered dictionary is necessary.
 
 Inside each document subfolder, these other folders will be created:
 
