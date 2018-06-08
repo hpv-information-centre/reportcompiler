@@ -172,7 +172,7 @@ class SourceParser(PluginModule):
                             'data': json.loads(json_data),
                             'metadata': metadata,
                             'doc_spec': os.path.basename(
-                                metadata['doc_spec_path'])},
+                                metadata['docspec_path'])},
                            indent=2))
 
     @abstractmethod

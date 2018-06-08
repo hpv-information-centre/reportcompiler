@@ -155,7 +155,8 @@ class JinjaLatexRenderer(JinjaRenderer):
                                             pattern='^[ ]*%#', string=t)) == 0]
         templates = [re.findall(
                 pattern=(jinja_env.block_start_string +
-                         r'\{[ ]*include[ ]*[\'"](.*?)[\'"][ ]*\}'),
+                         r'[ ]*include[ ]*[\'"](.*?)[\'"][ ]*' +
+                         jinja_env.block_end_string),
                 string=t) for t in templates]
         templates = list(itertools.chain.from_iterable(templates))
         return templates

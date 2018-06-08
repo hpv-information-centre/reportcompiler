@@ -12,7 +12,7 @@ Fixed settings
 
 These values are defined by the library and are designed to be used when necessary in the context generation stage. They should not be changed by the user.
 
-* **doc_spec_path**: Absolute path to the document specification directory.
+* **docspec_path**: Absolute path to the document specification directory.
 
 * **fig_path**: Absolute path for figures, pictures and other auxiliary files to create the document.
 * **hash_path**: Absolute path for files with hashes of code, data and metadata. Used to detect if any changes have been made and, if not disabled, skip the generation when there are none.
