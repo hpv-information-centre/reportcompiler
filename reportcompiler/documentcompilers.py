@@ -162,7 +162,7 @@ class DocumentCompiler:
                         'Template {} does not exist in the document '
                         'specification nor in the '
                         'RC_TEMPLATE_LIBRARY_PATH ({})'.format(
-                            common_template_dir)
+                            common_template_dir, common_template_dir)
                         )
                 else:
                     # Ignoring library templates for tree parsing purposes
