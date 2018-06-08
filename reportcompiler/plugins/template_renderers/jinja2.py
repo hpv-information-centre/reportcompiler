@@ -39,12 +39,7 @@ class JinjaRenderer(TemplateRenderer):
                 'RC_TEMPLATE_LIBRARY_PATH']
             if os.path.exists(template_common_dir):
                 template_dirs.append(template_common_dir)
-
-            environment = jinja2.Environment(
-                loader=jinja2.FileSystemLoader(template_dirs),
-                undefined=jinja2.StrictUndefined,
-                trim_blocks=True)
-            self._setup_environment(environment)
+            environment = self._build_environment(template_dirs)
             self._generate_temp_templates(environment, context)
             # TODO: render vs generate
             rendered_template = \
@@ -87,6 +82,7 @@ class JinjaRenderer(TemplateRenderer):
                         ' nor in the RC_TEMPLATE_LIBRARY_PATH')
 
     def included_templates(self, content):
+        environment = self._build_environment(template_dirs=[])
         templates = re.findall(pattern='{%.*%}', string=content)
         templates = [t
                      for t
@@ -98,14 +94,24 @@ class JinjaRenderer(TemplateRenderer):
         templates = list(itertools.chain.from_iterable(templates))
         return templates
 
-    def _setup_environment(self, environment):
-        pass  # Default environment
+    def _build_environment(self, template_dirs):
+        jinja_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(template_dirs),
+            undefined=jinja2.StrictUndefined,
+            trim_blocks=True)
+
+        jinja_env.line_comment_prefix = r'##'
+
+        return jinja_env
 
 
 class JinjaLatexRenderer(JinjaRenderer):
     """ Template renderer for jinja2, with latex-friendly syntax. """
 
-    def _setup_environment(self, jinja_env):
+    def _build_environment(self, template_dirs):
+        jinja_env = super(JinjaLatexRenderer, self)._build_environment(
+            template_dirs)
+
         def escape_tex(value):
             LATEX_SUBS = (
                 (re.compile(r'\\'), r'\\\\'),
@@ -126,26 +132,30 @@ class JinjaLatexRenderer(JinjaRenderer):
             return value.replace('\\', '/')
 
         jinja_env.block_start_string = r'\BLOCK{'
-        jinja_env.block_end_string = '}'
+        jinja_env.block_end_string = r'}'
         jinja_env.variable_start_string = r'\VAR{'
-        jinja_env.variable_end_string = '}'
-        jinja_env.comment_start_string = r'\COMMENT{'
-        jinja_env.comment_end_string = '}'
-        jinja_env.line_comment_preffix = '%#'
+        jinja_env.variable_end_string = r'}'
+        jinja_env.comment_start_string = r'\COMMENT'
+        jinja_env.comment_end_string = r'\ENDCOMMENT'
+        jinja_env.line_comment_prefix = r'%#'
         jinja_env.filters['escape_tex'] = escape_tex
         jinja_env.filters['escape_path'] = escape_path
         jinja_env.trim_blocks = True
         jinja_env.lstrip_blocks = True
         jinja_env.autoescape = False
 
+        return jinja_env
+
     def included_templates(self, content):
+        jinja_env = self._build_environment(template_dirs=[])
         templates = re.findall(pattern='.*BLOCK.*', string=content)
         templates = [t
                      for t
                      in templates if len(re.findall(
                                             pattern='^[ ]*%#', string=t)) == 0]
         templates = [re.findall(
-                pattern=r'\\BLOCK\{[ ]*include[ ]*[\'"](.*?)[\'"][ ]*\}',
+                pattern=(jinja_env.block_start_string +
+                         r'\{[ ]*include[ ]*[\'"](.*?)[\'"][ ]*\}'),
                 string=t) for t in templates]
         templates = list(itertools.chain.from_iterable(templates))
         return templates
