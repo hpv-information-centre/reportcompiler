@@ -252,7 +252,30 @@ Jinja2
 
 Template renderer using the jinja2_ template engine.
 
-Since the idea is to compartmentalize the different fragments, an alias for the current fragment context is created with name *ctx* (context). For example, the fragment f2 contained in the fragment f1 would have an automatic directive at the start of the f2 template such as *with ctx = data.f1.f2*.
+* Print statements are written ``{{ <var> }}``.
+* Blocks are written ``{% <content> %}``.
+* Line comments are written ``## <comment>``.
+* Block comments are written:
+
+  .. code-block:: latex
+
+    {%
+    This block of
+    text is a comment
+    %}
+
+Template example:
+
+.. code-block:: latex
+
+  ## This is an example of a latex table
+  <ul>
+    {% for item in list %}
+      <li>{{ item.name }}</li>
+    {% endfor %}
+  </ul>
+
+Since the idea is to compartmentalize the different fragments, an alias for the current fragment context is created with name ``ctx`` (context). For example, the fragment f2 contained in the fragment f1 would have an automatic directive at the start of the f2 template such as ``with ctx = data.f1.f2``.
 
 .. _jinja2: http://jinja.pocoo.org/
 
@@ -263,16 +286,26 @@ Jinja2 (latex)
 
 Template renderer using the jinja2_ template engine with a more latex-friendly syntax. The differences with the regular jinja2 renderer are:
 
-* Print statements are written \\VAR{<var>}.
-* Blocks are written \\BLOCK{<content>}.
-* Comments are written \\COMMENT{<comment>}.
-* A new filter (*escape_tex*) for latex character escaping is available.
+* Print statements are written ``\VAR{<var>}``.
+* Blocks are written ``\BLOCK{<content>}``.
+* Line comments are written ``%# <comment>``.
+* Block comments are written:
+
+  .. code-block:: latex
+
+    \COMMENT
+    This block of
+    text is a comment
+    \ENDCOMMENT
+
+* A filter (*escape_tex*) for latex character escaping is available.
+* A filter (*escape_path*) for file path escaping (e.g. spaces) is available.
 
 Template example:
 
 .. code-block:: latex
 
-  \COMMENT{This is an example of a latex table}
+  %# This is an example of a latex table
   \begin{itemize}
     \BLOCK{for item in list}
       \item{\VAR{item.name}}

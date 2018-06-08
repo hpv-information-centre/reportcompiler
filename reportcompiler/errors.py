@@ -47,5 +47,5 @@ class DocumentGenerationError(Exception):
                                                               error_tb[-5:]),
                                                           error_msg)
                 else:
-                    msg += '[{}] {}:\n {}\n\n'.format(doc, fragment, error)
+                    msg += '[{}] {}:\n {}\n\n'.format(doc, fragment, error_msg)
         return msg + '{} error/s'.format(count)

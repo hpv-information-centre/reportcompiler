@@ -75,13 +75,8 @@ class DocumentSpecification:
         config_file = '{}/config.conf'.format(self.path)
         if not os.path.exists(config_file):
             raise FileNotFoundError(
-<<<<<<< HEAD
-                "Document specification '{}' has no configuration file".format(
-                    self.path) +
-=======
                 "Document specification {} has no configuration file".format(
                     self.name) +
->>>>>>> doc
                 " (config.conf)")
 
         with open(config_file) as config_data:
@@ -204,7 +199,7 @@ class DocumentSpecification:
                  doc_params=None,
                  n_doc_workers=2,
                  n_frag_workers=2,
-                 debug_mode=False,
+                 debug=False,
                  random_seed=None,
                  log_level=logging.DEBUG):
         """
@@ -233,7 +228,7 @@ class DocumentSpecification:
         compiler.generate(doc_params, self.metadata,
                           n_doc_workers=n_doc_workers,
                           n_frag_workers=n_frag_workers,
-                          debug_mode=debug_mode,
+                          debug=debug,
                           random_seed=random_seed,
                           log_level=log_level)
 

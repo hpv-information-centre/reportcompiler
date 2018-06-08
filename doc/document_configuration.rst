@@ -39,9 +39,9 @@ These settings can be defined by the user on a document-level (config.conf) or a
 * **doc_name** (mandatory): Simple name of the base document. For actual generated documents a document suffix will be appended to this name.
 * **verbose_name**: Long name of the document. If not available, *doc_name* will be used.
 * **main_template** (mandatory): Root template (that includes the rest of templates).
-* **debug_mode**: True if debug mode is enabled, false (default) otherwise. In debug mode a document will be generated in a single thread to facilitate debugging and all errors will be tracked in order to be debugged easily (see `Debugging tools`_).
+* **debug**: True if debug mode is enabled, false (default) otherwise. In debug mode a document will be generated in a single thread to facilitate debugging and all errors will be tracked in order to be debugged easily (see `Debugging tools`_).
 * **skip_unchanged_fragments**: True (default) if context generation should be skipped when no changes have been made for a fragment, false otherwise. Changes detected include code (fragment source file), fetched data and metadata. Changes in modules or libraries imported in the source file are not accounted for.
-* **random_seed**: Seed for randomness in the generation. This should be used as the initial value for any pseudorandom generator in order to make the whole generation deterministic and reproducible.
+* **random_seed**: Seed for randomness. This should be used as the initial value for any pseudorandom generator in order to make the whole generation deterministic and reproducible.
 * **data_fetcher** (mandatory): the data fetcher(s) plugin(s) to be used. This value often will be defined for each fragment, but if all the fragments use the same data it can be defined on a document level. For more information see :ref:`data_fetchers`.
 * **template_renderer**: the template renderer plugin to be used (*jinja2* by default). For more information see :ref:`template_renderers`.
 * **source_parser**: the source parser(s) to be used. It should be a dictionary with file extensions as keys and source parser module names as values. File extensions are considered case insensitive when resolving the appropriate parser. E.g:

@@ -11,9 +11,10 @@ To define how a document will be generated a document specification has to be cr
 .. image:: ../img/report-specification-files.svg
    :align: center
 
-The content of the generated documents can be split up and defined in **fragments**, each having a corresponding template (describing its visualization) and source file (describing its processed data).
+The content of the generated documents can be split up and defined in **fragments**, each having a corresponding template (describing its visualization) and source file (describing its data processing).
 
 .. image:: ../img/source-templates.svg
+   :width: 50%
    :align: center
 
 These directory structures fully represent a document generation workflow and they can be easily moved, extended or distributed without any unnecessary dependencies. Furthermore, a file structure is a code-friendly environment, being able to seamlessly debug or use version control like any other software project, for example.
