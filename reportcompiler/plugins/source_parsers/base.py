@@ -217,7 +217,7 @@ class SourceParser(PluginModule):
         :param str message: Optional message for exception
         :raises ContextGenerationError: always
         """
-        if context['debug_mode']:
+        if context['debug']:
             SourceParser._build_debug_info(doc_param, data, context)
         exception_info = (message
                           if message
@@ -253,7 +253,7 @@ class SourceParser(PluginModule):
         :param str message: Optional message for exception
         :raises MetadataRetrievalError: always
         """
-        if context['debug_mode']:
+        if context['debug']:
             SourceParser._build_debug_info(doc_param, {}, context)
         exception_info = message if message else '    ' + str(exception)
         if context.get('fragment_name'):

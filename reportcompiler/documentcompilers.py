@@ -245,7 +245,7 @@ class DocumentCompiler:
                  doc_metadata,
                  n_doc_workers=2,
                  n_frag_workers=2,
-                 debug_mode=False,
+                 debug=False,
                  random_seed=None,
                  log_level=logging.DEBUG):
         """
@@ -259,20 +259,20 @@ class DocumentCompiler:
         :param int n_frag_workers: Number of concurrent fragment-generating
             threads. The total thread count will be
             n_doc_workers * n_frag_workers.
-        :param boolean debug_mode: If enabled, the document generation will
+        :param boolean debug: If enabled, the document generation will
             be limited to one thread and several measures will be taken to
             facilitate debugging.
         :param int random_seed: Seed to initialize any possible
             pseudorandom generators.
         :param int log_level: Log level
         """
-        if debug_mode:
+        if debug:
             n_doc_workers = 1
             n_frag_workers = 1
             log_level = logging.DEBUG
             self._prepare_debug_session(doc_metadata)
 
-        doc_metadata['debug_mode'] = debug_mode
+        doc_metadata['debug'] = debug
 
         if random_seed:
             doc_metadata['random_seed'] = random_seed
@@ -328,7 +328,7 @@ class DocumentCompiler:
 
         DocumentCompiler.shutdown_loggers()
 
-        if debug_mode:
+        if debug:
             self._prepare_debug_output(doc_metadata)
 
         error_results = [r for r in results if r.exception is not None]
