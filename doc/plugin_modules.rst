@@ -23,7 +23,7 @@ Data fetchers
 -------------
 These modules usually return a pandas_ dataframe with information retrieved from a particular data source, though they could return additional information as well (see reportcompiler-ic-fetcher_).
 
-Each fragment can have several data fetchers assigned, defined by the *data_fetcher* variable in the source file (parsed by the Source Parser plugins). This JSON serializable structure is either a dictionary with the fetcher parameters or a list of fetcher dictionaries.
+Each fragment can have several data fetchers assigned, defined by the *data_fetchers* variable in the source file (parsed by the Source Parser plugins). This JSON serializable structure is either a dictionary with the fetcher parameters or a list of fetcher dictionaries.
 
 Each data fetcher implementation receives three arguments: the document parameter, a dictionary with the information related to that fetcher definition and the whole fragment metadata. Note that the whole metadata includes the fetcher definition, but it is necessary to specify separately since a fragment can have more than one data fetcher.
 
@@ -55,7 +55,7 @@ Example:
 
 .. code-block:: javascript
 
-  "data_fetcher": {
+  "data_fetchers": {
     "name": "continent",
     "type": "constant",
     "values": ["Africa", "America", "Asia", "Europe", "Oceania"]
@@ -83,7 +83,7 @@ Example:
 
 .. code-block:: javascript
 
-  "data_fetcher": {
+  "data_fetchers": {
     "name": "continent",
     "type": "excel",
     "file": "continent.xlsx"
@@ -127,7 +127,7 @@ Example:
 
 .. code-block:: javascript
 
-  "data_fetcher": {
+  "data_fetchers": {
     "name": "countries",
     "type": "mysql",
     "credentials": "countries_db",
@@ -157,7 +157,7 @@ Example:
 
 .. code-block:: javascript
 
-  "data_fetcher": {
+  "data_fetchers": {
     "name": "countries",
     "type": "sqlite",
     "file": "countries.db",
@@ -346,7 +346,7 @@ Note that the whole context includes the postprocessor definition, but it is nec
 
 .. code-block:: javascript
 
-  "postprocessor": ["pdflatex", ...]
+  "postprocessors": ["pdflatex", ...]
 
 .. inheritance-diagram:: 
     reportcompiler.plugins.postprocessors.pdflatex

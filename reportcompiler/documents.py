@@ -26,8 +26,8 @@ class DocumentSpecification:
 
     CONFIG_RECOGNIZED_KEYS = {
         'doc_name', 'verbose_name', 'main_template', 'debug',
-        'skip_unchanged_fragments', 'random_seed', 'data_fetcher',
-        'source_parser', 'template_renderer', 'postprocessor'
+        'skip_unchanged_fragments', 'random_seed', 'data_fetchers',
+        'source_parser', 'template_renderer', 'postprocessors'
     }
 
     PARAMS_ALLOWED_KEYS = {
@@ -144,7 +144,7 @@ class DocumentSpecification:
             "main_template": "report.tex",
 
             "template_renderer": "jinja2-latex",
-            "postprocessor": "pdflatex"
+            "postprocessors": "pdflatex"
         }
         """
         with open(os.path.join(new_docspec_path, 'config.conf'), 'w') \

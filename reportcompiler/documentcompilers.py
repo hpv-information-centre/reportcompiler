@@ -684,7 +684,7 @@ class DocumentCompiler:
             generation output and 'meta' for document metadata
         """
         try:
-            postprocessors_info = context['meta']['postprocessor']
+            postprocessors_info = context['meta']['postprocessors']
             if not isinstance(postprocessors_info, list):
                 postprocessors_info = [postprocessors_info]
         except KeyError:
@@ -871,7 +871,9 @@ class FragmentCompiler:
         :returns: Pandas dataframe (or list of dataframes) with required data
         :rtype: pandas.DataFrame
         """
-        return FragmentCompiler.fetch_info(doc_param, 'data_fetcher', metadata)
+        return FragmentCompiler.fetch_info(doc_param,
+                                           'data_fetchers',
+                                           metadata)
 
     @staticmethod
     def fetch_info(doc_param, fetcher_key, metadata):
@@ -911,7 +913,7 @@ class FragmentCompiler:
         except KeyError:
             message = '{}: Fetcher not specified'.format(
                 fragment_name)
-            if fetcher_key == 'data_fetcher':
+            if fetcher_key == 'data_fetchers':
                 # Fetcher mandatory for data fetchers
                 if logger:
                     logger.error('[{}] {}'.format(metadata['doc_suffix'],

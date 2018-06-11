@@ -34,7 +34,7 @@ For example, the `HPV Information Centre MySQL plugin`_ has the following parame
 
 .. code-block:: python
 
-    data_fetcher = [
+    data_fetchers = [
             {
                 'name': 'nw',
                 'credentials': 'information_center',

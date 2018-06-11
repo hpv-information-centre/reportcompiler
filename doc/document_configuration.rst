@@ -42,7 +42,7 @@ These settings can be defined by the user on a document-level (config.conf) or a
 * **debug**: True if debug mode is enabled, false (default) otherwise. In debug mode a document will be generated in a single thread to facilitate debugging and all errors will be tracked in order to be debugged easily (see `Debugging tools`_).
 * **skip_unchanged_fragments**: True (default) if context generation should be skipped when no changes have been made for a fragment, false otherwise. Changes detected include code (fragment source file), fetched data and metadata. Changes in modules or libraries imported in the source file are not accounted for.
 * **random_seed**: Seed for randomness. This should be used as the initial value for any pseudorandom generator in order to make the whole generation deterministic and reproducible.
-* **data_fetcher** (mandatory): the data fetcher(s) plugin(s) to be used. This value often will be defined for each fragment, but if all the fragments use the same data it can be defined on a document level. For more information see :ref:`data_fetchers`.
+* **data_fetchers** (mandatory): the data fetcher(s) plugin(s) to be used. This value often will be defined for each fragment, but if all the fragments use the same data it can be defined on a document level. For more information see :ref:`data_fetchers`.
 * **template_renderer**: the template renderer plugin to be used (*jinja2* by default). For more information see :ref:`template_renderers`.
 * **source_parser**: the source parser(s) to be used. It should be a dictionary with file extensions as keys and source parser module names as values. File extensions are considered case insensitive when resolving the appropriate parser. E.g:
 
@@ -55,7 +55,9 @@ These settings can be defined by the user on a document-level (config.conf) or a
 
   Most of the time it won't be necessary to explicitly define this value since the defaults will work for the usual file extensions. For more information see :ref:`source_parsers`.
 
-* **postprocessor**: the postprocessing stage(s) to be used. It can be a single postprocessor definition or a list of them. A postprocessor can be, similarly to data fetchers, a string with the appropriate name or, if parameters are needed, a dictionary with all the required info (see :ref:`postprocessors`). By default no postprocessing will be used.
+* **postprocessors**: the postprocessing stage(s) to be used. It can be a single postprocessor definition or a list of them. A postprocessor can be, similarly to data fetchers, a string with the appropriate name or, if parameters are needed, a dictionary with all the required info (see :ref:`postprocessors`). By default no postprocessing will be used.
+
+.. _`Debugging tools`: https://github.com/hpv-information-centre/reportcompiler-debugging-tools
 
 Document parameter validation settings
 ---------------------------------------
@@ -65,5 +67,3 @@ These settings can be defined by the user on its own separate file (*params.conf
 * **augmentation**: Data fetcher specification for parameter augmentation (see :ref:`parameter_augmentation`).
 * **allowed_values**: Data fetcher specification for parameter allowed values (see :ref:`parameter_allowed_values`).
 * **mandatory**: List of keys that should always appear in the document parameter dictionary (see :ref:`parameter_mandatory`).
-
-.. _`Debugging tools`: https://github.com/hpv-information-centre/reportcompiler-debugging-tools
