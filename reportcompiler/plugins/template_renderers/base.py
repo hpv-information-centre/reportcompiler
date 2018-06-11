@@ -41,6 +41,16 @@ class TemplateRenderer(PluginModule):
             'Included templates method not implemented for {}'.format(
                 self.__class__))
 
+    def get_fragment_start_comment(self, name):
+        """ Returns the comment that will be inserted before the
+        fragment template.
+
+        :param str name: fragment name
+        :returns: Comment to be inserted before the template
+        :rtype: str
+        """
+        return ''
+
     @classmethod
     def _get_default_handler(cls, **kwargs):
         return TemplateRenderer.get('jinja')

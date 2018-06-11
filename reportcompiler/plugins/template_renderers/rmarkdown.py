@@ -100,3 +100,6 @@ class RMarkdownRenderer(TemplateRenderer):
         for m in matches:
             templates += [t.strip() for t in m]
         return templates
+
+    def get_fragment_start_comment(self, name):
+        return r'<!-- %%%%%%%%%%%% FRAGMENT: {} %%%%%%%%%%%% -->'.format(name)

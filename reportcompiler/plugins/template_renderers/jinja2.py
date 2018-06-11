@@ -63,7 +63,8 @@ class JinjaRenderer(TemplateRenderer):
                                       'templates',
                                       template_file), 'w') as f_tmp:
                     content = f_orig.read()
-                    header = env.block_start_string + \
+                    header = self.get_fragment_start_comment(template_file) + \
+                        '\n' + env.block_start_string + \
                         'with ctx = {}'.format(
                             'data.' + dict_path
                             if dict_path != ''
@@ -103,6 +104,10 @@ class JinjaRenderer(TemplateRenderer):
         jinja_env.line_comment_prefix = r'##'
 
         return jinja_env
+
+    def get_fragment_start_comment(self, name):
+        # No markers, since we have no information on the output format
+        return ''
 
 
 class JinjaLatexRenderer(JinjaRenderer):
@@ -160,3 +165,6 @@ class JinjaLatexRenderer(JinjaRenderer):
                 string=t) for t in templates]
         templates = list(itertools.chain.from_iterable(templates))
         return templates
+
+    def get_fragment_start_comment(self, name):
+        return r'%%%%%%%%%%%%%%%%% FRAGMENT: {} %%%%%%%%%%%%%%%%%'.format(name)
