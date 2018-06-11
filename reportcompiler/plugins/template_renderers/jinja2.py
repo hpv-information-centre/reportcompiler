@@ -70,10 +70,18 @@ class JinjaRenderer(TemplateRenderer):
                             if dict_path != ''
                             else 'data') + \
                         env.block_end_string + '\n'
+                    header += env.block_start_string + \
+                        'with style = meta.style' + \
+                        env.block_end_string + '\n'
+
                     footer = '\n' + \
                              env.block_start_string + \
                              'endwith' + \
                              env.block_end_string
+                    footer += '\n' + \
+                              env.block_start_string + \
+                              'endwith' + \
+                              env.block_end_string
                     f_tmp.write(header + content + footer)
             except FileNotFoundError:
                 common_template_dir = os.environ['RC_TEMPLATE_LIBRARY_PATH']

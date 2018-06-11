@@ -67,3 +67,16 @@ These settings can be defined by the user on its own separate file (*params.conf
 * **augmentation**: Data fetcher specification for parameter augmentation (see :ref:`parameter_augmentation`).
 * **allowed_values**: Data fetcher specification for parameter allowed values (see :ref:`parameter_allowed_values`).
 * **mandatory**: List of keys that should always appear in the document parameter dictionary (see :ref:`parameter_mandatory`).
+
+.. _`style_settings`: 
+
+Style settings
+--------------
+
+These settings are available in **metadata['style']** and they are intended to parameterize the appearance of the generated documents, such as color palettes.
+
+At this stage of development most of these settings are completely custom and have to be taken in consideration when writing the templates. The only exception is:
+
+* **data_fetchers**: Data fetcher specification for styling data that will be added (or overriden) to the rest of the styling dictionary. Once the data is fetched, this value is deleted from the metadata.
+
+In the future some standard values might be defined for a common style specification.

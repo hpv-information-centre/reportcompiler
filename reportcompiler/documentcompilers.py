@@ -87,6 +87,29 @@ class DocumentCompiler:
                                 metadata=metadata)
 
     @staticmethod
+    def fetch_style_data(metadata):
+        """
+        Fetches the information about the aesthetic settings for the document.
+
+        :param dict metadata: Document metadata
+        :returns: Dictionary with styling settings.
+        :rtype: dict
+        """
+        style_data = FragmentCompiler.fetch_info(
+                                doc_param={},
+                                fetcher_key='style/data_fetchers',
+                                metadata=metadata)
+
+        style_dict = {}
+        for df in style_data.values():
+            if len(df.index) > 1:
+                raise ValueError(
+                    'More than one row returned by style data fetcher')
+            style_dict.update(df.to_dict(orient='records')[0])
+
+        return style_dict
+
+    @staticmethod
     def setup_environment(metadata, doc_param):
         """
         Prepares the environment to generate the necessary files (e.g. output,
