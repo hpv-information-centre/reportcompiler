@@ -23,6 +23,17 @@ class DocumentSpecification:
     Represents a document specification with its file structure and
     configuration.
     """
+
+    CONFIG_RECOGNIZED_KEYS = {
+        'doc_name', 'verbose_name', 'main_template', 'debug',
+        'skip_unchanged_fragments', 'random_seed', 'data_fetcher',
+        'source_parser', 'template_renderer', 'postprocessor'
+    }
+
+    PARAMS_ALLOWED_KEYS = {
+        'augmentation', 'allowed_values', 'mandatory'
+    }
+
     def __init__(self,
                  dir_path=None,
                  repo_url=None,
@@ -68,7 +79,7 @@ class DocumentSpecification:
                 self.path,
                 self.metadata['main_template'])):
             raise FileNotFoundError(
-                "Main template defined in config.ini ({}) doesn't exist".
+                "Main template defined in config.conf ({}) doesn't exist".
                 format(self.metadata['main_template']))
 
     def build_metadata(self):
@@ -82,14 +93,20 @@ class DocumentSpecification:
         with open(config_file) as config_data:
             metadata = json.loads(jsmin(config_data.read()),
                                   object_pairs_hook=OrderedDict)
+            # Additional metadata keys beyond the official ones are allowed for
+            # custom functionality
 
         params_file = '{}/params.conf'.format(self.path)
         if os.path.exists(params_file):
             with open(params_file) as params_data:
-                metadata.update(
-                    json.loads(jsmin(params_data.read()),
-                               object_pairs_hook=OrderedDict)
-                )
+                params_config = json.loads(jsmin(params_data.read()),
+                                           object_pairs_hook=OrderedDict)
+                unknown_keys = set(params_config.keys()) - \
+                    DocumentSpecification.PARAMS_ALLOWED_KEYS
+                if len(unknown_keys) > 0:
+                    raise ValueError("Unknown values found in params.conf: {}".
+                                     format(', '.join(unknown_keys)))
+                metadata.update({'params': params_config})
 
         metadata['docspec_path'] = self.path
         metadata['skip_unchanged_fragments'] = \
@@ -270,9 +287,9 @@ class DocumentSpecification:
                     format(doc_param))
 
     def _check_mandatory_variables(self, doc_param):
-        if self.metadata.get('params_mandatory') is None:
+        if self.metadata['params'].get('mandatory') is None:
             return
-        mandatory_vars = self.metadata['params_mandatory']
+        mandatory_vars = self.metadata['params']['mandatory']
         if mandatory_vars is None:
             mandatory_vars = []
         mandatory_vars = set(mandatory_vars)
@@ -335,13 +352,13 @@ class DocumentSpecification:
                                 else "'" + defined_value + "'"
                             )
                 else:
-                    if self.metadata.get('params_allowed_values') is None:
+                    if self.metadata['params'].get('allowed_values') is None:
                         dependencies = []
                     else:
                         dependencies = [
                                 fetcher['dependencies']
-                                for fetcher in self.metadata[
-                                    'params_allowed_values']
+                                for fetcher in self.metadata['params'][
+                                    'allowed_values']
                                 if fetcher['name'] == var
                         ][0]  # Dependencies of the first (and only) fetcher
                     msg = dependent_allowed_values_msg.format(

@@ -83,7 +83,7 @@ class DocumentCompiler:
         """
         return FragmentCompiler.fetch_info(
                                 doc_param=doc_param,
-                                fetcher_key='params_allowed_values',
+                                fetcher_key='params/allowed_values',
                                 metadata=metadata)
 
     @staticmethod
@@ -745,7 +745,7 @@ class DocumentCompiler:
         message = 'Starting doc_param augmentation...'
         logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
         predata = FragmentCompiler.fetch_info(doc_param,
-                                              'params_augmentation',
+                                              'params/augmentation',
                                               metadata)
         if len(predata) > 0:
             flattened_predata = dict(ChainMap(*[df.ix[0, :].to_dict()
@@ -879,6 +879,9 @@ class FragmentCompiler:
         Fetches data according to fetcher_key.
 
         :param OrderedDict doc_param: Document variable
+        :param str fetcher_key: Key identifying the fetcher within the
+            metadata. A slash ('/') represents a nested dictionary path:
+            e.g. 'a/b' means metadata['a']['b'].
         :param dict metadata: Metadata (document metadata, overriden by
             fragment)
         :returns: Pandas dataframe (or list of dataframes) with required data
@@ -901,11 +904,14 @@ class FragmentCompiler:
             logger = None
 
         try:
-            fetchers_info = metadata[fetcher_key]
+            fetcher_key_items = fetcher_key.split('/')
+            fetchers_info = metadata
+            for item in fetcher_key_items:
+                fetchers_info = fetchers_info[item]
         except KeyError:
             message = '{}: Fetcher not specified'.format(
                 fragment_name)
-            if fetcher_key == 'fetch_data':
+            if fetcher_key == 'data_fetcher':
                 # Fetcher mandatory for data fetchers
                 if logger:
                     logger.error('[{}] {}'.format(metadata['doc_suffix'],

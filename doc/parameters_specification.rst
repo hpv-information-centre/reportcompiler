@@ -27,7 +27,7 @@ But we will probably use the name of the country ("Spain") often in the document
 .. code-block:: javascript
 
    {
-	"params_augmentation": {
+	"augmentation": {
                     "type": "mysql",
                     "credentials": "information_center",
                     "table": "areas_tbl",
@@ -57,12 +57,12 @@ By doing so, the document parameter each fragment would receive would be:
 Mandatory parameters
 ********************
 
-The document parameter can have any number of keys, but some of them might be forced to appear by defining the *params_mandatory* value. This value is a list of the keys that must appear in the document parameter; otherwise, a ValueError will be raised. When generating a list of documents, each document parameter will be checked before the generation process to ensure that all arguments are valid. For instance, a country report might have any number of optional parameters but it might require a country identifier ('iso'):
+The document parameter can have any number of keys, but some of them might be forced to appear by defining the *mandatory* value. This value is a list of the keys that must appear in the document parameter; otherwise, a ValueError will be raised. When generating a list of documents, each document parameter will be checked before the generation process to ensure that all arguments are valid. For instance, a country report might have any number of optional parameters but it might require a country identifier ('iso'):
 
 .. code-block:: javascript
 
    {
-	"params_mandatory": ['iso']
+	"mandatory": ['iso']
    }
 
 
@@ -77,7 +77,7 @@ For example, if the 'iso' variable should have only values for countries (not co
 
 .. code-block:: javascript
 
-  "params_allowed_values": [
+  "allowed_values": [
 		{
         "name": "iso",
         "type": "mysql",

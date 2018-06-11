@@ -31,8 +31,8 @@ These values are defined by the library and are designed to be used when necessa
 
 * **logger_name**: Name of the logger (for python logging library), to be used as an identifier for the current fragment (if working in parallel) or the document. 
 
-User-defined parameters
-------------------------
+Global settings
+-----------------
 
 These settings can be defined by the user on a document-level (config.conf) or a fragment-level (fragment source file).
 
@@ -56,8 +56,14 @@ These settings can be defined by the user on a document-level (config.conf) or a
   Most of the time it won't be necessary to explicitly define this value since the defaults will work for the usual file extensions. For more information see :ref:`source_parsers`.
 
 * **postprocessor**: the postprocessing stage(s) to be used. It can be a single postprocessor definition or a list of them. A postprocessor can be, similarly to data fetchers, a string with the appropriate name or, if parameters are needed, a dictionary with all the required info (see :ref:`postprocessors`). By default no postprocessing will be used.
-* **params_augmentation**: Data fetcher specification for parameter augmentation (see :ref:`parameter_augmentation`).
-* **params_allowed_values**: Data fetcher specification for parameter allowed values (see :ref:`parameter_allowed_values`).
-* **params_mandatory**: List of keys that should always appear in the document parameter dictionary (see :ref:`parameter_mandatory`).
+
+Document parameter validation settings
+---------------------------------------
+
+These settings can be defined by the user on its own separate file (*params.conf*). The values are available within the **metadata['params']** dictionary (e.g. metadata['params']['mandatory']).
+
+* **augmentation**: Data fetcher specification for parameter augmentation (see :ref:`parameter_augmentation`).
+* **allowed_values**: Data fetcher specification for parameter allowed values (see :ref:`parameter_allowed_values`).
+* **mandatory**: List of keys that should always appear in the document parameter dictionary (see :ref:`parameter_mandatory`).
 
 .. _`Debugging tools`: https://github.com/hpv-information-centre/reportcompiler-debugging-tools
