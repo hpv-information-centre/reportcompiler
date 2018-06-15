@@ -67,6 +67,7 @@ These settings can be defined by the user on its own separate file (*params.conf
 * **augmentation**: Data fetcher specification for parameter augmentation (see :ref:`parameter_augmentation`).
 * **allowed_values**: Data fetcher specification for parameter allowed values (see :ref:`parameter_allowed_values`).
 * **mandatory**: List of keys that should always appear in the document parameter dictionary (see :ref:`parameter_mandatory`).
+* **default_key**: Key that will be used as the default when the document parameter is not specified as a dictionary (see :ref:`default_docparam_key`)
 
 .. _`style_settings`: 
 

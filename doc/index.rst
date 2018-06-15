@@ -16,6 +16,7 @@ Report Compiler documentation
    document_configuration.rst
    document_styling.rst
    plugin_modules.rst
+   commands.rst
    document_debugging.rst
    plugin_development.rst
 

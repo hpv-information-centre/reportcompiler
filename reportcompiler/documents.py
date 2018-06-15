@@ -31,7 +31,7 @@ class DocumentSpecification:
     }
 
     PARAMS_ALLOWED_KEYS = {
-        'augmentation', 'allowed_values', 'mandatory'
+        'augmentation', 'allowed_values', 'mandatory', 'default_key'
     }
 
     def __init__(self,
@@ -214,6 +214,17 @@ class DocumentSpecification:
         return allowed_values
 
     @property
+    def default_docparam_key(self):
+        """ 
+        Return the default key of the document parameter
+        that will be used if none is specified. 
+        
+        :returns: default document parameter key
+        :rtype: str
+        """
+        return self.metadata['params'].get('default_key')
+
+    @property
     def main_template(self):
         """
         Returns the main template filename.
@@ -249,6 +260,10 @@ class DocumentSpecification:
             doc_params = OrderedDict()
         if not isinstance(doc_params, list):
             doc_params = [doc_params]
+        if self.default_docparam_key:
+            for i, doc_param in enumerate(doc_params):
+                if not isinstance(doc_param, dict):
+                    doc_params[i] = {self.default_docparam_key: doc_param}
 
         doc_params = self._clean_and_validate_doc_params(doc_params)
 

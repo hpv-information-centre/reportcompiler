@@ -79,5 +79,8 @@ setup(
             'pandoc-html=reportcompiler.plugins.postprocessors.pandoc:'
             'PandocHTMLPostProcessor',
         ],
+        'console_scripts': [
+            'compile-report=reportcompiler.command_line:compile_report'
+        ]
     }
 )

@@ -91,3 +91,20 @@ For example, if the 'iso' variable should have only values for countries (not co
   ]
 
 This information can be accessed before the generation by using the *fetch_allowed_var_values*, for user interface purposes for example. 
+
+.. _`default_docparam_key`:
+
+Default key
+***********
+
+When specifying a document parameter (when generating a new document via API or via command line, for example), it is expected to be a dictionary with potentially several keys. Many times a single key will be necessary, and in that case a shortcut has been implemented to accept simple values (integers, strings, ...) and consider them as the value of a defined `default_key`.
+
+For example, if a report expects a `iso` key as the document parameter, instead of passing the value `{"iso": "ESP"}` we could define:
+
+.. code-block:: javascript
+
+  "default_key": "iso"
+
+in the *params.conf* file and simply pass `"ESP"` as the document parameter.
+
+If no default key is defined a dictionary must be passed.
