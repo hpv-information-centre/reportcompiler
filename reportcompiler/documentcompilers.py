@@ -269,7 +269,7 @@ class DocumentCompiler:
                  n_doc_workers=2,
                  n_frag_workers=2,
                  debug=False,
-                 random_seed=None,
+                 random_seed=0,
                  log_level=logging.DEBUG):
         """
         Generates documents from a list of document variables.
@@ -296,11 +296,6 @@ class DocumentCompiler:
             self._prepare_debug_session(doc_metadata)
 
         doc_metadata['debug'] = debug
-
-        if random_seed:
-            doc_metadata['random_seed'] = random_seed
-        else:
-            doc_metadata['random_seed'] = np.random.randint(sys.maxsize)
 
         doc_info = namedtuple('doc_info', ['doc', 'result', 'exception'])
         results = []
