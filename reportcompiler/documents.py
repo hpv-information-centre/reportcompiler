@@ -260,10 +260,14 @@ class DocumentSpecification:
             doc_params = OrderedDict()
         if not isinstance(doc_params, list):
             doc_params = [doc_params]
-        if self.default_docparam_key:
-            for i, doc_param in enumerate(doc_params):
+        for i, doc_param in enumerate(doc_params):
+            if self.default_docparam_key:
                 if not isinstance(doc_param, dict):
                     doc_params[i] = {self.default_docparam_key: doc_param}
+            elif not isinstance(doc_param, dict):
+                raise ValueError(
+                    'Document parameter is not a dictionary '
+                    'and default key is not set')
 
         doc_params = self._clean_and_validate_doc_params(doc_params)
 
