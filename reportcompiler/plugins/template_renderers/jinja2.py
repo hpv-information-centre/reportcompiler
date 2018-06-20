@@ -63,16 +63,25 @@ class JinjaRenderer(TemplateRenderer):
                                       'templates',
                                       template_file), 'w') as f_tmp:
                     content = f_orig.read()
-                    header = env.block_start_string + \
+                    header = self.get_fragment_start_comment(template_file) + \
+                        '\n' + env.block_start_string + \
                         'with ctx = {}'.format(
                             'data.' + dict_path
                             if dict_path != ''
                             else 'data') + \
                         env.block_end_string + '\n'
+                    header += env.block_start_string + \
+                        'with style = meta.style' + \
+                        env.block_end_string + '\n'
+
                     footer = '\n' + \
                              env.block_start_string + \
                              'endwith' + \
                              env.block_end_string
+                    footer += '\n' + \
+                              env.block_start_string + \
+                              'endwith' + \
+                              env.block_end_string
                     f_tmp.write(header + content + footer)
             except FileNotFoundError:
                 common_template_dir = os.environ['RC_TEMPLATE_LIBRARY_PATH']
@@ -103,6 +112,10 @@ class JinjaRenderer(TemplateRenderer):
         jinja_env.line_comment_prefix = r'##'
 
         return jinja_env
+
+    def get_fragment_start_comment(self, name):
+        # No markers, since we have no information on the output format
+        return ''
 
 
 class JinjaLatexRenderer(JinjaRenderer):
@@ -155,7 +168,11 @@ class JinjaLatexRenderer(JinjaRenderer):
                                             pattern='^[ ]*%#', string=t)) == 0]
         templates = [re.findall(
                 pattern=(jinja_env.block_start_string +
-                         r'\{[ ]*include[ ]*[\'"](.*?)[\'"][ ]*\}'),
+                         r'[ ]*include[ ]*[\'"](.*?)[\'"][ ]*' +
+                         jinja_env.block_end_string),
                 string=t) for t in templates]
         templates = list(itertools.chain.from_iterable(templates))
         return templates
+
+    def get_fragment_start_comment(self, name):
+        return r'%%%%%%%%%%%%%%%%% FRAGMENT: {} %%%%%%%%%%%%%%%%%'.format(name)

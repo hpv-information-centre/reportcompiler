@@ -23,7 +23,7 @@ Data fetchers
 -------------
 These modules usually return a pandas_ dataframe with information retrieved from a particular data source, though they could return additional information as well (see reportcompiler-ic-fetcher_).
 
-Each fragment can have several data fetchers assigned, defined by the *data_fetcher* variable in the source file (parsed by the Source Parser plugins). This JSON serializable structure is either a dictionary with the fetcher parameters or a list of fetcher dictionaries.
+Each fragment can have several data fetchers assigned, defined by the *data_fetchers* variable in the source file (parsed by the Source Parser plugins). This JSON serializable structure is either a dictionary with the fetcher parameters or a list of fetcher dictionaries.
 
 Each data fetcher implementation receives three arguments: the document parameter, a dictionary with the information related to that fetcher definition and the whole fragment metadata. Note that the whole metadata includes the fetcher definition, but it is necessary to specify separately since a fragment can have more than one data fetcher.
 
@@ -55,7 +55,7 @@ Example:
 
 .. code-block:: javascript
 
-  "data_fetcher": {
+  "data_fetchers": {
     "name": "continent",
     "type": "constant",
     "values": ["Africa", "America", "Asia", "Europe", "Oceania"]
@@ -83,7 +83,7 @@ Example:
 
 .. code-block:: javascript
 
-  "data_fetcher": {
+  "data_fetchers": {
     "name": "continent",
     "type": "excel",
     "file": "continent.xlsx"
@@ -127,7 +127,7 @@ Example:
 
 .. code-block:: javascript
 
-  "data_fetcher": {
+  "data_fetchers": {
     "name": "countries",
     "type": "mysql",
     "credentials": "countries_db",
@@ -157,7 +157,7 @@ Example:
 
 .. code-block:: javascript
 
-  "data_fetcher": {
+  "data_fetchers": {
     "name": "countries",
     "type": "sqlite",
     "file": "countries.db",
@@ -227,10 +227,16 @@ These modules combine the templates in the *templates* directory with the contex
 
 As an additional tool, an optional common directory referenced by the *RC_TEMPLATE_LIBRARY_PATH* can hold additional templates to be shared among different document specifications. This functionality can be used in further plugins (see `Report Compiler IC Tools`_).
 
-Each template renderer plugin implements a *render_template* function. This function uses two arguments: the document parameter and the full document context. This context is a dictionary with two items:
+Each template renderer plugin implements three methods: ``render_template``, ``included_templates`` and ``get_fragment_start_comment``.
+
+The ``render_template`` method is responsible for the document generation using templates and data contexts. It has two arguments: the document parameter and the full document context. This context is a dictionary with two items:
 
 * *meta*: the document metadata, with an additional item with key *template_context_info* that contains a list of tuples of (template file, fragment path) for each fragment. The fragment path is the chain of parent fragments separated by dots (e.g. root.parent.child).
 * *data*: the context generated in the previous stage, nested by fragment path. 
+
+The ``included_templates`` returns a list of templates included in a particular template file and it is used to determine the template tree structure. It has a single argument: the text content of the template file.
+
+The ``get_fragment_start_comment`` returns a string that will be used as the comment that will be inserted before each fragment template, for debugging purposes. An output language must be defined, otherwise no comment can be defined and the string will be empty (e.g. the base *jinja2* renderer). It has a single argument: the fragment name.
 
 By default the jinja2 template system is used.
 
@@ -275,7 +281,7 @@ Template example:
     {% endfor %}
   </ul>
 
-Since the idea is to compartmentalize the different fragments, an alias for the current fragment context is created with name ``ctx`` (context). For example, the fragment f2 contained in the fragment f1 would have an automatic directive at the start of the f2 template such as ``with ctx = data.f1.f2``.
+Since the idea is to compartmentalize the different fragments, an alias for the current fragment context is created with name ``ctx`` (context). For example, the fragment f2 contained in the fragment f1 would have an automatic directive at the start of the f2 template such as ``with ctx = data.f1.f2``. Similarly, the style data in ``meta.style`` is aliased to ``style``.
 
 .. _jinja2: http://jinja.pocoo.org/
 
@@ -338,7 +344,7 @@ Note that the whole context includes the postprocessor definition, but it is nec
 
 .. code-block:: javascript
 
-  "postprocessor": ["pdflatex", ...]
+  "postprocessors": ["pdflatex", ...]
 
 .. inheritance-diagram:: 
     reportcompiler.plugins.postprocessors.pdflatex

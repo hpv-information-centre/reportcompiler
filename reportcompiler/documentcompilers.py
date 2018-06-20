@@ -83,8 +83,31 @@ class DocumentCompiler:
         """
         return FragmentCompiler.fetch_info(
                                 doc_param=doc_param,
-                                fetcher_key='params_allowed_values',
+                                fetcher_key='params/allowed_values',
                                 metadata=metadata)
+
+    @staticmethod
+    def fetch_style_data(metadata):
+        """
+        Fetches the information about the aesthetic settings for the document.
+
+        :param dict metadata: Document metadata
+        :returns: Dictionary with styling settings.
+        :rtype: dict
+        """
+        style_data = FragmentCompiler.fetch_info(
+                                doc_param={},
+                                fetcher_key='style/data_fetchers',
+                                metadata=metadata)
+
+        style_dict = {}
+        for df in style_data.values():
+            if len(df.index) > 1:
+                raise ValueError(
+                    'More than one row returned by style data fetcher')
+            style_dict.update(df.to_dict(orient='records')[0])
+
+        return style_dict
 
     @staticmethod
     def setup_environment(metadata, doc_param):
@@ -246,7 +269,7 @@ class DocumentCompiler:
                  n_doc_workers=2,
                  n_frag_workers=2,
                  debug=False,
-                 random_seed=None,
+                 random_seed=0,
                  log_level=logging.DEBUG):
         """
         Generates documents from a list of document variables.
@@ -273,11 +296,6 @@ class DocumentCompiler:
             self._prepare_debug_session(doc_metadata)
 
         doc_metadata['debug'] = debug
-
-        if random_seed:
-            doc_metadata['random_seed'] = random_seed
-        else:
-            doc_metadata['random_seed'] = np.random.randint(sys.maxsize)
 
         doc_info = namedtuple('doc_info', ['doc', 'result', 'exception'])
         results = []
@@ -684,7 +702,7 @@ class DocumentCompiler:
             generation output and 'meta' for document metadata
         """
         try:
-            postprocessors_info = context['meta']['postprocessor']
+            postprocessors_info = context['meta']['postprocessors']
             if not isinstance(postprocessors_info, list):
                 postprocessors_info = [postprocessors_info]
         except KeyError:
@@ -745,7 +763,7 @@ class DocumentCompiler:
         message = 'Starting doc_param augmentation...'
         logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
         predata = FragmentCompiler.fetch_info(doc_param,
-                                              'params_augmentation',
+                                              'params/augmentation',
                                               metadata)
         if len(predata) > 0:
             flattened_predata = dict(ChainMap(*[df.ix[0, :].to_dict()
@@ -871,7 +889,9 @@ class FragmentCompiler:
         :returns: Pandas dataframe (or list of dataframes) with required data
         :rtype: pandas.DataFrame
         """
-        return FragmentCompiler.fetch_info(doc_param, 'data_fetcher', metadata)
+        return FragmentCompiler.fetch_info(doc_param,
+                                           'data_fetchers',
+                                           metadata)
 
     @staticmethod
     def fetch_info(doc_param, fetcher_key, metadata):
@@ -879,6 +899,9 @@ class FragmentCompiler:
         Fetches data according to fetcher_key.
 
         :param OrderedDict doc_param: Document variable
+        :param str fetcher_key: Key identifying the fetcher within the
+            metadata. A slash ('/') represents a nested dictionary path:
+            e.g. 'a/b' means metadata['a']['b'].
         :param dict metadata: Metadata (document metadata, overriden by
             fragment)
         :returns: Pandas dataframe (or list of dataframes) with required data
@@ -901,11 +924,14 @@ class FragmentCompiler:
             logger = None
 
         try:
-            fetchers_info = metadata[fetcher_key]
+            fetcher_key_items = fetcher_key.split('/')
+            fetchers_info = metadata
+            for item in fetcher_key_items:
+                fetchers_info = fetchers_info[item]
         except KeyError:
             message = '{}: Fetcher not specified'.format(
                 fragment_name)
-            if fetcher_key == 'fetch_data':
+            if fetcher_key == 'data_fetchers':
                 # Fetcher mandatory for data fetchers
                 if logger:
                     logger.error('[{}] {}'.format(metadata['doc_suffix'],
