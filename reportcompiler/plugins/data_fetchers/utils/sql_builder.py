@@ -13,6 +13,7 @@ JSON data.
 # TODO: Test and optimize for larger data sets
 
 import re
+import logging
 from collections import OrderedDict
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
@@ -49,22 +50,24 @@ class SQLQueryBuilder:
             order_by_clause = self._create_sort_clause()
             limit_clause = self._create_limit_clause()
 
-            sql_string = """
-                            {select_clause}
-                            {from_clause}
-                            {join_clause}
-                            {where_clause}
-                            {group_by_clause}
-                            {order_by_clause}
-                            {limit_clause}
-                        """.format(
+            sql_string = "{select_clause} " \
+                         "{from_clause} " \
+                         "{join_clause} " \
+                         "{where_clause} " \
+                         "{group_by_clause} " \
+                         "{order_by_clause} " \
+                         "{limit_clause}".format(
                                 select_clause=select_clause,
                                 from_clause=from_clause,
                                 join_clause=join_clause,
                                 where_clause=where_clause,
                                 group_by_clause=group_by_clause,
                                 order_by_clause=order_by_clause,
-                                limit_clause=limit_clause)
+                                limit_clause=limit_clause).strip()
+        logger = logging.getLogger(self.metadata['logger_name'])
+        logger.debug('[{}] {}: {}'.format(self.metadata['doc_suffix'],
+                                          self.metadata.get('fragment_name'),
+                                          sql_string))
         return ' '.join(sql_string.split())
 
     def _create_select_clause(self):

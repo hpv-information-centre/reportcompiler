@@ -80,7 +80,6 @@ class MySQLFetcher(SQLFetcher):
         except KeyError:
             pass  # No credentials file specified
         except Exception as e:
-            print(e)
             raise DataFetcher.raise_data_fetching_exception(
                 metadata,
                 message='MySQL credentials {} don\'t exist'.format(

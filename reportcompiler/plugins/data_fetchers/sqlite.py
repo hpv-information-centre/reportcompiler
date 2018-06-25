@@ -22,8 +22,6 @@ class SQLiteFetcher(SQLFetcher):
                                             fetcher_info['file']))
         c = conn.cursor()
         sql_string = self._build_sql_query(doc_param, fetcher_info, metadata)
-        logger = logging.getLogger(metadata['logger_name'])
-        logger.debug('[{}] {}'.format(metadata['doc_suffix'], sql_string))
         c.execute(sql_string)
         data = c.fetchall()
         column_names = [col[0] for col in c.description]
