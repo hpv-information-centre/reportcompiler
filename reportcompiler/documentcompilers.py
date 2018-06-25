@@ -300,7 +300,7 @@ class DocumentCompiler:
             doc_metadata = deepcopy(doc_metadata)
             if not isinstance(fragments, list):
                 fragments = [fragments]
-            doc_metadata['compiled_fragments'] = \
+            doc_metadata['partial_generation_fragments'] = \
                 [os.path.splitext(f)[0] for f in fragments]
 
             enabled_nodes = set()

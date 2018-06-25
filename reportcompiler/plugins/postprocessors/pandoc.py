@@ -27,9 +27,9 @@ class PandocPostProcessor(PostProcessor):
             if suffix != '':
                 filename += '-' + suffix
 
-            if context['meta'].get('compiled_fragments'):
+            if context['meta'].get('partial_generation_fragments'):
                 filename += '__' + '-'.join(
-                    context['meta']['compiled_fragments'])
+                    context['meta']['partial_generation_fragments'])
 
             try:
                 pandoc_cmd = \
