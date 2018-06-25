@@ -80,7 +80,8 @@ setup(
             'PandocHTMLPostProcessor',
         ],
         'console_scripts': [
-            'compile-report=reportcompiler.command_line:compile_report'
+            'compile-report=reportcompiler.command_line:compile_report',
+            'compile-fragment=reportcompiler.command_line:compile_fragment'
         ]
     }
 )
