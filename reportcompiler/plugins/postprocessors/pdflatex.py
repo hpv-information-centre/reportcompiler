@@ -23,7 +23,11 @@ class PdflatexPostProcessor(PostProcessor):
 
         tmp_path = context['meta']['tmp_path']
         out_path = context['meta']['out_path']
-        tex_file = os.path.join(tmp_path, filename + '.tex')
+        if context['meta'].get('partial_generation_fragments'):
+            filename += '__' + '-'.join(
+                context['meta']['partial_generation_fragments'])
+        filename += '.tex'
+        tex_file = os.path.join(tmp_path, filename)
 
         try:
             if which('pdflatex') is None:
@@ -34,6 +38,7 @@ class PdflatexPostProcessor(PostProcessor):
 
             with open(tex_file, 'w') as f:
                 f.write(doc)
+
             command = 'pdflatex -interaction=nonstopmode ' \
                       '-halt-on-error ' \
                       '-aux-directory="{}" ' \

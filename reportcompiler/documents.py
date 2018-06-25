@@ -215,10 +215,10 @@ class DocumentSpecification:
 
     @property
     def default_docparam_key(self):
-        """ 
+        """
         Return the default key of the document parameter
-        that will be used if none is specified. 
-        
+        that will be used if none is specified.
+
         :returns: default document parameter key
         :rtype: str
         """
@@ -240,6 +240,7 @@ class DocumentSpecification:
                  n_frag_workers=2,
                  debug=False,
                  random_seed=None,
+                 fragments=None,
                  log_level=logging.DEBUG):
         """
         Generates the documents with document variables doc_params from the
@@ -253,6 +254,11 @@ class DocumentSpecification:
             threads (within each document-generating thread)
         :param int random_seed: Seed to initialize any possible
             pseudorandom generators.
+        :param str fragments: Fragment(s) to be generated. Setting this
+            value generates the document only considering the templates from
+            the main template to the chosen value(s) and all its children.
+            Setting it to None is equivalent to setting it to the main template
+            and therefore the whole document will be generated.
         :param int log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
             logging.ERROR, ...)
         """
@@ -277,6 +283,7 @@ class DocumentSpecification:
                           n_frag_workers=n_frag_workers,
                           debug=debug,
                           random_seed=random_seed,
+                          fragments=fragments,
                           log_level=log_level)
 
     def clean(self, docs='all', keep=[]):

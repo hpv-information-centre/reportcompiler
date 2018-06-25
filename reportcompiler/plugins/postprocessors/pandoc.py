@@ -25,11 +25,15 @@ class PandocPostProcessor(PostProcessor):
             suffix = context['meta']['doc_suffix']
             filename = context['meta']['doc_name']
             if suffix != '':
-                filename = filename + '-' + suffix
+                filename += '-' + suffix
+
+            if context['meta'].get('compiled_fragments'):
+                filename += '__' + '-'.join(
+                    context['meta']['compiled_fragments'])
 
             try:
                 pandoc_cmd = \
-                    "\"C:/Program Files/RStudio/bin/pandoc/pandoc\" " + \
+                    "\"pandoc\" " + \
                     "+RTS -K512m -RTS " + \
                     "--standalone " + \
                     "\"{input_md}\" ".format(

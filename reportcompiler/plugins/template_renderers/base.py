@@ -19,12 +19,13 @@ class TemplateRenderer(PluginModule):
     entry_point_group = 'template_renderers'
 
     @abstractmethod
-    def render_template(self, doc_param, context):
+    def render_template(self, doc_param, template_tree, context):
         """ Renders the template after the context is generated for all fragments.
 
-        :param OrderedDict doc_param: Document variable
+        :param OrderedDict doc_param: Document variable.
+        :param anytree template_tree: Tree with the templates to be rendered.
         :param dict context: Context dictionary with keys 'data' (context
-            generated from fragments) and 'meta' (document metadata)
+            generated from fragments) and 'meta' (document metadata).
         """
         raise NotImplementedError(
             'Template rendering not implemented for {}'.format(self.__class__))

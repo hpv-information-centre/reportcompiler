@@ -11,6 +11,7 @@ import logging
 import json
 import sys
 import numpy as np
+import anytree
 from collections import OrderedDict, ChainMap, namedtuple
 from glob import glob
 from copy import deepcopy
@@ -270,6 +271,7 @@ class DocumentCompiler:
                  n_frag_workers=2,
                  debug=False,
                  random_seed=0,
+                 fragments=None,
                  log_level=logging.DEBUG):
         """
         Generates documents from a list of document variables.
@@ -287,8 +289,33 @@ class DocumentCompiler:
             facilitate debugging.
         :param int random_seed: Seed to initialize any possible
             pseudorandom generators.
+        :param str fragments: Fragment(s) to be generated. Setting this
+            value generates the document only considering the templates from
+            the main template to the chosen value(s) and all its children.
+            Setting it to None is equivalent to setting it to the main template
+            and therefore the whole document will be generated.
         :param int log_level: Log level
         """
+        if fragments:
+            doc_metadata = deepcopy(doc_metadata)
+            if not isinstance(fragments, list):
+                fragments = [fragments]
+            doc_metadata['compiled_fragments'] = \
+                [os.path.splitext(f)[0] for f in fragments]
+
+            enabled_nodes = set()
+            for fragment in fragments:
+                match = anytree.find(self.template_tree.node,
+                                     lambda n: n.name == fragment)
+                if match is None:
+                    raise ValueError(
+                        '{} does not exist in the template tree.'.format(
+                            fragment))
+                enabled_nodes = enabled_nodes.union(list(match.path))
+
+            for node in PreOrderIter(self.template_tree.node):
+                node.children = set(node.children).intersection(enabled_nodes)
+
         if debug:
             n_doc_workers = 1
             n_frag_workers = 1
@@ -510,7 +537,7 @@ class DocumentCompiler:
                 fragments_context, doc_metadata)
 
             output_doc = DocumentCompiler.render_template(
-                augmented_doc_param, context)
+                augmented_doc_param, self.template_tree, context)
 
             DocumentCompiler.postprocess(
                 output_doc,
@@ -662,15 +689,17 @@ class DocumentCompiler:
         :rtype: list
         """
 
-        return self.renderer.included_templates(content)
+        templates = self.renderer.included_templates(content)
+        return [template_name for template_name, _ in templates]
 
     @staticmethod
-    def render_template(doc_param, context):
+    def render_template(doc_param, template_tree, context):
         """
         Performs the template rendering stage for the document
         (see architecture).
 
         :param OrderedDict doc_param: Document variable
+        :param anytree template_tree: Tree with the templates to be rendered.
         :param dict context: Full context with two keys: 'data' for context
             generation output and 'meta' for document metadata
         :returns: Template rendering engine output, generally the rendered
@@ -687,7 +716,7 @@ class DocumentCompiler:
         logger.debug('[{}] Rendering template ({})...'.format(
             context['meta']['doc_suffix'],
             renderer.__class__.__name__))
-        return renderer.render_template(doc_param, context)
+        return renderer.render_template(doc_param, template_tree, context)
 
     @staticmethod
     def postprocess(doc, doc_param, context):

@@ -8,8 +8,10 @@ import re
 import os
 import itertools
 import shutil
+import anytree
 from reportcompiler.plugins.template_renderers.base \
     import TemplateRenderer
+from anytree import PreOrderIter
 
 try:
     import jinja2
@@ -25,7 +27,23 @@ __all__ = ['JinjaRenderer', 'JinjaLatexRenderer', ]
 class JinjaRenderer(TemplateRenderer):
     """ Template renderer for jinja2. """
 
-    def render_template(self, doc_param, context):
+    def _comment_disabled_templates(self,
+                                    fragment_content,
+                                    all_included_templates,
+                                    jinja_env):
+        child_template_info = self.included_templates(
+                                            fragment_content)
+        for child_name, child_block in child_template_info:
+            if child_name not in all_included_templates:
+                fragment_content = fragment_content.replace(
+                    child_block,
+                    '{} {} {}'.format(jinja_env.comment_start_string,
+                                      child_block,
+                                      jinja_env.comment_end_string)
+                )
+        return fragment_content
+
+    def render_template(self, doc_param, template_tree, context):
         try:
             template_dirs = []
             template_tmp_dir = os.path.join(
@@ -40,7 +58,7 @@ class JinjaRenderer(TemplateRenderer):
             if os.path.exists(template_common_dir):
                 template_dirs.append(template_common_dir)
             environment = self._build_environment(template_dirs)
-            self._generate_temp_templates(environment, context)
+            self._generate_temp_templates(environment, template_tree, context)
             # TODO: render vs generate
             rendered_template = \
                 environment.get_template(
@@ -53,21 +71,32 @@ class JinjaRenderer(TemplateRenderer):
         except Exception as e:
             TemplateRenderer.raise_rendering_exception(context, exception=e)
 
-    def _generate_temp_templates(self, env, context):
-        context_info = context['meta']['template_context_info']
-        for template_file, dict_path in context_info:
+    def _generate_temp_templates(self, env, template_tree, context):
+        all_included_templates = anytree.findall(template_tree.node,
+                                                 lambda _: True)
+        all_included_templates = [n.name for n in all_included_templates]
+
+        for subtree in PreOrderIter(template_tree.node):
+            node = subtree
+            template_file = node.name
+            template_path = '.'.join([os.path.splitext(n.name)[0]
+                                      for n in node.path[1:]])
             try:
                 with open(os.path.join(context['meta']['templates_path'],
-                                       template_file), 'r') as f_orig, \
+                                       node.name), 'r') as f_orig, \
                     open(os.path.join(context['meta']['tmp_path'],
                                       'templates',
-                                      template_file), 'w') as f_tmp:
+                                      node.name), 'w') as f_tmp:
                     content = f_orig.read()
+
+                    content = self._comment_disabled_templates(
+                        content, all_included_templates, env)
+
                     header = self.get_fragment_start_comment(template_file) + \
                         '\n' + env.block_start_string + \
                         'with ctx = {}'.format(
-                            'data.' + dict_path
-                            if dict_path != ''
+                            'data.' + template_path
+                            if template_path != ''
                             else 'data') + \
                         env.block_end_string + '\n'
                     header += env.block_start_string + \
@@ -97,11 +126,18 @@ class JinjaRenderer(TemplateRenderer):
                      for t
                      in templates if len(re.findall(
                                             pattern='^[ ]*##', string=t)) == 0]
-        templates = [re.findall(
+
+        template_names = [re.findall(
                         pattern=r'\{%[ ]*include[ ]*[\'"](.*?)[\'"][ ]*%\}',
                         string=t) for t in templates]
-        templates = list(itertools.chain.from_iterable(templates))
-        return templates
+        template_names = list(itertools.chain.from_iterable(template_names))
+
+        template_blocks = [re.findall(
+                        pattern=r'\{%[ ]*include[ ]*[\'"].*?[\'"][ ]*%\}',
+                        string=t) for t in templates]
+        template_blocks = list(itertools.chain.from_iterable(template_blocks))
+
+        return list(zip(template_names, template_blocks))
 
     def _build_environment(self, template_dirs):
         jinja_env = jinja2.Environment(
@@ -166,13 +202,21 @@ class JinjaLatexRenderer(JinjaRenderer):
                      for t
                      in templates if len(re.findall(
                                             pattern='^[ ]*%#', string=t)) == 0]
-        templates = [re.findall(
+        template_names = [re.findall(
                 pattern=(jinja_env.block_start_string +
                          r'[ ]*include[ ]*[\'"](.*?)[\'"][ ]*' +
-                         jinja_env.block_end_string),
+                         jinja_env.block_end_string).replace('\\', '\\\\'),
                 string=t) for t in templates]
-        templates = list(itertools.chain.from_iterable(templates))
-        return templates
+        template_names = list(itertools.chain.from_iterable(template_names))
+
+        template_blocks = [re.findall(
+                pattern=(jinja_env.block_start_string +
+                         r'[ ]*include[ ]*[\'"].*?[\'"][ ]*' +
+                         jinja_env.block_end_string).replace('\\', '\\\\'),
+                string=t) for t in templates]
+        template_blocks = list(itertools.chain.from_iterable(template_blocks))
+
+        return list(zip(template_names, template_blocks))
 
     def get_fragment_start_comment(self, name):
         return r'%%%%%%%%%%%%%%%%% FRAGMENT: {} %%%%%%%%%%%%%%%%%'.format(name)
