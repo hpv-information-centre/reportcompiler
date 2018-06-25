@@ -34,15 +34,23 @@ def compile_report():
 def compile_fragment():
     if len(sys.argv) < 4:
         print('Error: This command requires the path to the document '
-              'specification followed by the fragment name and the document '
+              'specification followed by the fragments name and the document '
               'parameters to generate.')
         return
 
     docspec_path = sys.argv[1]
     docspec = DocumentSpecification(docspec_path)
-    fragment = sys.argv[2]
+
+    try:
+        separator_index = sys.argv.index('--')
+        _fragments = sys.argv[2:separator_index]
+        _docparams = sys.argv[separator_index+1:]
+    except ValueError:
+        _fragments = sys.argv[2]
+        _docparams = sys.argv[3:]
+
     docparams = []
-    for arg in sys.argv[3:]:
+    for arg in _docparams:
         try:
             docparam = json.loads(arg)
         except json.JSONDecodeError:
@@ -50,7 +58,7 @@ def compile_fragment():
         docparams.append(docparam)
 
     try:
-        docspec.generate(docparams, fragment=fragment)
+        docspec.generate(docparams, fragments=_fragments)
     except DocumentGenerationError as e:
         print(e)
         os._exit(1)
