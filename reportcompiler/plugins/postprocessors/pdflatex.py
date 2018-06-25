@@ -46,7 +46,7 @@ class PdflatexPostProcessor(PostProcessor):
                       '"{}"'.format(tmp_path,
                                     out_path,
                                     tex_file)
-            print(command)
+
             run(command,
                 shell=True,
                 check=True,
