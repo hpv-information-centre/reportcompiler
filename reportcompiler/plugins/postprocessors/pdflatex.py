@@ -15,19 +15,9 @@ __all__ = ['PdflatexPostProcessor', ]
 class PdflatexPostProcessor(PostProcessor):
     """ Postprocessor for pdflatex. """
 
-    def postprocess(self, doc_param, doc, postprocessor_info, context):
-        suffix = context['meta']['doc_suffix']
-        filename = context['meta']['doc_name']
-        if suffix != '':
-            filename = filename + '-' + suffix
-
+    def postprocess(self, doc_param, doc_path, postprocessor_info, context):
         tmp_path = context['meta']['tmp_path']
         out_path = context['meta']['out_path']
-        if context['meta'].get('partial_generation_fragments'):
-            filename += '__' + '-'.join(
-                context['meta']['partial_generation_fragments'])
-        filename += '.tex'
-        tex_file = os.path.join(tmp_path, filename)
 
         try:
             if which('pdflatex') is None:
@@ -36,8 +26,7 @@ class PdflatexPostProcessor(PostProcessor):
                     message='pdflatex not found in PATH. Please install it '
                             'or configure your PATH.')
 
-            with open(tex_file, 'w') as f:
-                f.write(doc)
+            tex_file = os.path.join(tmp_path, doc_path)
 
             command = 'pdflatex -interaction=nonstopmode ' \
                       '-halt-on-error ' \

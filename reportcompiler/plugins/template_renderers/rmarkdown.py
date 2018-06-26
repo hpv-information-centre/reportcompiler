@@ -53,15 +53,26 @@ class RMarkdownRenderer(TemplateRenderer):
             self._generate_temp_templates(doc_param, template_tree, context)
 
             try:
+                md_file = os.path.join(context['meta']['tmp_path'],
+                                       context['meta']['doc_name'] +
+                                       '-' +
+                                       context['meta']['doc_suffix'] +
+                                       '.md')
+                if context['meta'].get('partial_generation_fragments'):
+                    md_file += '__' + '-'.join(
+                        context['meta']['partial_generation_fragments'])
+
                 r_code = "library(knitr);" + \
                          "setwd('{}');".format(
                              context['meta']['tmp_path'].replace(
                                  '\\', '\\\\')) + \
-                         "knitr::knit(input='{}', encoding='UTF-8');".format(
+                         "knitr::knit(input='{}', " \
+                         "output='{}', encoding='UTF-8');".format(
                              os.path.join(context['meta']['tmp_path'],
                                           'templates',
                                           context['meta']['main_template']).
-                             replace('\\', '\\\\'))
+                             replace('\\', '\\\\'),
+                             md_file)
                 command = 'Rscript --vanilla -e "{}"'.format(
                                 r_code.replace('"', '\\"'))
 
@@ -71,15 +82,15 @@ class RMarkdownRenderer(TemplateRenderer):
                     stdout=PIPE,
                     stderr=PIPE,
                     universal_newlines=True)
+
+                return md_file
             except CalledProcessError as e:
                 TemplateRenderer.raise_rendering_exception(
                     context,
                     exception=e,
                     message=e.stdout)
-
-            shutil.rmtree(template_tmp_dir)
-
-            return None
+            finally:
+                shutil.rmtree(template_tmp_dir)
         except UndefinedError as e:
             TemplateRenderer.raise_rendering_exception(context, exception=e)
 

@@ -67,7 +67,20 @@ class JinjaRenderer(TemplateRenderer):
 
             shutil.rmtree(template_tmp_dir, ignore_errors=True)
 
-            return rendered_template
+            filename = context['meta']['doc_name']
+            suffix = context['meta']['doc_suffix']
+            if suffix != '':
+                filename += '-' + suffix
+            tmp_path = context['meta']['tmp_path']
+            if context['meta'].get('partial_generation_fragments'):
+                filename += '__' + '-'.join(
+                    context['meta']['partial_generation_fragments'])
+            filename += '.' + self.get_extension(context)
+            tex_file = os.path.join(tmp_path, filename)
+            with open(tex_file, 'w') as f:
+                f.write(rendered_template)
+
+            return filename
         except Exception as e:
             TemplateRenderer.raise_rendering_exception(context, exception=e)
 
@@ -153,6 +166,9 @@ class JinjaRenderer(TemplateRenderer):
         # No markers, since we have no information on the output format
         return ''
 
+    def get_extension(self, context):
+        return ''
+
 
 class JinjaLatexRenderer(JinjaRenderer):
     """ Template renderer for jinja2, with latex-friendly syntax. """
@@ -220,3 +236,6 @@ class JinjaLatexRenderer(JinjaRenderer):
 
     def get_fragment_start_comment(self, name):
         return r'%%%%%%%%%%%%%%%%% FRAGMENT: {} %%%%%%%%%%%%%%%%%'.format(name)
+
+    def get_extension(self, context):
+        return 'tex'
