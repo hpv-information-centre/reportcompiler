@@ -278,13 +278,14 @@ class DocumentSpecification:
         doc_params = self._clean_and_validate_doc_params(doc_params)
 
         compiler = DocumentCompiler(self)
-        compiler.generate(doc_params, self.metadata,
-                          n_doc_workers=n_doc_workers,
-                          n_frag_workers=n_frag_workers,
-                          debug=debug,
-                          random_seed=random_seed,
-                          fragments=fragments,
-                          log_level=log_level)
+        results = compiler.generate(doc_params, self.metadata,
+                                    n_doc_workers=n_doc_workers,
+                                    n_frag_workers=n_frag_workers,
+                                    debug=debug,
+                                    random_seed=random_seed,
+                                    fragments=fragments,
+                                    log_level=log_level)
+        return results
 
     def clean(self, docs='all', keep=[]):
         if docs == 'all':

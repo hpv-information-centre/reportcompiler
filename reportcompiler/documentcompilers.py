@@ -397,6 +397,24 @@ class DocumentCompiler:
                                             '<global>': (error_msg, None)}})
             raise DocumentGenerationError(
                 'Error on document(s) generation:\n', traceback_dict)
+        else:
+            dfs = [
+                pd.DataFrame(
+                    [
+                        {
+                            'doc': dr.doc,
+                            'fragment': fr['fragment'],
+                            'time': fr['time']
+                        }
+                        for fr in dr.result
+                    ]
+                )
+                for dr in results
+            ]
+            results = pd.DataFrame()
+            for df in dfs:
+                results = results.append(df, ignore_index=True)
+            return results
 
     def _prepare_debug_session(self, doc_metadata):
         """
@@ -468,8 +486,10 @@ class DocumentCompiler:
         :returns: (context, path of the fragment)
         :rtype: tuple
         """
+        startTime = time.perf_counter()
         fragment_path = '/'.join([elem.name for elem in fragment.path])
         if self.source_file_map.get(fragment.name):
+            start = time.perf_counter
             current_frag_context = FragmentCompiler.compile(
                 self.source_file_map[fragment.name],
                 doc_param,
@@ -480,7 +500,18 @@ class DocumentCompiler:
             current_frag_context = {}
         if not isinstance(current_frag_context, dict):
             current_frag_context = {'data': current_frag_context}
-        return current_frag_context, fragment_path
+        elapsedTime = time.perf_counter() - startTime
+        logger = logging.getLogger(doc_metadata['logger_name'])
+        logger.info('[{}] {}: Fragment finished in {} ms\n'.format(
+            doc_metadata['doc_suffix'],
+            os.path.splitext(fragment.name)[0],
+            int(elapsedTime * 1000)))
+        result = {
+            'context': current_frag_context,
+            'path': fragment_path,
+            'time': elapsedTime
+        }
+        return result
 
     def _generate_doc(self,
                       doc_param,
@@ -551,22 +582,31 @@ class DocumentCompiler:
                 augmented_doc_param,
                 context)
 
-            logger.info('[{}] Document generated'.format(
-                doc_metadata['doc_suffix']))
+            logger.info('[{}] Document generated at {}'.format(
+                doc_metadata['doc_suffix'],
+                doc_metadata['out_path']))
 
-            return output_doc
+            stats = self._build_stats(results)
+
+            return stats
         except (DocumentGenerationError,
                 TemplateRendererException,
                 PostProcessorError) as e:
             logger.error(
-                '[{}] Error(s) in document generation, see below'.format(
+                '[{}] Error(s) in document generation'.format(
                     doc_metadata['doc_suffix']))
             raise e from None
         finally:
             if n_frag_workers > 1:
                 self._build_final_log(doc_logfile_path, doc_metadata)
 
-        return None
+    def _build_stats(self, results):
+        return [
+            {
+                'fragment': r.result['path'],
+                'time': r.result['time']
+            } for r in results
+        ]
 
     def _generate_doc_fragments_parallel(self,
                                          augmented_doc_param,
@@ -663,7 +703,8 @@ class DocumentCompiler:
     def _build_fragments_context(self, fragment_results):
         fragments_context = {}
         for result in fragment_results:
-            current_frag_context, fragment_path = result.result
+            current_frag_context = result.result['context']
+            fragment_path = result.result['path']
             DocumentCompiler.update_nested_dict(fragments_context,
                                                 fragment_path,
                                                 current_frag_context)
