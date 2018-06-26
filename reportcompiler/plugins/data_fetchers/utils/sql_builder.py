@@ -64,10 +64,12 @@ class SQLQueryBuilder:
                                 group_by_clause=group_by_clause,
                                 order_by_clause=order_by_clause,
                                 limit_clause=limit_clause).strip()
-        logger = logging.getLogger(self.metadata['logger_name'])
-        logger.debug('[{}] {}: {}'.format(self.metadata['doc_suffix'],
-                                          self.metadata.get('fragment_name'),
-                                          sql_string))
+        if self.metadata.get('logger_name'):
+            logger = logging.getLogger(self.metadata['logger_name'])
+            logger.debug('[{}] {}: {}'.format(self.metadata['doc_suffix'],
+                                              self.metadata.get(
+                                                  'fragment_name'),
+                                              sql_string))
         return ' '.join(sql_string.split())
 
     def _create_select_clause(self):

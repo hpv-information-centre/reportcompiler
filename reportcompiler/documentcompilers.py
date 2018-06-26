@@ -12,6 +12,10 @@ import json
 import sys
 import numpy as np
 import anytree
+import time
+import functools
+import pandas as pd
+
 from collections import OrderedDict, ChainMap, namedtuple
 from glob import glob
 from copy import deepcopy
@@ -497,13 +501,16 @@ class DocumentCompiler:
         DocumentCompiler.setup_logger(doc_metadata, log_level)
         doc_logfile_path = DocumentCompiler._get_log_file_path(doc_metadata)
 
-        try:
-            augmented_doc_param = DocumentCompiler.augment_doc_param(
-                doc_param, doc_metadata)
+        logger = logging.getLogger(doc_metadata['logger_name'])
+        logger.info('[{}] Starting document generation...'.format(
+            doc_metadata['doc_suffix']))
 
-            logger = logging.getLogger(doc_metadata['logger_name'])
-            logger.info('[{}] Generating document...'.format(
-                doc_metadata['doc_suffix']))
+        try:
+            if doc_metadata['params'].get('augmentation'):
+                augmented_doc_param = DocumentCompiler.augment_doc_param(
+                    doc_param, doc_metadata)
+            else:
+                augmented_doc_param = doc_param
 
             fragment_info = namedtuple('fragment_info', ['fragment',
                                                          'result',
@@ -789,8 +796,8 @@ class DocumentCompiler:
         :rtype: dict
         """
         logger = logging.getLogger(metadata['logger_name'])
-        message = 'Starting doc_param augmentation...'
-        logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
+        logger.info('[{}] {}'.format(metadata['doc_suffix'],
+                                     'Augmenting document parameter...'))
         predata = FragmentCompiler.fetch_info(doc_param,
                                               'params/augmentation',
                                               metadata)
@@ -875,10 +882,6 @@ class FragmentCompiler:
         context = FragmentCompiler.generate_context(fragment_data,
                                                     doc_param,
                                                     metadata)
-        logger = logging.getLogger(metadata['logger_name'])
-        logger.info('[{}] {}: Fragment done.\n'.
-                    format(metadata['doc_suffix'],
-                           metadata['fragment_name']))
         return context
 
     @staticmethod
