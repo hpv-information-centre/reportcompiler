@@ -15,6 +15,7 @@ JSON data.
 import re
 import logging
 from collections import OrderedDict
+from copy import deepcopy
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 
@@ -198,9 +199,10 @@ class SQLQueryBuilder:
         filter_clause = []
         column = None
         try:
-            for column, value in self.fetcher_info[key].items():
+            for column, val in self.fetcher_info[key].items():
                 self._validate_sql_varname(column)
                 # self._validate_sql_varname(value)
+                value = deepcopy(val)
                 if is_var:
                     if not isinstance(value, list):
                         value = [value]
