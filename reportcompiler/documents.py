@@ -241,7 +241,8 @@ class DocumentSpecification:
                  debug=False,
                  random_seed=None,
                  fragments=None,
-                 log_level=logging.DEBUG):
+                 log_level=logging.DEBUG,
+                 **kwargs):
         """
         Generates the documents with document variables doc_params from the
         current document specification.
@@ -260,7 +261,9 @@ class DocumentSpecification:
             Setting it to None is equivalent to setting it to the main template
             and therefore the whole document will be generated.
         :param int log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
-            logging.ERROR, ...)
+            logging.ERROR, ...).
+        :param dict kwargs: Additional arguments that will be added to the
+            document metadata when generating the documents.
         """
         if doc_params is None:
             doc_params = OrderedDict()
@@ -277,8 +280,11 @@ class DocumentSpecification:
 
         doc_params = self._clean_and_validate_doc_params(doc_params)
 
+        metadata = self.metadata.copy()
+        metadata.update(kwargs)
+
         compiler = DocumentCompiler(self)
-        results = compiler.generate(doc_params, self.metadata,
+        results = compiler.generate(doc_params, metadata,
                                     n_doc_workers=n_doc_workers,
                                     n_frag_workers=n_frag_workers,
                                     debug=debug,
