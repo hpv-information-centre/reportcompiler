@@ -9,6 +9,7 @@ import os
 import itertools
 import shutil
 import anytree
+from datetime import datetime
 from reportcompiler.plugins.template_renderers.base \
     import TemplateRenderer
 from anytree import PreOrderIter
@@ -196,6 +197,9 @@ class JinjaLatexRenderer(JinjaRenderer):
         def escape_path(value):
             return value.replace('\\', '/')
 
+        def format_date(value, new_format):
+            return datetime.strptime(value, '%Y-%m-%d').strftime(new_format)
+
         jinja_env.block_start_string = r'\BLOCK{'
         jinja_env.block_end_string = r'}'
         jinja_env.variable_start_string = r'\VAR{'
@@ -205,6 +209,7 @@ class JinjaLatexRenderer(JinjaRenderer):
         jinja_env.line_comment_prefix = r'%#'
         jinja_env.filters['escape_tex'] = escape_tex
         jinja_env.filters['escape_path'] = escape_path
+        jinja_env.filters['format_date'] = format_date
         jinja_env.trim_blocks = True
         jinja_env.lstrip_blocks = True
         jinja_env.autoescape = False
