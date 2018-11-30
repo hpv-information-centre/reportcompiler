@@ -35,16 +35,18 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     install_requires=[
-        'pandas',
-        'anytree',
-        'jsmin',
-        'GitPython',
-        'odictliteral',
-        'sphinx-autoapi',
-        'setuptools',  # 34.3.2
-        'sphinx',
-        'autoapi',
-        'sphinxcontrib-websupport'
+        'pandas>=0.22.0',
+        'anytree>=2.4.3',
+        'jsmin>=2.2.2',
+        'GitPython>=2.1.9',
+        'odictliteral>=1.0.0',
+        'sphinx-autoapi>=0.5.0',
+        'setuptools>=39.2.0',
+        'sphinx>=1.7.5',
+        'autoapi>=1.3.1',
+        'sphinxcontrib-websupport>=1.0.1',
+        # Not strictly requirement, but convenient to have as one
+        'pymysql>=0.8.1'
     ],
     entry_points={
         'reportcompiler.data_fetchers': [
