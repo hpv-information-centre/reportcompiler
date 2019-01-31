@@ -37,3 +37,10 @@ Templates
 ---------
 
 The templates will (depending on the plugin implementation) insert a comment with the name of a fragment before each fragment template. This can be useful when checking template mistakes in, for example, the document .tex file in the *tmp* directory before a *pdflatex* compilation.
+
+Partial document generation
+---------------------------
+
+In case only a subset of the available fragments are required, the ``generate`` method includes a ``fragments`` parameter to specify which sections should be generated. The excluded fragments will be commented out of the parent templates. The generated document will be created in the same folder determined by the document parameter, but with a suffix indicating which fragments have been generated.
+
+This functionality can be useful, besides for custom, summarized documents, for fast debugging of particular fragments. In this case, the rest of fragments will not be considered and the generation can be considerably faster (even faster than using the cache system).

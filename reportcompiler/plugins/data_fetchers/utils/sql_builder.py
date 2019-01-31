@@ -13,7 +13,9 @@ JSON data.
 # TODO: Test and optimize for larger data sets
 
 import re
+import logging
 from collections import OrderedDict
+from copy import deepcopy
 from reportcompiler.plugins.data_fetchers.base \
     import DataFetcher
 
@@ -49,22 +51,26 @@ class SQLQueryBuilder:
             order_by_clause = self._create_sort_clause()
             limit_clause = self._create_limit_clause()
 
-            sql_string = """
-                            {select_clause}
-                            {from_clause}
-                            {join_clause}
-                            {where_clause}
-                            {group_by_clause}
-                            {order_by_clause}
-                            {limit_clause}
-                        """.format(
+            sql_string = "{select_clause} " \
+                         "{from_clause} " \
+                         "{join_clause} " \
+                         "{where_clause} " \
+                         "{group_by_clause} " \
+                         "{order_by_clause} " \
+                         "{limit_clause}".format(
                                 select_clause=select_clause,
                                 from_clause=from_clause,
                                 join_clause=join_clause,
                                 where_clause=where_clause,
                                 group_by_clause=group_by_clause,
                                 order_by_clause=order_by_clause,
-                                limit_clause=limit_clause)
+                                limit_clause=limit_clause).strip()
+        if self.metadata.get('logger_name'):
+            logger = logging.getLogger(self.metadata['logger_name'])
+            logger.debug('[{}] {}: {}'.format(self.metadata['doc_suffix'],
+                                              self.metadata.get(
+                                                  'fragment_name'),
+                                              sql_string))
         return ' '.join(sql_string.split())
 
     def _create_select_clause(self):
@@ -193,9 +199,10 @@ class SQLQueryBuilder:
         filter_clause = []
         column = None
         try:
-            for column, value in self.fetcher_info[key].items():
+            for column, val in self.fetcher_info[key].items():
                 self._validate_sql_varname(column)
                 # self._validate_sql_varname(value)
+                value = deepcopy(val)
                 if is_var:
                     if not isinstance(value, list):
                         value = [value]

@@ -215,10 +215,10 @@ class DocumentSpecification:
 
     @property
     def default_docparam_key(self):
-        """ 
+        """
         Return the default key of the document parameter
-        that will be used if none is specified. 
-        
+        that will be used if none is specified.
+
         :returns: default document parameter key
         :rtype: str
         """
@@ -240,7 +240,9 @@ class DocumentSpecification:
                  n_frag_workers=2,
                  debug=False,
                  random_seed=None,
-                 log_level=logging.DEBUG):
+                 fragments=None,
+                 log_level=logging.DEBUG,
+                 **kwargs):
         """
         Generates the documents with document variables doc_params from the
         current document specification.
@@ -253,8 +255,15 @@ class DocumentSpecification:
             threads (within each document-generating thread)
         :param int random_seed: Seed to initialize any possible
             pseudorandom generators.
+        :param str fragments: Fragment(s) to be generated. Setting this
+            value generates the document only considering the templates from
+            the main template to the chosen value(s) and all its children.
+            Setting it to None is equivalent to setting it to the main template
+            and therefore the whole document will be generated.
         :param int log_level: Log level (e.g. logging.DEBUG, logging.WARNING,
-            logging.ERROR, ...)
+            logging.ERROR, ...).
+        :param dict kwargs: Additional arguments that will be added to the
+            document metadata when generating the documents.
         """
         if doc_params is None:
             doc_params = OrderedDict()
@@ -271,13 +280,18 @@ class DocumentSpecification:
 
         doc_params = self._clean_and_validate_doc_params(doc_params)
 
+        metadata = self.metadata.copy()
+        metadata.update(kwargs)
+
         compiler = DocumentCompiler(self)
-        compiler.generate(doc_params, self.metadata,
-                          n_doc_workers=n_doc_workers,
-                          n_frag_workers=n_frag_workers,
-                          debug=debug,
-                          random_seed=random_seed,
-                          log_level=log_level)
+        results = compiler.generate(doc_params, metadata,
+                                    n_doc_workers=n_doc_workers,
+                                    n_frag_workers=n_frag_workers,
+                                    debug=debug,
+                                    random_seed=random_seed,
+                                    fragments=fragments,
+                                    log_level=log_level)
+        return results
 
     def clean(self, docs='all', keep=[]):
         if docs == 'all':

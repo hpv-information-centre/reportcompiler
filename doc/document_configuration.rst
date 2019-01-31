@@ -31,6 +31,8 @@ These values are defined by the library and are designed to be used when necessa
 
 * **logger_name**: Name of the logger (for python logging library), to be used as an identifier for the current fragment (if working in parallel) or the document. 
 
+* **partial_generation_fragments**: If defined, list of the fragments that will be included in the partial document generation. For integrity purposes, the fragments that (recursively) include those specified in this setting are also generated, all the way up to the main template.
+
 Global settings
 -----------------
 

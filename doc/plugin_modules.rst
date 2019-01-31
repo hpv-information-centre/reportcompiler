@@ -304,8 +304,10 @@ Template renderer using the jinja2_ template engine with a more latex-friendly s
     text is a comment
     \ENDCOMMENT
 
-* A filter (*escape_tex*) for latex character escaping is available.
-* A filter (*escape_path*) for file path escaping (e.g. spaces) is available.
+* The following filters are available:
+   * **escape_tex**: escapes latex characters.
+   * **escape_path**: escapes file paths (e.g. spaces or backslashes).
+   * **format_date(fmt)**: formats a date string from YYYY-MM-DD to format *fmt* (see strftime documentation).
 
 Template example:
 

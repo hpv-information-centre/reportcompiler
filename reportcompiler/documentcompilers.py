@@ -11,6 +11,11 @@ import logging
 import json
 import sys
 import numpy as np
+import anytree
+import time
+import functools
+import pandas as pd
+
 from collections import OrderedDict, ChainMap, namedtuple
 from glob import glob
 from copy import deepcopy
@@ -270,6 +275,7 @@ class DocumentCompiler:
                  n_frag_workers=2,
                  debug=False,
                  random_seed=0,
+                 fragments=None,
                  log_level=logging.DEBUG):
         """
         Generates documents from a list of document variables.
@@ -287,8 +293,33 @@ class DocumentCompiler:
             facilitate debugging.
         :param int random_seed: Seed to initialize any possible
             pseudorandom generators.
+        :param str fragments: Fragment(s) to be generated. Setting this
+            value generates the document only considering the templates from
+            the main template to the chosen value(s) and all its children.
+            Setting it to None is equivalent to setting it to the main template
+            and therefore the whole document will be generated.
         :param int log_level: Log level
         """
+        if fragments:
+            doc_metadata = deepcopy(doc_metadata)
+            if not isinstance(fragments, list):
+                fragments = [fragments]
+            doc_metadata['partial_generation_fragments'] = \
+                [os.path.splitext(f)[0] for f in fragments]
+
+            enabled_nodes = set()
+            for fragment in fragments:
+                match = anytree.find(self.template_tree.node,
+                                     lambda n: n.name == fragment)
+                if match is None:
+                    raise ValueError(
+                        '{} does not exist in the template tree.'.format(
+                            fragment))
+                enabled_nodes = enabled_nodes.union(list(match.path))
+
+            for node in PreOrderIter(self.template_tree.node):
+                node.children = set(node.children).intersection(enabled_nodes)
+
         if debug:
             n_doc_workers = 1
             n_frag_workers = 1
@@ -366,6 +397,24 @@ class DocumentCompiler:
                                             '<global>': (error_msg, None)}})
             raise DocumentGenerationError(
                 'Error on document(s) generation:\n', traceback_dict)
+        else:
+            dfs = [
+                pd.DataFrame(
+                    [
+                        {
+                            'doc': dr.doc,
+                            'fragment': fr['fragment'],
+                            'time': fr['time']
+                        }
+                        for fr in dr.result
+                    ]
+                )
+                for dr in results
+            ]
+            results = pd.DataFrame()
+            for df in dfs:
+                results = results.append(df, ignore_index=True)
+            return results
 
     def _prepare_debug_session(self, doc_metadata):
         """
@@ -437,8 +486,10 @@ class DocumentCompiler:
         :returns: (context, path of the fragment)
         :rtype: tuple
         """
+        startTime = time.perf_counter()
         fragment_path = '/'.join([elem.name for elem in fragment.path])
         if self.source_file_map.get(fragment.name):
+            start = time.perf_counter
             current_frag_context = FragmentCompiler.compile(
                 self.source_file_map[fragment.name],
                 doc_param,
@@ -449,7 +500,18 @@ class DocumentCompiler:
             current_frag_context = {}
         if not isinstance(current_frag_context, dict):
             current_frag_context = {'data': current_frag_context}
-        return current_frag_context, fragment_path
+        elapsedTime = time.perf_counter() - startTime
+        logger = logging.getLogger(doc_metadata['logger_name'])
+        logger.info('[{}] {}: Fragment finished in {} ms\n'.format(
+            doc_metadata['doc_suffix'],
+            os.path.splitext(fragment.name)[0],
+            int(elapsedTime * 1000)))
+        result = {
+            'context': current_frag_context,
+            'path': fragment_path,
+            'time': elapsedTime
+        }
+        return result
 
     def _generate_doc(self,
                       doc_param,
@@ -470,13 +532,16 @@ class DocumentCompiler:
         DocumentCompiler.setup_logger(doc_metadata, log_level)
         doc_logfile_path = DocumentCompiler._get_log_file_path(doc_metadata)
 
-        try:
-            augmented_doc_param = DocumentCompiler.augment_doc_param(
-                doc_param, doc_metadata)
+        logger = logging.getLogger(doc_metadata['logger_name'])
+        logger.info('[{}] Starting document generation...'.format(
+            doc_metadata['doc_suffix']))
 
-            logger = logging.getLogger(doc_metadata['logger_name'])
-            logger.info('[{}] Generating document...'.format(
-                doc_metadata['doc_suffix']))
+        try:
+            if doc_metadata['params'].get('augmentation'):
+                augmented_doc_param = DocumentCompiler.augment_doc_param(
+                    doc_param, doc_metadata)
+            else:
+                augmented_doc_param = doc_param
 
             fragment_info = namedtuple('fragment_info', ['fragment',
                                                          'result',
@@ -510,29 +575,38 @@ class DocumentCompiler:
                 fragments_context, doc_metadata)
 
             output_doc = DocumentCompiler.render_template(
-                augmented_doc_param, context)
+                augmented_doc_param, self.template_tree, context)
 
             DocumentCompiler.postprocess(
                 output_doc,
                 augmented_doc_param,
                 context)
 
-            logger.info('[{}] Document generated'.format(
-                doc_metadata['doc_suffix']))
+            logger.info('[{}] Document generated at {}'.format(
+                doc_metadata['doc_suffix'],
+                doc_metadata['out_path']))
 
-            return output_doc
+            stats = self._build_stats(results)
+
+            return stats
         except (DocumentGenerationError,
                 TemplateRendererException,
                 PostProcessorError) as e:
             logger.error(
-                '[{}] Error(s) in document generation, see below'.format(
+                '[{}] Error(s) in document generation'.format(
                     doc_metadata['doc_suffix']))
             raise e from None
         finally:
             if n_frag_workers > 1:
                 self._build_final_log(doc_logfile_path, doc_metadata)
 
-        return None
+    def _build_stats(self, results):
+        return [
+            {
+                'fragment': r.result['path'],
+                'time': r.result['time']
+            } for r in results
+        ]
 
     def _generate_doc_fragments_parallel(self,
                                          augmented_doc_param,
@@ -629,7 +703,8 @@ class DocumentCompiler:
     def _build_fragments_context(self, fragment_results):
         fragments_context = {}
         for result in fragment_results:
-            current_frag_context, fragment_path = result.result
+            current_frag_context = result.result['context']
+            fragment_path = result.result['path']
             DocumentCompiler.update_nested_dict(fragments_context,
                                                 fragment_path,
                                                 current_frag_context)
@@ -662,15 +737,17 @@ class DocumentCompiler:
         :rtype: list
         """
 
-        return self.renderer.included_templates(content)
+        templates = self.renderer.included_templates(content)
+        return [template_name for template_name, _ in templates]
 
     @staticmethod
-    def render_template(doc_param, context):
+    def render_template(doc_param, template_tree, context):
         """
         Performs the template rendering stage for the document
         (see architecture).
 
         :param OrderedDict doc_param: Document variable
+        :param anytree template_tree: Tree with the templates to be rendered.
         :param dict context: Full context with two keys: 'data' for context
             generation output and 'meta' for document metadata
         :returns: Template rendering engine output, generally the rendered
@@ -687,7 +764,7 @@ class DocumentCompiler:
         logger.debug('[{}] Rendering template ({})...'.format(
             context['meta']['doc_suffix'],
             renderer.__class__.__name__))
-        return renderer.render_template(doc_param, context)
+        return renderer.render_template(doc_param, template_tree, context)
 
     @staticmethod
     def postprocess(doc, doc_param, context):
@@ -760,8 +837,8 @@ class DocumentCompiler:
         :rtype: dict
         """
         logger = logging.getLogger(metadata['logger_name'])
-        message = 'Starting doc_param augmentation...'
-        logger.info('[{}] {}'.format(metadata['doc_suffix'], message))
+        logger.info('[{}] {}'.format(metadata['doc_suffix'],
+                                     'Augmenting document parameter...'))
         predata = FragmentCompiler.fetch_info(doc_param,
                                               'params/augmentation',
                                               metadata)
@@ -829,8 +906,9 @@ class FragmentCompiler:
         """
         metadata = doc_metadata
         metadata['fragment_path'] = fragment
+        relative_path = fragment.replace(metadata['src_path'] + '/', '')
         metadata['fragment_name'] = os.path.splitext(
-            os.path.basename(fragment))[0]
+            relative_path)[0]
 
         if multiprocessing:
             FragmentCompiler.setup_logger(metadata['fragment_name'],
@@ -846,10 +924,6 @@ class FragmentCompiler:
         context = FragmentCompiler.generate_context(fragment_data,
                                                     doc_param,
                                                     metadata)
-        logger = logging.getLogger(metadata['logger_name'])
-        logger.info('[{}] {}: Fragment done.\n'.
-                    format(metadata['doc_suffix'],
-                           metadata['fragment_name']))
         return context
 
     @staticmethod

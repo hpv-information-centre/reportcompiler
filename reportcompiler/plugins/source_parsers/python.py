@@ -18,9 +18,8 @@ class PythonParser(SourceParser):
     """ Context generator for python scripts. """
 
     def generate_context(self, doc_param, data, metadata):
-        filename, _ = os.path.splitext(metadata['fragment_path'])
-        basename = os.path.basename(filename)
-        fragment_module = importlib.import_module(basename)
+        module_name = metadata['fragment_name'].replace('/', '.')
+        fragment_module = importlib.import_module(module_name)
         context = None
         try:
             context = fragment_module.generate_context(doc_param,
@@ -39,7 +38,7 @@ class PythonParser(SourceParser):
             except TypeError:
                 return False
 
-        module_name = metadata['fragment_name']
+        module_name = metadata['fragment_name'].replace('/', '.')
 
         fragment_module = None
         try:
