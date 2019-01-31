@@ -96,6 +96,16 @@ class JinjaRenderer(TemplateRenderer):
             template_path = '.'.join([os.path.splitext(n.name)[0]
                                       for n in node.path[1:]])
             try:
+                with open(os.path.join(context['meta']['tmp_path'],
+                                       'templates',
+                                       node.name), 'w') as f_tmp:
+                    pass
+            except FileNotFoundError:
+                full_path = os.path.join(context['meta']['tmp_path'],
+                                         'templates',
+                                         node.name)
+                os.makedirs(os.path.dirname(full_path))
+            try:
                 with open(os.path.join(context['meta']['templates_path'],
                                        node.name), 'r') as f_orig, \
                     open(os.path.join(context['meta']['tmp_path'],
@@ -109,7 +119,7 @@ class JinjaRenderer(TemplateRenderer):
                     header = self.get_fragment_start_comment(template_file) + \
                         '\n' + env.block_start_string + \
                         'with ctx = {}'.format(
-                            'data.' + template_path
+                            'data.' + template_path.replace('/', '.')
                             if template_path != ''
                             else 'data') + \
                         env.block_end_string + '\n'

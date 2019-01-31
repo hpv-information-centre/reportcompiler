@@ -906,8 +906,9 @@ class FragmentCompiler:
         """
         metadata = doc_metadata
         metadata['fragment_path'] = fragment
+        relative_path = fragment.replace(metadata['src_path'] + '/', '')
         metadata['fragment_name'] = os.path.splitext(
-            os.path.basename(fragment))[0]
+            relative_path)[0]
 
         if multiprocessing:
             FragmentCompiler.setup_logger(metadata['fragment_name'],
