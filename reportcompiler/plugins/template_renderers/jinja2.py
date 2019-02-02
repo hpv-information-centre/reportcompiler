@@ -18,9 +18,7 @@ try:
     import jinja2
     from jinja2.exceptions import UndefinedError
 except ImportError:
-    raise TemplateRenderer.raise_rendering_exception(
-        metadata,
-        message='Python package "jinja2" needed for jinja template renderer')
+    raise EnvironmentError('Python package "jinja2" needed for jinja template renderer')
 
 __all__ = ['JinjaRenderer', 'JinjaLatexRenderer', ]
 
@@ -54,10 +52,12 @@ class JinjaRenderer(TemplateRenderer):
                 os.mkdir(template_tmp_dir)
             template_dirs.append(template_tmp_dir)
 
-            template_common_dir = os.environ[
-                'RC_TEMPLATE_LIBRARY_PATH']
-            if os.path.exists(template_common_dir):
-                template_dirs.append(template_common_dir)
+            lib_path_env = 'RC_TEMPLATE_LIBRARY_PATH'
+            if lib_path_env in os.environ:
+                template_common_dir = os.environ[
+                    'RC_TEMPLATE_LIBRARY_PATH']
+                if os.path.exists(template_common_dir):
+                    template_dirs.append(template_common_dir)
             environment = self._build_environment(template_dirs)
             self._generate_temp_templates(environment, template_tree, context)
             # TODO: render vs generate
@@ -144,7 +144,6 @@ class JinjaRenderer(TemplateRenderer):
                         ' nor in the RC_TEMPLATE_LIBRARY_PATH')
 
     def included_templates(self, content):
-        environment = self._build_environment(template_dirs=[])
         templates = re.findall(pattern='{%.*%}', string=content)
         templates = [t
                      for t

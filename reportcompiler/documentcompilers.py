@@ -184,13 +184,21 @@ class DocumentCompiler:
                 for f in fragments_found:
                     stack.append(Node(f, parent=current_node))
             except FileNotFoundError:
-                common_template_dir = os.environ['RC_TEMPLATE_LIBRARY_PATH']
+                lib_path_env = 'RC_TEMPLATE_LIBRARY_PATH'
+                if lib_path_env not in os.environ:
+                    raise FileNotFoundError(
+                        'Template {} does not exist in the document '
+                        'specification and '
+                        'RC_TEMPLATE_LIBRARY_PATH is not set.'.format(
+                            current_node.name)
+                        )
+                common_template_dir = os.environ[lib_path_env]
                 if not os.path.exists(common_template_dir + current_node.name):
                     raise FileNotFoundError(
                         'Template {} does not exist in the document '
                         'specification nor in the '
-                        'RC_TEMPLATE_LIBRARY_PATH ({})'.format(
-                            common_template_dir, common_template_dir)
+                        'RC_TEMPLATE_LIBRARY_PATH ({}).'.format(
+                            current_node.name, common_template_dir)
                         )
                 else:
                     # Ignoring library templates for tree parsing purposes
