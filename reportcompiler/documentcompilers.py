@@ -184,13 +184,21 @@ class DocumentCompiler:
                 for f in fragments_found:
                     stack.append(Node(f, parent=current_node))
             except FileNotFoundError:
-                common_template_dir = os.environ['RC_TEMPLATE_LIBRARY_PATH']
+                lib_path_env = 'RC_TEMPLATE_LIBRARY_PATH'
+                if lib_path_env not in os.environ:
+                    raise FileNotFoundError(
+                        'Template {} does not exist in the document '
+                        'specification and '
+                        'RC_TEMPLATE_LIBRARY_PATH is not set.'.format(
+                            current_node.name)
+                        )
+                common_template_dir = os.environ[lib_path_env]
                 if not os.path.exists(common_template_dir + current_node.name):
                     raise FileNotFoundError(
                         'Template {} does not exist in the document '
                         'specification nor in the '
-                        'RC_TEMPLATE_LIBRARY_PATH ({})'.format(
-                            common_template_dir, common_template_dir)
+                        'RC_TEMPLATE_LIBRARY_PATH ({}).'.format(
+                            current_node.name, common_template_dir)
                         )
                 else:
                     # Ignoring library templates for tree parsing purposes
@@ -487,9 +495,8 @@ class DocumentCompiler:
         :rtype: tuple
         """
         startTime = time.perf_counter()
-        fragment_path = '/'.join([elem.name for elem in fragment.path])
+        fragment_path = os.path.sep.join([elem.name for elem in fragment.path])
         if self.source_file_map.get(fragment.name):
-            start = time.perf_counter
             current_frag_context = FragmentCompiler.compile(
                 self.source_file_map[fragment.name],
                 doc_param,
@@ -906,7 +913,8 @@ class FragmentCompiler:
         """
         metadata = doc_metadata
         metadata['fragment_path'] = fragment
-        relative_path = fragment.replace(metadata['src_path'] + '/', '')
+        relative_path = fragment.replace(
+            metadata['src_path'] + os.path.sep, '')
         metadata['fragment_name'] = os.path.splitext(
             relative_path)[0]
 

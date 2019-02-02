@@ -17,7 +17,7 @@ This library is being developed by the ICO/IARC Information Centre on HPV and Ca
 .. |docs| image:: https://readthedocs.org/projects/reportcompiler/badge/?version=stable
     :alt: Documentation Status
     :scale: 100%
-    :target: https://reportcompiler.readthedocs.io/en/doc/?badge=stable
+    :target: https://reportcompiler.readthedocs.io/en/stable/?badge=stable
 
 Features
 ============
