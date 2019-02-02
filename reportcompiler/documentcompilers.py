@@ -495,9 +495,8 @@ class DocumentCompiler:
         :rtype: tuple
         """
         startTime = time.perf_counter()
-        fragment_path = '/'.join([elem.name for elem in fragment.path])
+        fragment_path = os.path.sep.join([elem.name for elem in fragment.path])
         if self.source_file_map.get(fragment.name):
-            start = time.perf_counter
             current_frag_context = FragmentCompiler.compile(
                 self.source_file_map[fragment.name],
                 doc_param,
@@ -914,7 +913,8 @@ class FragmentCompiler:
         """
         metadata = doc_metadata
         metadata['fragment_path'] = fragment
-        relative_path = fragment.replace(metadata['src_path'] + '/', '')
+        relative_path = fragment.replace(
+            metadata['src_path'] + os.path.sep, '')
         metadata['fragment_name'] = os.path.splitext(
             relative_path)[0]
 
