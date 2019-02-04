@@ -175,6 +175,7 @@ class DocumentCompiler:
         stack = [root_template]
         while len(stack) > 0:
             current_node = stack.pop()
+            current_node.name = current_node.name
             try:
                 with open(os.path.join(self.doc_spec.path,
                                        'templates',

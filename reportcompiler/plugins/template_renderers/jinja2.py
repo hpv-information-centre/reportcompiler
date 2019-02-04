@@ -18,7 +18,8 @@ try:
     import jinja2
     from jinja2.exceptions import UndefinedError
 except ImportError:
-    raise EnvironmentError('Python package "jinja2" needed for jinja template renderer')
+    raise EnvironmentError('Python package "jinja2" needed for '
+                           'jinja template renderer')
 
 __all__ = ['JinjaRenderer', 'JinjaLatexRenderer', ]
 
@@ -119,7 +120,7 @@ class JinjaRenderer(TemplateRenderer):
                     header = self.get_fragment_start_comment(template_file) + \
                         '\n' + env.block_start_string + \
                         'with ctx = {}'.format(
-                            'data.' + template_path.replace('/', '.')
+                            'data.' + template_path.replace(os.path.sep, '.')
                             if template_path != ''
                             else 'data') + \
                         env.block_end_string + '\n'
@@ -238,6 +239,8 @@ class JinjaLatexRenderer(JinjaRenderer):
                          jinja_env.block_end_string).replace('\\', '\\\\'),
                 string=t) for t in templates]
         template_names = list(itertools.chain.from_iterable(template_names))
+        template_names = [tn.replace('/', os.path.sep)
+                          for tn in template_names]
 
         template_blocks = [re.findall(
                 pattern=(jinja_env.block_start_string +

@@ -43,7 +43,8 @@ class SourceParser(PluginModule):
         logger = logging.getLogger(metadata['logger_name'])
 
         doc_suffix = metadata['doc_suffix']
-        fragment_name_path = metadata['fragment_name'].replace(os.path.sep, '__')
+        fragment_name_path = metadata['fragment_name'] \
+            .replace(os.path.sep, '__')
         fragment_tmp_basename = os.path.join(metadata['tmp_path'],
                                              doc_suffix + '_' +
                                              fragment_name_path)
