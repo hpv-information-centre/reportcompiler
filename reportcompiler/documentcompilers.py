@@ -107,10 +107,11 @@ class DocumentCompiler:
 
         style_dict = {}
         for df in style_data.values():
-            if len(df.index) > 1:
-                raise ValueError(
-                    'More than one row returned by style data fetcher')
-            style_dict.update(df.to_dict(orient='records')[0])
+            list_dicts = df.to_dict(orient='records')
+            keys = list_dicts[0].keys()
+            for key in keys:
+                values = [item[key] for item in list_dicts]
+                style_dict[key] = values
 
         return style_dict
 

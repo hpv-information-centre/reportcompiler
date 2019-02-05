@@ -108,6 +108,10 @@ class DocumentSpecification:
                                      format(', '.join(unknown_keys)))
                 metadata.update({'params': params_config})
 
+        metadata['docspec_path'] = self.path
+        metadata['skip_unchanged_fragments'] = \
+            metadata.get('skip_unchanged_fragments', True)
+
         style_file = '{}/style.conf'.format(self.path)
         if os.path.exists(style_file):
             with open(style_file) as style_data:
@@ -118,10 +122,6 @@ class DocumentSpecification:
                     metadata['style'].update(
                         DocumentCompiler.fetch_style_data(metadata))
                     del metadata['style']['data_fetchers']
-
-        metadata['docspec_path'] = self.path
-        metadata['skip_unchanged_fragments'] = \
-            metadata.get('skip_unchanged_fragments', True)
         return metadata
 
     def __str__(self):
