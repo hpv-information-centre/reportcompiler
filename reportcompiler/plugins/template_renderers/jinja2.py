@@ -48,7 +48,7 @@ class JinjaRenderer(TemplateRenderer):
             template_dirs = []
             template_tmp_dir = os.path.join(
                 context['meta']['tmp_path'],
-                'templates')
+                '_templates')
             if not os.path.exists(template_tmp_dir):
                 os.mkdir(template_tmp_dir)
             template_dirs.append(template_tmp_dir)
@@ -94,23 +94,22 @@ class JinjaRenderer(TemplateRenderer):
         for subtree in PreOrderIter(template_tree.node):
             node = subtree
             template_file = node.name
-            template_path = '.'.join([os.path.splitext(n.name)[0]
-                                      for n in node.path[1:]])
+            template_path, _ = os.path.splitext(node.name)
             try:
                 with open(os.path.join(context['meta']['tmp_path'],
-                                       'templates',
+                                       '_templates',
                                        node.name), 'w') as f_tmp:
                     pass
             except FileNotFoundError:
                 full_path = os.path.join(context['meta']['tmp_path'],
-                                         'templates',
+                                         '_templates',
                                          node.name)
                 os.makedirs(os.path.dirname(full_path))
             try:
                 with open(os.path.join(context['meta']['templates_path'],
                                        node.name), 'r') as f_orig, \
                     open(os.path.join(context['meta']['tmp_path'],
-                                      'templates',
+                                      '_templates',
                                       node.name), 'w') as f_tmp:
                     content = f_orig.read()
 
@@ -241,7 +240,6 @@ class JinjaLatexRenderer(JinjaRenderer):
         template_names = list(itertools.chain.from_iterable(template_names))
         template_names = [tn.replace('/', os.path.sep)
                           for tn in template_names]
-
         template_blocks = [re.findall(
                 pattern=(jinja_env.block_start_string +
                          r'[ ]*include[ ]*[\'"].*?[\'"][ ]*' +

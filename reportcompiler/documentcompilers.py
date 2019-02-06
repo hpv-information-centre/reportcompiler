@@ -115,8 +115,7 @@ class DocumentCompiler:
 
         return style_dict
 
-    @staticmethod
-    def setup_environment(metadata, doc_param):
+    def setup_environment(self, metadata, doc_param):
         """
         Prepares the environment to generate the necessary files (e.g. output,
         temp, logs, hashes, figures, ...) and variables.
@@ -132,24 +131,44 @@ class DocumentCompiler:
 
         metadata['doc_suffix'] = \
             DocumentCompiler.get_doc_param_suffix(doc_param)
-        dirs = ['fig',  # Generated figures
-                'hash',  # Hashes used as cache checks to reuse generated data:
-                         # * .hash files contain the hashes of code, data,
-                         #   metadata and doc_param
-                         # * .ctx files contain the generated contexts to be
-                         #   reused if the hashes match
-                'log',  # Logs detailing the document generation
-                'tmp',  # Temporary directory
-                'out',  # Output directory
-                ]
-        for d in dirs:
+        root_dirs = ['fig',   # Generated figures
+                     'hash',  # Hashes used as cache to reuse generated data:
+                              # * .hash files contain the hashes of code, data,
+                              #   metadata and doc_param
+                              # * .ctx files contain the generated contexts,
+                              #   reused if the hashes match
+                     'tmp',   # Temporary directory
+                     'log',   # Logs detailing the document generation
+                     'out',   # Output directory
+                     ]
+        nested_root_dirs = ['fig', 'hash', 'tmp']
+
+        subdirs = list(self.source_file_map.keys())
+        subdirs = [os.path.dirname(f) for f in subdirs]
+        subdirs.remove('')  # Remove root fragments
+        subdirs = set(subdirs)  # Remove duplicates
+        dirs = deepcopy(root_dirs)
+        for d in nested_root_dirs:
+            dirs += ['{}/{}'.format(d, sd) for sd in subdirs]
+
+        for d in root_dirs:
             metadata['{}_path'.format(d)] = _build_subpath(d)
-            if not os.path.exists(metadata['{}_path'.format(d)]):
-                os.makedirs(metadata['{}_path'.format(d)], 0o777)
-        metadata['data_path'] = os.path.join(metadata['docspec_path'], 'data')
-        metadata['templates_path'] = os.path.join(metadata['docspec_path'],
-                                                  'templates')
-        metadata['src_path'] = os.path.join(metadata['docspec_path'], 'src')
+
+        for d in root_dirs:
+            path = metadata['{}_path'.format(d)]
+            if not os.path.exists(path):
+                os.makedirs(path, 0o777)
+            if d in nested_root_dirs:
+                for sd in subdirs:
+                    path = os.path.join(metadata['{}_path'.format(d)], sd)
+                    if not os.path.exists(path):
+                        os.makedirs(path, 0o777)
+        metadata['data_path'] = os.path.join(
+            metadata['docspec_path'], 'data')
+        metadata['templates_path'] = os.path.join(
+            metadata['docspec_path'], 'templates')
+        metadata['src_path'] = os.path.join(
+            metadata['docspec_path'], 'src')
         metadata['logger_name'] = ('reportcompiler.' +
                                    metadata['doc_name'] +
                                    '_' +
@@ -345,8 +364,8 @@ class DocumentCompiler:
             # (easier to debug)
             for doc_param in doc_params:
                 result = None
-                DocumentCompiler.setup_environment(doc_metadata,
-                                                   doc_param)
+                self.setup_environment(doc_metadata,
+                                       doc_param)
                 try:
                     result = self._generate_doc(doc_param,
                                                 doc_metadata,
@@ -498,11 +517,21 @@ class DocumentCompiler:
         """
         startTime = time.perf_counter()
         fragment_path = os.path.sep.join([elem.name for elem in fragment.path])
+
+        fragment_path = os.path.dirname(
+            self.source_file_map.get(fragment.name))
+        metadata = deepcopy(doc_metadata)
+        metadata['fig_path'] = fragment_path \
+            .replace(doc_metadata['src_path'], doc_metadata['fig_path'])
+        metadata['hash_path'] = fragment_path \
+            .replace(doc_metadata['src_path'], doc_metadata['hash_path'])
+        metadata['tmp_path'] = fragment_path \
+            .replace(doc_metadata['src_path'], doc_metadata['tmp_path'])
         if self.source_file_map.get(fragment.name):
             current_frag_context = FragmentCompiler.compile(
                 self.source_file_map[fragment.name],
                 doc_param,
-                doc_metadata,
+                metadata,
                 multiprocessing,
                 log_level)
         else:
@@ -510,11 +539,12 @@ class DocumentCompiler:
         if not isinstance(current_frag_context, dict):
             current_frag_context = {'data': current_frag_context}
         elapsedTime = time.perf_counter() - startTime
-        logger = logging.getLogger(doc_metadata['logger_name'])
+        logger = logging.getLogger(metadata['logger_name'])
         logger.info('[{}] {}: Fragment finished in {} ms\n'.format(
-            doc_metadata['doc_suffix'],
+            metadata['doc_suffix'],
             os.path.splitext(fragment.name)[0],
             int(elapsedTime * 1000)))
+        fragment_path, _ = os.path.splitext(fragment.name)
         result = {
             'context': current_frag_context,
             'path': fragment_path,
@@ -820,7 +850,7 @@ class DocumentCompiler:
         """
         head, tail = os.path.split(fragment)
         fragment_items = []
-        while head != '':
+        while tail != '':
             tail_name, _ = os.path.splitext(tail)
             fragment_items.append(tail_name)
             head, tail = os.path.split(head)
