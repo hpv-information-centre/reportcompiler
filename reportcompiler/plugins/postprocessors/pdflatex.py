@@ -50,6 +50,15 @@ class PdflatexPostProcessor(PostProcessor):
                 stderr=PIPE,
                 universal_newlines=True,
                 cwd=context['meta']['tmp_path'])
+
+            # 2nd pdflatex compilation
+            run(command,
+                shell=True,
+                check=True,
+                stdout=PIPE,
+                stderr=PIPE,
+                universal_newlines=True,
+                cwd=context['meta']['tmp_path'])
         except CalledProcessError as e:
             PostProcessor.raise_postprocessor_exception(
                 context,
