@@ -353,7 +353,10 @@ class DocumentCompiler:
             n_doc_workers = 1
             n_frag_workers = 1
             log_level = logging.DEBUG
-            self._prepare_debug_session(doc_metadata)
+            try:
+                self._prepare_debug_session(doc_metadata)
+            except:
+                print('Debug session cannot be initialized')
 
         doc_metadata['debug'] = debug
 
@@ -407,7 +410,10 @@ class DocumentCompiler:
         DocumentCompiler.shutdown_loggers()
 
         if debug:
-            self._prepare_debug_output(doc_metadata)
+            try:
+                self._prepare_debug_output(doc_metadata)
+            except:
+                print('Debug output cannot be written')
 
         error_results = [r for r in results if r.exception is not None]
         n_errors = len(error_results)
