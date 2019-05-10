@@ -386,8 +386,8 @@ class DocumentCompiler:
             with ProcessPoolExecutor(max_workers=n_doc_workers) as executor:
                 for doc_param in doc_params:
                     _doc_metadata = deepcopy(doc_metadata)
-                    DocumentCompiler.setup_environment(_doc_metadata,
-                                                       doc_param)
+                    self.setup_environment(_doc_metadata,
+                                           doc_param)
                     worker = self._generate_doc
                     result = executor.submit(worker,
                                              doc_param,
