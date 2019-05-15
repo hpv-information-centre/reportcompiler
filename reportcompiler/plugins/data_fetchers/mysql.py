@@ -29,15 +29,24 @@ class MySQLFetcher(SQLFetcher):
     """ Data fetcher for MySQL databases. """
     mutex = threading.Lock()
 
-    @staticmethod
-    def create_connection(credentials):
-        connection = pymysql.connect(host=credentials['host'],
-                                     user=credentials['user'],
-                                     password=credentials['password'],
-                                     db=credentials['db'],
-                                     charset='utf8mb4',
-                                     cursorclass=pymysql.cursors.DictCursor)
-        return connection
+    class DatabaseConnection:
+        def __init__(self, credentials, metadata):
+            self.credentials = credentials
+            self.metadata = metadata
+
+        def __enter__(self):
+            self.connection = pymysql.connect(
+                            host=self.credentials['host'],
+                            user=self.credentials['user'],
+                            password=self.credentials['password'],
+                            db=self.credentials['db'],
+                            charset='utf8mb4',
+                            cursorclass=pymysql.cursors.DictCursor)
+            return self.connection
+
+        def __exit__(self, type, value, traceback):
+            if type is None:
+                self.connection.close()
 
     def fetch(self, doc_param, fetcher_info, metadata):
         # TODO: Look for ways to avoid mutex
@@ -49,23 +58,24 @@ class MySQLFetcher(SQLFetcher):
         credentials = MySQLFetcher._create_context_credentials(fetcher_info,
                                                                metadata)
         try:
-            connection = MySQLFetcher.create_connection(credentials)
+            with MySQLFetcher.DatabaseConnection(credentials, metadata) \
+                    as connection:
+                try:
+                    sql_string = self._build_sql_query(doc_param,
+                                                       fetcher_info,
+                                                       metadata)
+                except KeyError:
+                    raise DataFetcher.raise_data_fetching_exception(
+                        metadata,
+                        message='Table/column definition not '
+                                'defined for fragment')
+
+                df = pd.read_sql(sql_string, con=connection)
+                return df
         except OperationalError as e:
             raise DataFetcher.raise_data_fetching_exception(
                     metadata,
                     exception=e)
-
-        try:
-            sql_string = self._build_sql_query(doc_param,
-                                               fetcher_info,
-                                               metadata)
-        except KeyError:
-            raise DataFetcher.raise_data_fetching_exception(
-                metadata,
-                message='Table/column definition not defined for fragment')
-
-        df = pd.read_sql(sql_string, con=connection)
-        return df
 
     @staticmethod
     def _create_context_credentials(fetcher_info, metadata):
