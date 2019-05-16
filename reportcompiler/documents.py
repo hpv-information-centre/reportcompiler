@@ -64,7 +64,7 @@ class DocumentSpecification:
                 repo.create_remote('origin', repo_url)
                 repo.remotes.origin.pull(repo_branch)
             dir_path = os.path.join(dir_path, repo_relative_path)
-        self.path = dir_path
+        self.path = os.path.abspath(dir_path)
         name = os.path.basename(self.path)
         if not os.path.exists(self.path):
             raise FileNotFoundError(
