@@ -910,6 +910,7 @@ class FragmentCompiler:
         :param dict doc_metadata: Document metadata
         :param int log_level: Log level
         """
+        fragment_name = fragment_name.replace('/', '__')
         doc_metadata['logger_name'] += '-' + fragment_name
         logger = logging.getLogger(doc_metadata['logger_name'])
         logger.handlers = []
