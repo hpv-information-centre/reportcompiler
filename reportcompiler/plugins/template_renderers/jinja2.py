@@ -195,7 +195,6 @@ class JinjaLatexRenderer(JinjaRenderer):
                 (re.compile(r'\^'), r'\^{}'),
                 (re.compile(r'"'), r"''"),
                 (re.compile(r'\.\.\.+'), r'\\ldots '),
-                (re.compile(r'_'), r'\_'),
             )
 
             newval = value
