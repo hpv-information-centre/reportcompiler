@@ -79,8 +79,8 @@ class JinjaRenderer(TemplateRenderer):
                     context['meta']['partial_generation_fragments'])
             filename += '.' + self.get_extension(context)
             tex_file = os.path.join(tmp_path, filename)
-            with open(tex_file, 'w') as f:
-                f.write(rendered_template)
+            with open(tex_file, 'wb') as f:
+                f.write(rendered_template.encode('utf8'))
 
             return filename
         except Exception as e:
