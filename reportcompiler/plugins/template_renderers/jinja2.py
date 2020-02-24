@@ -195,6 +195,7 @@ class JinjaLatexRenderer(JinjaRenderer):
                 (re.compile(r'\^'), r'\^{}'),
                 (re.compile(r'"'), r"''"),
                 (re.compile(r'\.\.\.+'), r'\\ldots '),
+                (re.compile(r'(http[s]?://[^ ]*)'), r'\\url{\1}'),
             )
 
             newval = value
