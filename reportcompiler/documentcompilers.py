@@ -888,7 +888,7 @@ class DocumentCompiler:
                                               'params/augmentation',
                                               metadata)
         if len(predata) > 0:
-            flattened_predata = dict(ChainMap(*[df.ix[0, :].to_dict()
+            flattened_predata = dict(ChainMap(*[df.iloc[0, :].to_dict()
                                                 for df in predata.values()]))
         else:
             flattened_predata = {}
